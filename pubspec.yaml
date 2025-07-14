@@ -1,0 +1,40 @@
+name: shiro
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.0
+  http: 1.1.0
+  flutter_dotenv: ^5.0.2
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.1.0
+  flutter_test:
+    sdk: flutter
+  speech_to_text: ^7.1.0
+  permission_handler: ^12.0.1
+  flutter_tts: ^4.2.3
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
+  flutter_lints: ^5.0.0
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "lib/assets/icons/icon2.png"
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - lib/assets/icons/
+    
+# Change App Icon Command
+# flutter pub run flutter_launcher_icons:main
