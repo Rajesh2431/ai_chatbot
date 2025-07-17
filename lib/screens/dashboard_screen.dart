@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../widget/action_card.dart';
-import '../widget/single_wide_action_card.dart';
+//import '../widget/single_wide_action_card.dart';
 import '../screens/chat_screen.dart';
 import '../screens/voicechat_screen.dart';
-import '../screens/journal_screen.dart'; // 👈 Add import
+import '../screens/journal_screen.dart';
+import '../screens/game_selection.dart'; // Added import for game selection
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -102,23 +103,26 @@ class DashboardScreen extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: SingleWideActionCard(
-                    icon: Icons.videogame_asset,
-                    label: 'Play Games',
-                    onTap: () {},
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SingleWideActionCard(
+                  child: ActionCard(
                     icon: Icons.book,
                     label: 'My Journal',
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const JournalScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const JournalScreen()),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ActionCard(
+                    icon: Icons.videogame_asset,
+                    label: 'Play Games',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const GameSelectionScreen()),
                       );
                     },
                   ),

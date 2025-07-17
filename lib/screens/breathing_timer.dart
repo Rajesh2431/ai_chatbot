@@ -59,6 +59,7 @@ class _BreathingExerciseScreenState extends State<BreathingExerciseScreen>
         ],
       ),
     ).then((_) {
+      // ignore: use_build_context_synchronously
       Navigator.pop(context);
     });
   }

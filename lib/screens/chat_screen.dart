@@ -68,6 +68,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       Future.delayed(Duration(seconds: 1), () {
         showModalBottomSheet(
+          // ignore: use_build_context_synchronously
           context: context,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
