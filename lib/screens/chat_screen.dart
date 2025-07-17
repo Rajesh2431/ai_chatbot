@@ -4,6 +4,7 @@ import '../models/message.dart';
 import '../services/api_service.dart';
 import '../services/depression_service.dart';
 import '../widget/option_bubble.dart';
+import '../screens/breathing_timer.dart'; // 👈 Import breathing screen
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -20,6 +21,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isQuestionnaireActive = false;
   int _currentQuestionIndex = 0;
   int _totalScore = 0;
+  bool _awaitingPostExerciseFeedback = false;
 
   @override
   void initState() {
@@ -56,20 +58,81 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.add(
           Message(
             text:
-                "Here’s a task to start with: Try one of the listed activities today and write about how it made you feel.",
+                "Here’s a task to start with: Try one of the listed activities today and write about how it made you feel. Tap below to start a breathing exercise.",
             isUser: false,
           ),
         );
         _isQuestionnaireActive = false;
       });
       _scrollToBottom();
+
+      Future.delayed(Duration(seconds: 1), () {
+        showModalBottomSheet(
+          context: context,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+          backgroundColor: Colors.black87,
+          builder: (context) => Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Start Breathing Exercise", style: TextStyle(color: Colors.white, fontSize: 18)),
+                SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    final completed = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const BreathingExerciseScreen(durationSeconds: 60),
+                      ),
+                    );
+                    if (completed == true) {
+                      setState(() {
+                        _messages.add(Message(
+                          text: "How do you feel after the breathing exercise?",
+                          isUser: false,
+                        ));
+                        _awaitingPostExerciseFeedback = true;
+                      });
+                      _scrollToBottom();
+                    }
+                  },
+                  child: Text("1 Minute"),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final completed = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const BreathingExerciseScreen(durationSeconds: 120),
+                      ),
+                    );
+                    if (completed == true) {
+                      setState(() {
+                        _messages.add(Message(
+                          text: "How do you feel after the breathing exercise?",
+                          isUser: false,
+                        ));
+                        _awaitingPostExerciseFeedback = true;
+                      });
+                      _scrollToBottom();
+                    }
+                  },
+                  child: Text("2 Minutes"),
+                ),
+              ],
+            ),
+          ),
+        );
+      });
     }
   }
 
   void _submitAnswer(int score) {
     final currentQuestion = DepressionService.questions[_currentQuestionIndex];
-    final selectedOption = currentQuestion
-        .options[currentQuestion.scores.indexOf(score)]; // get selected option
+    final selectedOption = currentQuestion.options[
+        currentQuestion.scores.indexOf(score)];
     setState(() {
       _messages.add(Message(text: selectedOption, isUser: true));
     });
@@ -87,7 +150,13 @@ class _ChatScreenState extends State<ChatScreen> {
     _controller.clear();
     _scrollToBottom();
 
-    final reply = await OpenRouterAPI.getResponse(text);
+    String reply;
+    if (_awaitingPostExerciseFeedback) {
+      reply = "Thank you for sharing. Remember, it’s okay to feel what you feel. Let's keep exploring ways to feel better.";
+      _awaitingPostExerciseFeedback = false;
+    } else {
+      reply = await OpenRouterAPI.getResponse(text);
+    }
 
     setState(() {
       _messages.add(Message(text: reply, isUser: false));
@@ -168,7 +237,6 @@ class _ChatScreenState extends State<ChatScreen> {
           style: TextStyle(color: Colors.white),
         ),
         actions: const [
-          //Icon(Icons.refresh, color: Colors.white),
           SizedBox(width: 16),
         ],
       ),
@@ -189,7 +257,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   (msg) => MessageBubble(text: msg.text, isUser: msg.isUser),
                 ),
                 if (_isQuestionnaireActive &&
-                    _currentQuestionIndex < DepressionService.questions.length)
+                    _currentQuestionIndex <
+                        DepressionService.questions.length)
                   Wrap(
                     children: List.generate(
                       DepressionService

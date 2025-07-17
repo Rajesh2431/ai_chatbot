@@ -3,6 +3,7 @@ import '../widget/action_card.dart';
 import '../widget/single_wide_action_card.dart';
 import '../screens/chat_screen.dart';
 import '../screens/voicechat_screen.dart';
+import '../screens/journal_screen.dart'; // 👈 Add import
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -47,7 +48,7 @@ class DashboardScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
                         Text(
-                          'Well Come',
+                          'Welcome',
                           style: TextStyle(color: Colors.white, fontSize: 18),
                         ),
                         Text(
@@ -98,10 +99,31 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            SingleWideActionCard(
-              icon: Icons.videogame_asset,
-              label: 'Play Games',
-              onTap: () {},
+            Row(
+              children: [
+                Expanded(
+                  child: SingleWideActionCard(
+                    icon: Icons.videogame_asset,
+                    label: 'Play Games',
+                    onTap: () {},
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SingleWideActionCard(
+                    icon: Icons.book,
+                    label: 'My Journal',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const JournalScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             const Text(

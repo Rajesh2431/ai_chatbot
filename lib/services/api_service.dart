@@ -37,6 +37,8 @@ class OpenRouterAPI {
                         - Avoid unrelated topics (e.g. tech, math, politics, entertainment).
                         - You always suggest activities for user to reduce their stress
                         - Always give short and understandable replys
+                        - Add some emojis to your replies
+                        -
                         ''',
           },
           {'role': 'user', 'content': prompt},

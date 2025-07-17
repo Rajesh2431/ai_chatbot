@@ -69,6 +69,7 @@ class _VoiceChatScreenState extends State<VoiceChatScreen> {
       onStatus: (val) => setState(() {
         _isListening = _speech.isListening;
       }),
+      // ignore: avoid_print
       onError: (val) => print('Error: $val'),
     );
 
