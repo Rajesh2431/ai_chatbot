@@ -331,7 +331,7 @@ class _GridGameScreenState extends State<GridGameScreen> {
             Positioned.fill(
               child: IgnorePointer(
                 child: Container(
-                  color: _feedbackColor.withOpacity(0.15),
+                  color: _feedbackColor.withAlpha(2),
                 ),
               ),
             ),
