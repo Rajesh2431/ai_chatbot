@@ -22,17 +22,20 @@ A Flutter app for mental health support, journaling, and relaxation games.
 ## Getting Started
 
 1. **Clone the repository:**
+
    ```sh
    git clone https://github.com/rajesh2431/ai_chatbot.git
    cd ai_chatbot
    ```
 
 2. **Install dependencies:**
+
    ```sh
    flutter pub get
    ```
 
 3. **Run the app:**
+
    ```sh
    flutter run
    ```
