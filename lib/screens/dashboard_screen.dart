@@ -4,6 +4,7 @@ import 'chat_screen.dart';
 import 'journal_screen.dart';
 import 'setting_screen.dart';
 import 'tap_the_calm_game.dart';
+import 'quiz_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -18,6 +19,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final List<Widget> _pages = [
     _HomeContent(),
     JournalScreen(),
+    QuizScreen(),
     SettingsScreen(),
   ];
 
@@ -29,7 +31,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Get status bar height for proper top padding
     final double statusBarHeight = MediaQuery.of(context).padding.top;
 
     return Scaffold(
@@ -38,19 +39,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
         padding: EdgeInsets.only(top: statusBarHeight),
         child: _pages[_selectedIndex],
       ),
-      bottomNavigationBar: CurvedNavigationBar(
-        index: _selectedIndex,
-        height: 60,
-        backgroundColor: Colors.white,
-        color: const Color(0xFF97CAE4),
-        animationDuration: const Duration(milliseconds: 300),
-        items: const [
-          Icon(Icons.home, size: 28, color: Colors.white),
-          Icon(Icons.book, size: 28, color: Colors.white),
-          Icon(Icons.settings, size: 28, color: Colors.white),
-        ],
-        onTap: _onMenuTap,
-      ),
+          bottomNavigationBar: Container(
+            color: Colors.white,
+            child: CurvedNavigationBar(
+              index: _selectedIndex,
+              height: 60,
+              backgroundColor: Colors.white,
+              color: const Color(0xFF97CAE4),
+              animationDuration: const Duration(milliseconds: 300),
+              items: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.home, size: 28, color: Colors.white),
+                    if (_selectedIndex != 0)
+                      const SizedBox(height: 2),
+                    if (_selectedIndex != 0)
+                      const Text('Home', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.book_rounded, size: 28, color: Colors.white),
+                    if (_selectedIndex != 1)
+                      const SizedBox(height: 2),
+                    if (_selectedIndex != 1)
+                      const Text('Journal', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.quiz_rounded, size: 28, color: Colors.white),
+                    if (_selectedIndex != 2)
+                      const SizedBox(height: 2),
+                    if (_selectedIndex != 2)
+                      const Text('Quiz', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.settings, size: 28, color: Colors.white),
+                    if (_selectedIndex != 3)
+                      const SizedBox(height: 2),
+                    if (_selectedIndex != 3)
+                      const Text('Settings', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ],
+              onTap: _onMenuTap,
+            ),
+          ),
     );
   }
 }
@@ -69,7 +114,7 @@ class _HomeContent extends StatelessWidget {
             children: [
               // Notification icon
               IconButton(
-                icon: const Icon(Icons.notifications, color: Colors.black, size: 28),
+                icon: const Icon(Icons.menu, color: Colors.black, size: 28),
                 onPressed: () {
                   // Add notification logic here
                 },
@@ -126,7 +171,7 @@ class _HomeContent extends StatelessWidget {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF97CAE4),
-                padding: const EdgeInsets.symmetric(vertical: 24),
+                padding: const EdgeInsets.symmetric(vertical: 60),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
@@ -136,7 +181,7 @@ class _HomeContent extends StatelessWidget {
                 'Chat With AI',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 20,
+                  fontSize: 40,
                   fontWeight: FontWeight.w600,
                 ),
               ),

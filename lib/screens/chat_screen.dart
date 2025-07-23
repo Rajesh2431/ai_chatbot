@@ -69,7 +69,7 @@ class _ChatScreenState extends State<ChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
+          0.0, // For reverse: true, scroll to top (which is the bottom of the chat)
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
@@ -248,19 +248,32 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get status bar height for proper top spacing
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(36),
-        child: AppBar(
-          backgroundColor: const Color(0xFFD6D6D6),
-          elevation: 0,
-          toolbarHeight: 36,
-          automaticallyImplyLeading: false,
-        ),
-      ),
       body: Column(
         children: [
+          // Top row with menu icon and status bar space
+          Padding(
+            padding: EdgeInsets.only(
+              top: statusBarHeight + 16, // Add status bar height
+              left: 16,
+              right: 16,
+              bottom: 4,
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.menu, color: Color(0xFF4A90E2), size: 32),
+                  onPressed: () {
+                    // Add menu logic here
+                  },
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: ListView(
               controller: _scrollController,
