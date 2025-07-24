@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'screens/chat_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'providers/journal_entries_provider.dart'; // ✅ Update path if needed
 
 void main() => runApp(const App());
 
@@ -11,24 +12,28 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AI Chat',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.deepPurple,
-        brightness: Brightness.light,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => JournalEntriesProvider()), // ✅ Wrap provider
+      ],
+      child: MaterialApp(
+        title: 'AI Chat',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          useMaterial3: true,
+          colorSchemeSeed: Colors.deepPurple,
+          brightness: Brightness.light,
+        ),
+        home: const SplashScreen(), // Optional: SplashScreen for GIF
+        routes: {
+          '/chat': (context) => const ChatScreen(),
+          '/dashboard': (context) => const DashboardScreen(),
+        },
       ),
-      home: const DashboardScreen(), // ✅ Set the dashboard as entry point
-      routes: {
-        '/chat': (context) => const ChatScreen(),
-        '/dashboard': (context) => const DashboardScreen(),
-      },
     );
   }
 }
 
-// Add this SplashScreen widget
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -40,7 +45,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 10), () {
+    Future.delayed(const Duration(seconds: 4), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const DashboardScreen()),
@@ -54,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.white,
       body: Center(
         child: Image.asset(
-          'lib/assets/videos/splashscreen.gif', // Ensure this path is correct
+          'lib/assets/videos/splashscreen.gif', // ✅ Ensure this path is valid
           width: 1080,
           height: 1920,
           fit: BoxFit.contain,
