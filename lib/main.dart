@@ -1,27 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'screens/chat_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/journal_screen.dart';
+import 'providers/journal_entries_provider.dart';
 
-void main() => runApp(const MyApp());
+void main() => runApp(const App());
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class App extends StatelessWidget {
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AI Chat',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.deepPurple,
-        brightness: Brightness.light,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => JournalEntriesProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'AI Journal',
+        theme: ThemeData(
+          useMaterial3: true,
+          colorSchemeSeed: Colors.deepPurple,
+          brightness: Brightness.light,
+        ),
+        initialRoute: '/',
+        routes: {
+          '/': (context) => const DashboardScreen(),
+          '/chat': (context) => const ChatScreen(),
+          '/journal': (context) => const JournalScreen(),
+        },
       ),
-      home: const DashboardScreen(), // ✅ Set the dashboard as entry point
-      routes: {
-        '/chat': (context) => const ChatScreen(),
-        '/dashboard': (context) => const DashboardScreen(),
-      },
     );
   }
 }

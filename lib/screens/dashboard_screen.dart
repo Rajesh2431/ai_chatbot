@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import '../widget/action_card.dart';
-//import '../widget/single_wide_action_card.dart';
 import '../screens/chat_screen.dart';
 import '../screens/voicechat_screen.dart';
-import '../screens/journal_screen.dart';
-import '../screens/game_selection.dart'; // Added import for game selection
+import '../screens/game_selection.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color.fromARGB(255, 170, 25, 25),
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: const Color.fromARGB(255, 233, 106, 106),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.menu_rounded, color: Colors.white),
@@ -107,10 +110,7 @@ class DashboardScreen extends StatelessWidget {
                     icon: Icons.book,
                     label: 'My Journal',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const JournalScreen()),
-                      );
+                      Navigator.pushNamed(context, '/journal');
                     },
                   ),
                 ),

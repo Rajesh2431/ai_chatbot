@@ -48,9 +48,9 @@ class GameSelectionScreen extends StatelessWidget {
   Widget _buildGameCard(BuildContext context,
       {required String title, required String description, required VoidCallback onTap}) {
     return Card(
-      color: const Color(0xFF2C2C2C),
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: const Color.fromARGB(255, 88, 2, 2),
+      margin: const EdgeInsets.symmetric(vertical: 20),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         title: Text(title, style: const TextStyle(color: Colors.orange, fontSize: 18)),
