@@ -3,6 +3,7 @@ import '../widget/action_card.dart';
 import '../screens/chat_screen.dart';
 import '../screens/voicechat_screen.dart';
 import '../screens/game_selection.dart';
+import '../screens/avatar_selection_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -15,9 +16,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 170, 25, 25),
+      backgroundColor: const Color.fromARGB(255, 242, 215, 215),
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 233, 106, 106),
+        backgroundColor: const Color.fromARGB(255, 26, 13, 13),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.menu_rounded, color: Colors.white),
@@ -30,6 +31,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
               backgroundColor: Colors.purple[100],
               backgroundImage: const AssetImage('lib/assets/icons/profile.png'),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.white),
+            tooltip: 'Change Avatar',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => AvatarSelectionScreen()),
+              );
+            },
           ),
         ],
       ),

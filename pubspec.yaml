@@ -47,6 +47,7 @@ flutter:
 
   assets:
     - lib/assets/icons/
+    - lib/assets/avatar/
     
 # Change App Icon Command
 # flutter pub run flutter_launcher_icons:main

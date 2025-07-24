@@ -692,4 +692,3 @@ class WaveformPainter extends CustomPainter {
   bool shouldRepaint(covariant WaveformPainter oldDelegate) =>
       oldDelegate.animationValue != animationValue;
 }
-
