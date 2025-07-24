@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'screens/chat_screen.dart';
 import 'screens/dashboard_screen.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-// Future<void> main() async {
-//   await dotenv.load(fileName: ".env");
-//   runApp(const MyApp());
-// }
+void main() => runApp(const App());
 
-void main() => runApp(const MyApp());
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class App extends StatelessWidget {
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +19,7 @@ class MyApp extends StatelessWidget {
         colorSchemeSeed: Colors.deepPurple,
         brightness: Brightness.light,
       ),
-      home: const SplashScreen(), // Show splash first
+      home: const DashboardScreen(), // ✅ Set the dashboard as entry point
       routes: {
         '/chat': (context) => const ChatScreen(),
         '/dashboard': (context) => const DashboardScreen(),
