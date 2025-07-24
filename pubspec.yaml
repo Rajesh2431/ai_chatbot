@@ -29,6 +29,10 @@ dependencies:
   flutter_animate: ^4.3.0
   flutter_gif: ^0.0.4
   animated_splash_screen: ^1.3.0
+  nlp: ^0.0.0
+  path_provider: ^2.1.5
+  async: ^2.13.0
+  http_parser: ^4.1.2
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
@@ -47,6 +51,7 @@ flutter:
   assets:
     - lib/assets/icons/
     - lib/assets/videos/
+    - lib/assets/sources/
     
 # Change App Icon Command
 # flutter pub run flutter_launcher_icons:main

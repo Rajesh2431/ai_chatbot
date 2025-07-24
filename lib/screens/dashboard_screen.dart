@@ -5,6 +5,7 @@ import 'journal_screen.dart';
 import 'setting_screen.dart';
 import 'tap_the_calm_game.dart';
 import 'quiz_screen.dart';
+import 'breathing_timer.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -40,11 +41,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: _pages[_selectedIndex],
       ),
           bottomNavigationBar: Container(
-            color: Colors.white,
+            color: const Color.fromARGB(0, 255, 255, 255),
             child: CurvedNavigationBar(
               index: _selectedIndex,
               height: 60,
-              backgroundColor: Colors.white,
+              backgroundColor: const Color.fromARGB(0, 255, 255, 255),
               color: const Color(0xFF97CAE4),
               animationDuration: const Duration(milliseconds: 300),
               items: [
@@ -163,41 +164,60 @@ class _HomeContent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           // Chat With AI Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF97CAE4),
-                padding: const EdgeInsets.symmetric(vertical: 60),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                elevation: 0,
-              ),
-              child: const Text(
-                'Chat With AI',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 40,
-                  fontWeight: FontWeight.w600,
+          GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
+            },
+            child: Container(
+              width: double.infinity,
+              height: 150,
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // 🔹 Animated GIF background
+                    Image.asset(
+                      'lib/assets/videos/calm_bg1.gif',
+                      fit: BoxFit.cover,
+                    ),
+                    // 🔹 Text overlay
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      alignment: Alignment.center, // or Alignment.center
+                      child: const Text(
+                        'Chat With AI',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 34,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black26,
+                              blurRadius: 6,
+                              offset: Offset(2, 2),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 18),
+
           // Games Section
           const Text(
             'Games',
             style: TextStyle(
               color: Color(0xFF6EC1E4),
-              fontSize: 20,
+              fontSize: 34,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 1),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
@@ -208,16 +228,32 @@ class _HomeContent extends StatelessWidget {
             children: [
               _GameTile(
                 title: 'Tap the Calm',
+                backgroundImage: 'lib/assets/icons/game_bg.png',
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const GridCalmGame()),
                 ),
               ),
-              _GameTile(title: 'Game Name', onTap: () {}),
-              _GameTile(title: 'Game Name', onTap: () {}),
-              _GameTile(title: 'Game Name', onTap: () {}),
+              _GameTile(
+                title: 'Breathing',
+                backgroundImage: 'lib/assets/icons/breathing_bg.jpg',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BreathingScreen()),
+                ),
+              ),
+              _GameTile(
+                title: 'Game Name',
+                backgroundImage: 'lib/assets/images/game3.jpg',
+                onTap: () {},
+              ),
+              _GameTile(
+                title: 'Game Name',
+                backgroundImage: 'lib/assets/images/game4.jpg',
+                onTap: () {},
+              ),
             ],
-          ),
+          )
         ],
       ),
     );
@@ -227,31 +263,54 @@ class _HomeContent extends StatelessWidget {
 class _GameTile extends StatelessWidget {
   final String title;
   final VoidCallback onTap;
+  final String backgroundImage; // 🔹 Add background image field
 
-  const _GameTile({required this.title, required this.onTap});
+  const _GameTile({
+    required this.title,
+    required this.onTap,
+    required this.backgroundImage,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE0E0E0)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            const Icon(Icons.videogame_asset, color: Color(0xFF6EC1E4), size: 32),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+            // 🔹 Background image
+            Image.asset(
+              backgroundImage,
+              fit: BoxFit.cover,
+            ),
+            // 🔹 Optional dark overlay
+            Container(
+              color: Colors.black.withOpacity(0.25),
+            ),
+            // 🔹 Icon + Text
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.videogame_asset, color: Colors.white, size: 32),
+                const SizedBox(height: 10),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black26,
+                        blurRadius: 4,
+                        offset: Offset(1, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -259,3 +318,4 @@ class _GameTile extends StatelessWidget {
     );
   }
 }
+

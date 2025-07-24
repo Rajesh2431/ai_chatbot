@@ -1,139 +1,263 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'dart:async';
 
-class BreathingExerciseScreen extends StatefulWidget {
-  final int durationSeconds;
-  const BreathingExerciseScreen({super.key, required this.durationSeconds});
+class BreathingScreen extends StatefulWidget {
+  const BreathingScreen({super.key});
 
   @override
-  State<BreathingExerciseScreen> createState() => _BreathingExerciseScreenState();
+  State<BreathingScreen> createState() => _BreathingScreenState();
 }
 
-class _BreathingExerciseScreenState extends State<BreathingExerciseScreen>
+class _BreathingScreenState extends State<BreathingScreen>
     with SingleTickerProviderStateMixin {
-  late int _remainingSeconds;
-  bool _isInhale = true;
-  Timer? _timer;
-  late AnimationController _animationController;
+  late AnimationController _breathController;
+  late Animation<double> _radiusAnimation;
+  Timer? _sessionTimer;
+
+  bool _isRunning = false;
+  bool _hasStarted = false;
+  String _statusText = "Select Duration";
+
+  Duration _selectedDuration = Duration.zero;
+  Duration _remainingTime = Duration.zero;
 
   @override
   void initState() {
     super.initState();
-    _remainingSeconds = widget.durationSeconds;
-    _animationController = AnimationController(
-      vsync: this,
+    _breathController = AnimationController(
       duration: const Duration(seconds: 4),
-    )..repeat(reverse: true);
-    _startBreathingCycle();
-  }
+      vsync: this,
+    );
 
-  void _startBreathingCycle() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _remainingSeconds--;
-        if (_remainingSeconds % 8 == 0) {
-          _isInhale = !_isInhale;
-        }
-        if (_remainingSeconds <= 0) {
-          timer.cancel();
-          _animationController.stop();
-          _showCompletionDialog();
-        }
-      });
-    });
-  }
-
-  void _showCompletionDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        backgroundColor: Colors.black87,
-        title: const Text("Exercise Complete", style: TextStyle(color: Colors.white)),
-        content: const Text("You’ve completed your breathing exercise.", style: TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Ok", style: TextStyle(color: Colors.blueAccent)),
-          )
-        ],
-      ),
-    ).then((_) {
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
-    });
+    _radiusAnimation = Tween<double>(begin: 60, end: 140).animate(
+      CurvedAnimation(parent: _breathController, curve: Curves.easeInOut),
+    );
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _animationController.dispose();
+    _breathController.dispose();
+    _sessionTimer?.cancel();
     super.dispose();
+  }
+
+  void _startBreathing(Duration duration) {
+    setState(() {
+      _selectedDuration = duration;
+      _remainingTime = duration;
+      _hasStarted = true;
+      _isRunning = true;
+      _statusText = "Breathe In";
+    });
+
+    _breathController.repeat(reverse: true);
+
+    _breathController.addStatusListener((status) {
+      if (!_isRunning) return;
+      setState(() {
+        _statusText =
+            status == AnimationStatus.forward ? "Breathe In" : "Breathe Out";
+      });
+    });
+
+    _sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingTime.inSeconds <= 1) {
+        _stopBreathing();
+        timer.cancel();
+      } else {
+        setState(() {
+          _remainingTime = _remainingTime - const Duration(seconds: 1);
+        });
+      }
+    });
+  }
+
+  void _stopBreathing() {
+    setState(() {
+      _isRunning = false;
+      _statusText = "Session Complete";
+    });
+    _breathController.stop();
+    _sessionTimer?.cancel();
+  }
+
+  void _goBack() {
+    Navigator.pop(context);
+  }
+
+  Widget _buildRing(double scale, double opacity) {
+    return Container(
+      width: _radiusAnimation.value * scale,
+      height: _radiusAnimation.value * scale,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withOpacity(opacity),
+      ),
+    );
+  }
+
+  Widget _buildDurationPanel() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+        margin: const EdgeInsets.symmetric(horizontal: 32),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.95),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            )
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Choose Duration',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 16,
+              children: [
+                _durationButton("1 min", const Duration(minutes: 1)),
+                _durationButton("2 min", const Duration(minutes: 2)),
+                _durationButton("5 min", const Duration(minutes: 5)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _durationButton(String label, Duration duration) {
+    return ElevatedButton(
+      onPressed: () => _startBreathing(duration),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: Text(label),
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return "$minutes:$seconds";
   }
 
   @override
   Widget build(BuildContext context) {
-    final text = _isInhale ? "Inhale" : "Exhale";
-    final color = _isInhale ? Colors.tealAccent : Colors.deepOrangeAccent;
-
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text("Breathing Exercise"),
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Column(
-        children: [
-          const SizedBox(height: 40),
-          Center(
-            child: Text(
-              "$_remainingSeconds s",
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFB2EBF2), Color(0xFF81D4FA)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          const SizedBox(height: 60),
-          Center(
-            child: ScaleTransition(
-              scale: Tween(begin: 0.7, end: 1.2).animate(
-                CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-              ),
-              child: Container(
-                height: 240,
-                width: 240,
-                decoration: BoxDecoration(
-                  color: color.withAlpha(2),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withAlpha(5),
-                      blurRadius: 24,
-                      spreadRadius: 6,
-                    )
-                  ],
+        ),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // 🔙 Back button
+              Positioned(
+                top: 16,
+                left: 16,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: _goBack,
                 ),
-                child: Center(
-                  child: Text(
-                    text,
-                    style: const TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+              ),
+
+              // 🧘 Center content
+              Center(
+                child: !_hasStarted
+                    ? _buildDurationPanel()
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // ⏳ Static Countdown
+                          Text(
+                            _formatDuration(_remainingTime),
+                            style: const TextStyle(
+                              fontSize: 28,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // 🌊 Breathing Animation
+                          AnimatedBuilder(
+                            animation: _radiusAnimation,
+                            builder: (context, child) {
+                              return Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  _buildRing(1.8, 0.08),
+                                  _buildRing(1.5, 0.12),
+                                  _buildRing(1.2, 0.16),
+                                  _buildRing(1.0, 0.20),
+                                  _buildRing(0.7, 1.0),
+                                ],
+                              );
+                            },
+                          ),
+
+                          const SizedBox(height: 30),
+
+                          // 💬 Static Status Text
+                          Text(
+                            _statusText,
+                            style: const TextStyle(
+                              fontSize: 28,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+
+              // 🛑 Static Stop Button
+              if (_hasStarted)
+                Positioned(
+                  bottom: 40,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: ElevatedButton(
+                      onPressed: _stopBreathing,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 40, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text("Stop", style: TextStyle(fontSize: 18)),
                     ),
                   ),
                 ),
-              ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
