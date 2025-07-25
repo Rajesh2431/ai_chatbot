@@ -1,4 +1,4 @@
-name: shiro
+name: SeaSmart
 description: "A new Flutter project."
 publish_to: 'none'
 
@@ -42,7 +42,7 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "lib/assets/icons/icon2.png"
+  image_path: "lib/assets/icons/app_icon.png"
 
 flutter:
   uses-material-design: true
@@ -51,6 +51,7 @@ flutter:
     - lib/assets/icons/
     - lib/assets/videos/
     - lib/assets/sources/
+    - lib/assets/avatar/
     
 # Change App Icon Command
 # flutter pub run flutter_launcher_icons:main

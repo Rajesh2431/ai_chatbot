@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 // import 'package:syncfusion_flutter_pdf/pdf.dart'; 
 // import 'dart:io';
 
 class OpenRouterAPI {
   static const _url = 'https://openrouter.ai/api/v1/chat/completions';
   static const _apiKey =
-      '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';
+      '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';
   //static final _apiKey = dotenv.env['OPENROUTER_API_KEY'] ?? '';
 
   static Future<String> getResponse(String prompt) async {
