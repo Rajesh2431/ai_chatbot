@@ -5,7 +5,6 @@ import 'screens/chat_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/journal_screen.dart';
 import 'providers/journal_entries_provider.dart';
-import 'services/avatar_service.dart';
 
 void main() => runApp(const App());
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/message.dart';
 import '../services/api_service.dart';
+import 'voicechat_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -25,7 +26,9 @@ class _ChatScreenState extends State<ChatScreen> {
   void _initializeChat() {
     setState(() {
       _messages.add(Message(text: "Hi", isUser: false));
-      _messages.add(Message(text: "How are you feeling today? 😊", isUser: false));
+      _messages.add(
+        Message(text: "How are you feeling today? 😊", isUser: false),
+      );
     });
     _scrollToBottom();
   }
@@ -53,7 +56,12 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _messages.add(Message(text: "Sorry, I'm having trouble connecting. Please try again.", isUser: false));
+          _messages.add(
+            Message(
+              text: "Sorry, I'm having trouble connecting. Please try again.",
+              isUser: false,
+            ),
+          );
           _isTyping = false;
         });
         _scrollToBottom();
@@ -120,7 +128,9 @@ class _ChatScreenState extends State<ChatScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser)
@@ -132,7 +142,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 width: 28,
                 height: 28,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Colors.deepOrange, size: 24),
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.person,
+                  color: Colors.deepOrange,
+                  size: 24,
+                ),
               ),
             ),
           if (!isUser) const SizedBox(width: 8),
@@ -140,7 +154,9 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isUser ? const Color(0xFF4A90E2) : const Color(0xFFF5F7FA),
+                color: isUser
+                    ? const Color(0xFF4A90E2)
+                    : const Color(0xFFF5F7FA),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(22),
                   topRight: const Radius.circular(22),
@@ -153,7 +169,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           color: Colors.blue.withOpacity(0.08),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
-                        )
+                        ),
                       ]
                     : [],
               ),
@@ -177,7 +193,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 width: 28,
                 height: 28,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Colors.blue, size: 24),
+                errorBuilder: (_, __, ___) =>
+                    const Icon(Icons.person, color: Colors.blue, size: 24),
               ),
             ),
         ],
@@ -225,7 +242,14 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             child: IconButton(
               icon: const Icon(Icons.graphic_eq, color: Color(0xFF4A90E2)),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const VoiceChatScreen(),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(width: 6),
@@ -238,7 +262,9 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             child: IconButton(
               icon: const Icon(Icons.send, color: Colors.white),
-              onPressed: _isTyping ? null : () => _sendMessage(_controller.text.trim()),
+              onPressed: _isTyping
+                  ? null
+                  : () => _sendMessage(_controller.text.trim()),
             ),
           ),
         ],
@@ -266,7 +292,11 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.menu, color: Color(0xFF4A90E2), size: 32),
+                  icon: const Icon(
+                    Icons.menu,
+                    color: Color(0xFF4A90E2),
+                    size: 32,
+                  ),
                   onPressed: () {
                     // Add menu logic here
                   },
@@ -298,11 +328,21 @@ class _ChatScreenState extends State<ChatScreen> {
                       width: 22,
                       height: 22,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Colors.deepOrange, size: 16),
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.person,
+                        color: Colors.deepOrange,
+                        size: 16,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const Text("Typing...", style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
+                  const Text(
+                    "Typing...",
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
                 ],
               ),
             ),

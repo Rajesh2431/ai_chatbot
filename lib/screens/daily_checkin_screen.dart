@@ -22,61 +22,57 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-  
+  final ScrollController _scrollController = ScrollController();
+
   List<ChatMessage> messages = [];
   int currentQuestionIndex = 0;
   bool isTyping = false;
   bool isCompleted = false;
-  
+
   final List<DailyQuestion> questions = [
     DailyQuestion(
       question: "Good morning! How are you feeling today?",
       options: [
-        MoodOption("😊 Great! I'm feeling amazing", 5),
-        MoodOption("🙂 Pretty good, thanks for asking", 4),
-        MoodOption("😐 Okay, just a normal day", 3),
-        MoodOption("😔 Not so great today", 2),
-        MoodOption("😞 Having a tough day", 1),
+        MoodOption("Great", "😊", 4),
+        MoodOption("Good", "🙂", 3),
+        MoodOption("Okay", "😐", 2),
+        MoodOption("Not great", "😔", 1),
       ],
     ),
     DailyQuestion(
       question: "How well did you sleep last night?",
       options: [
-        MoodOption("😴 Slept like a baby, very refreshed", 5),
-        MoodOption("😊 Good sleep, feeling rested", 4),
-        MoodOption("😐 Average sleep, could be better", 3),
-        MoodOption("😪 Restless night, feeling tired", 2),
-        MoodOption("😵 Barely slept, exhausted", 1),
+        MoodOption("Very well", "😴", 4),
+        MoodOption("Good", "😊", 3),
+        MoodOption("Average", "😐", 2),
+        MoodOption("Poorly", "😪", 1),
       ],
     ),
     DailyQuestion(
       question: "What's your energy level right now?",
       options: [
-        MoodOption("⚡ Full of energy and ready to go!", 5),
-        MoodOption("💪 Good energy, feeling motivated", 4),
-        MoodOption("🔋 Moderate energy, doing okay", 3),
-        MoodOption("🪫 Low energy, feeling drained", 2),
-        MoodOption("😴 Very low energy, need rest", 1),
+        MoodOption("High energy", "⚡", 4),
+        MoodOption("Good energy", "💪", 3),
+        MoodOption("Moderate", "🔋", 2),
+        MoodOption("Low energy", "🪫", 1),
       ],
     ),
     DailyQuestion(
       question: "How stressed do you feel today?",
       options: [
-        MoodOption("😌 Very relaxed and calm", 5),
-        MoodOption("🙂 Mostly calm with minor stress", 4),
-        MoodOption("😐 Moderate stress levels", 3),
-        MoodOption("😰 Quite stressed about things", 2),
-        MoodOption("😫 Very stressed and overwhelmed", 1),
+        MoodOption("Very calm", "😌", 4),
+        MoodOption("Mostly calm", "🙂", 3),
+        MoodOption("Moderate stress", "😐", 2),
+        MoodOption("Very stressed", "😰", 1),
       ],
     ),
     DailyQuestion(
       question: "How optimistic are you feeling about today?",
       options: [
-        MoodOption("🌟 Very optimistic and excited!", 5),
-        MoodOption("😊 Pretty positive about today", 4),
-        MoodOption("😐 Neutral, we'll see how it goes", 3),
-        MoodOption("😕 Not very optimistic", 2),
-        MoodOption("😞 Feeling quite pessimistic", 1),
+        MoodOption("Very optimistic", "🌟", 4),
+        MoodOption("Pretty positive", "😊", 3),
+        MoodOption("Neutral", "😐", 2),
+        MoodOption("Not optimistic", "😕", 1),
       ],
     ),
   ];
@@ -88,47 +84,65 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
-    );
-    
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
+
     _startCheckin();
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   void _startCheckin() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    _addAIMessage("Hello! I'm ${widget.avatarName}, your daily companion. Let's do a quick check-in to see how you're doing today! 😊");
-    
+    _addAIMessage(
+      "Hello! I'm ${widget.avatarName}, your daily companion. Let's do a quick check-in to see how you're doing today! 😊",
+    );
+
     await Future.delayed(const Duration(milliseconds: 2000));
     _askNextQuestion();
   }
 
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0.0, // For reverse: true, scroll to top (which is the bottom of the chat)
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
   void _addAIMessage(String message) {
     setState(() {
-      messages.add(ChatMessage(
-        message: message,
-        isUser: false,
-        timestamp: DateTime.now(),
-      ));
+      messages.add(
+        ChatMessage(message: message, isUser: false, timestamp: DateTime.now()),
+      );
     });
     _fadeController.forward();
+    _scrollToBottom();
   }
 
   void _addUserMessage(String message, int score) {
     setState(() {
-      messages.add(ChatMessage(
-        message: message,
-        isUser: true,
-        timestamp: DateTime.now(),
-        moodScore: score,
-      ));
+      messages.add(
+        ChatMessage(
+          message: message,
+          isUser: true,
+          timestamp: DateTime.now(),
+          moodScore: score,
+        ),
+      );
     });
+    _scrollToBottom();
   }
 
   void _askNextQuestion() {
@@ -136,7 +150,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
       setState(() {
         isTyping = true;
       });
-      
+
       Future.delayed(const Duration(milliseconds: 1500), () {
         setState(() {
           isTyping = false;
@@ -150,19 +164,19 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
 
   void _handleOptionSelected(MoodOption option) async {
     _addUserMessage(option.text, option.score);
-    
+
     // Store the mood score
     await MoodService.storeDailyMoodScore(
       questions[currentQuestionIndex].question,
       option.score,
     );
-    
+
     currentQuestionIndex++;
-    
+
     // Add encouraging response
     await Future.delayed(const Duration(milliseconds: 1000));
     _addAIMessage(_getEncouragingResponse(option.score));
-    
+
     await Future.delayed(const Duration(milliseconds: 2000));
     _askNextQuestion();
   }
@@ -199,7 +213,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
     setState(() {
       isCompleted = true;
     });
-    
+
     // Calculate overall mood score
     double totalScore = 0;
     int scoreCount = 0;
@@ -209,21 +223,28 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
         scoreCount++;
       }
     }
-    
+
     double averageScore = scoreCount > 0 ? totalScore / scoreCount : 3.0;
-    
+
     // Store overall daily mood
     await MoodService.storeDailyOverallMood(averageScore);
-    
+
     // Mark daily check-in as completed
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('last_checkin_date', DateTime.now().toIso8601String().split('T')[0]);
-    
-    _addAIMessage("Thank you for sharing with me today! 🙏 Based on our chat, I can see how you're feeling. Remember, I'm always here when you need support!");
-    
+    await prefs.setString(
+      'last_checkin_date',
+      DateTime.now().toIso8601String().split('T')[0],
+    );
+
+    _addAIMessage(
+      "Thank you for sharing with me today! 🙏 Based on our chat, I can see how you're feeling. Remember, I'm always here when you need support!",
+    );
+
     await Future.delayed(const Duration(milliseconds: 2000));
-    _addAIMessage("Let's head to your dashboard where you can explore activities that might help brighten your day! 🌟");
-    
+    _addAIMessage(
+      "Let's head to your dashboard where you can explore activities that might help brighten your day! 🌟",
+    );
+
     await Future.delayed(const Duration(milliseconds: 3000));
     _navigateToDashboard();
   }
@@ -303,10 +324,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
                           ),
                           const Text(
                             'Daily Check-in Assistant',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -320,23 +338,27 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
               // Chat messages
               Expanded(
                 child: ListView.builder(
+                  controller: _scrollController,
                   padding: const EdgeInsets.all(16),
+                  reverse: true,
                   itemCount: messages.length + (isTyping ? 1 : 0),
                   itemBuilder: (context, index) {
-                    if (index == messages.length && isTyping) {
+                    if (index == 0 && isTyping) {
                       return _buildTypingIndicator();
                     }
-                    
-                    final message = messages[index];
+
+                    final messageIndex = isTyping ? index - 1 : index;
+                    final reversedIndex = messages.length - 1 - messageIndex;
+                    final message = messages[reversedIndex];
                     return _buildMessageBubble(message);
                   },
                 ),
               ),
 
               // Options (only show for current question)
-              if (currentQuestionIndex < questions.length && 
-                  messages.isNotEmpty && 
-                  !messages.last.isUser && 
+              if (currentQuestionIndex < questions.length &&
+                  messages.isNotEmpty &&
+                  !messages.last.isUser &&
                   !isTyping &&
                   !isCompleted)
                 _buildOptionsPanel(),
@@ -353,8 +375,8 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         child: Row(
-          mainAxisAlignment: message.isUser 
-              ? MainAxisAlignment.end 
+          mainAxisAlignment: message.isUser
+              ? MainAxisAlignment.end
               : MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -374,26 +396,30 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
                   ],
                 ),
                 child: ClipOval(
-                  child: Image.asset(
-                    widget.avatarImage,
-                    fit: BoxFit.cover,
-                  ),
+                  child: Image.asset(widget.avatarImage, fit: BoxFit.cover),
                 ),
               ),
               const SizedBox(width: 12),
             ],
             Flexible(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: message.isUser 
-                      ? Colors.blue[500] 
+                  color: message.isUser
+                      ? Colors.blue[500]
                       : Colors.white.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
                     topRight: const Radius.circular(20),
-                    bottomLeft: message.isUser ? const Radius.circular(20) : const Radius.circular(4),
-                    bottomRight: message.isUser ? const Radius.circular(4) : const Radius.circular(20),
+                    bottomLeft: message.isUser
+                        ? const Radius.circular(20)
+                        : const Radius.circular(4),
+                    bottomRight: message.isUser
+                        ? const Radius.circular(4)
+                        : const Radius.circular(20),
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -451,10 +477,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
               border: Border.all(color: Colors.blue[200]!, width: 1),
             ),
             child: ClipOval(
-              child: Image.asset(
-                widget.avatarImage,
-                fit: BoxFit.cover,
-              ),
+              child: Image.asset(widget.avatarImage, fit: BoxFit.cover),
             ),
           ),
           const SizedBox(width: 10),
@@ -493,40 +516,47 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
   }
 
   Widget _buildOptionsPanel() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: questions[currentQuestionIndex].options.map((option) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            child: ElevatedButton(
-              onPressed: () => _handleOptionSelected(option),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[50],
-                foregroundColor: Colors.blue[700],
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.blue[200]!),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: questions[currentQuestionIndex].options.asMap().entries.map((
+          entry,
+        ) {
+          int index = entry.key;
+          MoodOption option = entry.value;
+
+          // Define colors for the four options (green, blue, orange, red)
+          List<Color> buttonColors = [
+            Colors.green, // First option - green
+            Colors.blue, // Second option - blue
+            Colors.orange, // Third option - orange
+            Colors.red, // Fourth option - red
+          ];
+
+          Color buttonColor = buttonColors[index % buttonColors.length];
+
+          return OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: buttonColor.withValues(alpha: 0.4)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(22),
+              ),
+              backgroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+            onPressed: () => _handleOptionSelected(option),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  option.text,
+                  style: TextStyle(color: buttonColor, fontSize: 16),
                 ),
-                elevation: 0,
-              ),
-              child: Text(
-                option.text,
-                style: const TextStyle(fontSize: 16),
-                textAlign: TextAlign.left,
-              ),
+                const SizedBox(width: 6),
+                Text(option.emoji, style: const TextStyle(fontSize: 16)),
+              ],
             ),
           );
         }).toList(),
@@ -553,15 +583,13 @@ class DailyQuestion {
   final String question;
   final List<MoodOption> options;
 
-  DailyQuestion({
-    required this.question,
-    required this.options,
-  });
+  DailyQuestion({required this.question, required this.options});
 }
 
 class MoodOption {
   final String text;
+  final String emoji;
   final int score;
 
-  MoodOption(this.text, this.score);
+  MoodOption(this.text, this.emoji, this.score);
 }

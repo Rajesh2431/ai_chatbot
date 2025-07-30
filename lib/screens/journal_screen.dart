@@ -32,8 +32,8 @@ class _JournalScreenState extends State<JournalScreen>
   bool _showRecording = false;
   bool _showControls = false;
   bool _emojiSelected = false;
-  bool _emojiVisible = true;
-  bool _calendarVisible = true;
+  final bool _emojiVisible = true;
+  final bool _calendarVisible = true;
   late final AnimationController _animationController;
   late final ScrollController _scrollController;
   CalendarFormat _calendarFormat = CalendarFormat.month;
