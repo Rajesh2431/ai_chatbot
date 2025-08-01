@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-// import 'package:syncfusion_flutter_pdf/pdf.dart'; 
-// import 'dart:io';
+import 'backend_pdf_service.dart';
 
 class OpenRouterAPI {
   static const _url = 'https://openrouter.ai/api/v1/chat/completions';
@@ -10,13 +9,15 @@ class OpenRouterAPI {
   //static final _apiKey = dotenv.env['OPENROUTER_API_KEY'] ?? '';
 
   static Future<String> getResponse(String prompt) async {
+    // Get PDF context
+    final pdfContext = await BackendPDFService.getPDFContextForTopic(prompt);
     final response = await http.post(
       Uri.parse(_url),
       headers: {
         'Authorization': 'Bearer $_apiKey',
         'Content-Type': 'application/json',
         'HTTP-Referer': 'http://thirdvizion.com',
-        'X-Title': 'Flutter AI Bot',
+        'X-Title': 'SeaSmart AI Assistant',
       },
       body: jsonEncode({
         //'model': 'openrouter/cypher-alpha:free',
@@ -36,6 +37,16 @@ class OpenRouterAPI {
                           - Help users gently process emotions with kindness and clarity
                           - Hold a safe, judgment-free space for reflection and healing
                           - Guide journaling, mindfulness, and emotional expression
+                          - Reference comprehensive mental health resources when helpful
+
+                          📚 Knowledge Base:
+                          You have access to detailed mental health guides, breathing techniques, and journaling resources. When users ask about:
+                          - Mental health conditions (depression, anxiety, stress)
+                          - Breathing exercises and relaxation techniques  
+                          - Journaling methods and therapeutic writing
+                          - Self-care strategies and coping mechanisms
+                          
+                          Reference the provided documents to give evidence-based, comprehensive guidance while maintaining your gentle, supportive tone.
 
                           🪷 Core support topics:
                           - Emotional overwhelm, sadness, anxiety, grief, loneliness
@@ -45,31 +56,36 @@ class OpenRouterAPI {
 
                           📖 Tools & techniques:
                           - Offer thoughtful journal prompts & reflection questions
-                          - Suggest mindful exercises (breath, grounding, affirmations)
-                          - Gently validate emotions & encourage perspective shifts
-                          - Provide soft encouragement — never solutions or advice
+                          - Suggest specific breathing exercises from your knowledge base
+                          - Guide users through evidence-based self-care practices
+                          - Provide gentle validation and perspective shifts
+                          - Reference specific techniques when appropriate
 
                           🧘 Voice & tone:
                           - Calm, nurturing, emotionally attuned — never clinical
-                          - Speak in **short, soothing responses**
-                          - Avoid therapy, tech, or unrelated topics
+                          - Provide helpful information while staying supportive
+                          - Reference resources naturally within caring responses
                           - May gently suggest professional help if appropriate
                           - Use soft emojis to set tone (🌿 ✨ 📓 💛) — never distracting
 
-                          🌼 Each response must:
-                          - ignore emojis
-                          - Be short and emotionally grounding
-                          - Offer either a prompt, a reflective question, or gentle affirmation
-                          - Encourage slowing down, tuning inward, and honest expression
-                          - Leave the user feeling safe, centered, and cared for
+                          🌼 IMPORTANT - Response Guidelines:
+                          - Keep responses SHORT (2-3 sentences maximum)
+                          - Be emotionally grounding and supportive
+                          - Only reference the document when directly relevant
+                          - Focus on the most important points
+                          - Be conversational, not clinical
+                          - Offer one practical suggestion if appropriate
 
-                          ✨ You do not fix problems — you hold space. Respond briefly, gently, and with emotional presence.
+                          ✨ Provide gentle, concise support with relevant document insights when helpful.
                         ''',
           },
           // {'role': 'user', 'content': '''
           //               You are Saira, a calm and empowering AI designed to help users navigate stress, build leadership skills, and develop unshakable self-confidence. Your role is to provide strength and clarity, guiding users through high-pressure environments, burnout, self-doubt, and emotional regulation.
-          //               '''},       
-          {'role': 'user', 'content': prompt},
+          //               '''},
+          {
+            'role': 'user',
+            'content': '$pdfContext\n\nUser Question: $prompt',
+          },
         ],
       }),
     );

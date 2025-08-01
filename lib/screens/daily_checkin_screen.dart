@@ -28,6 +28,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
   int currentQuestionIndex = 0;
   bool isTyping = false;
   bool isCompleted = false;
+  bool showOptions = false; // Add this to control when options appear
 
   final List<DailyQuestion> questions = [
     DailyQuestion(
@@ -105,7 +106,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
       "Hello! I'm ${widget.avatarName}, your daily companion. Let's do a quick check-in to see how you're doing today! 😊",
     );
 
-    await Future.delayed(const Duration(milliseconds: 2000));
+    await Future.delayed(const Duration(milliseconds: 3000));
     _askNextQuestion();
   }
 
@@ -149,6 +150,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
     if (currentQuestionIndex < questions.length) {
       setState(() {
         isTyping = true;
+        showOptions = false; // Hide options while typing
       });
 
       Future.delayed(const Duration(milliseconds: 1500), () {
@@ -156,6 +158,13 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
           isTyping = false;
         });
         _addAIMessage(questions[currentQuestionIndex].question);
+
+        // Show options after AI message is added and a brief delay
+        Future.delayed(const Duration(milliseconds: 800), () {
+          setState(() {
+            showOptions = true;
+          });
+        });
       });
     } else {
       _completeCheckin();
@@ -163,6 +172,11 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
   }
 
   void _handleOptionSelected(MoodOption option) async {
+    // Hide options immediately when one is selected
+    setState(() {
+      showOptions = false;
+    });
+
     _addUserMessage(option.text, option.score);
 
     // Store the mood score
@@ -173,8 +187,17 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
 
     currentQuestionIndex++;
 
-    // Add encouraging response
+    // Add encouraging response with typing indicator
+    setState(() {
+      isTyping = true;
+    });
+
     await Future.delayed(const Duration(milliseconds: 1000));
+
+    setState(() {
+      isTyping = false;
+    });
+
     _addAIMessage(_getEncouragingResponse(option.score));
 
     await Future.delayed(const Duration(milliseconds: 2000));
@@ -306,6 +329,25 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
                         child: Image.asset(
                           widget.avatarImage,
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.blue.shade300,
+                                    Colors.blue.shade100,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.person,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -355,10 +397,9 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
                 ),
               ),
 
-              // Options (only show for current question)
-              if (currentQuestionIndex < questions.length &&
-                  messages.isNotEmpty &&
-                  !messages.last.isUser &&
+              // Options (only show when showOptions is true)
+              if (showOptions &&
+                  currentQuestionIndex < questions.length &&
                   !isTyping &&
                   !isCompleted)
                 _buildOptionsPanel(),
@@ -378,25 +419,65 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
           mainAxisAlignment: message.isUser
               ? MainAxisAlignment.end
               : MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment:
+              CrossAxisAlignment.start, // Changed from end to start
           children: [
             if (!message.isUser) ...[
               Container(
-                width: 40,
-                height: 40,
+                width: 45,
+                height: 45,
+                margin: const EdgeInsets.only(top: 2),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.blue[300]!, width: 2),
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.cyan.shade200.withValues(alpha: 0.8),
+                      Colors.cyan.shade100.withValues(alpha: 0.6),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    width: 2,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.blue.withValues(alpha: 0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+                      color: Colors.cyan.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
                 child: ClipOval(
-                  child: Image.asset(widget.avatarImage, fit: BoxFit.cover),
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    child: ClipOval(
+                      child: Image.asset(
+                        widget.avatarImage,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.cyan.shade300,
+                                  Colors.cyan.shade100,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -442,16 +523,25 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
             if (message.isUser) ...[
               const SizedBox(width: 12),
               Container(
-                width: 40,
-                height: 40,
+                width: 45,
+                height: 45,
+                margin: const EdgeInsets.only(top: 2),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.blue[600],
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade400, Colors.blue.shade600],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    width: 2,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.blue.withValues(alpha: 0.3),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
@@ -468,40 +558,90 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start, // Align to start
         children: [
           Container(
-            width: 35,
-            height: 35,
+            width: 45,
+            height: 45,
+            margin: const EdgeInsets.only(top: 2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.blue[200]!, width: 1),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.cyan.shade200.withValues(alpha: 0.8),
+                  Colors.cyan.shade100.withValues(alpha: 0.6),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.8),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.cyan.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: ClipOval(
-              child: Image.asset(widget.avatarImage, fit: BoxFit.cover),
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                child: ClipOval(
+                  child: Image.asset(
+                    widget.avatarImage,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.cyan.shade300,
+                              Colors.cyan.shade100,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  blurRadius: 5,
-                  offset: const Offset(0, 2),
+                  color: Colors.grey.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Typing', style: TextStyle(color: Colors.grey)),
+                Text(
+                  'Typing...',
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
                 SizedBox(width: 8),
                 SizedBox(
-                  width: 20,
-                  height: 20,
+                  width: 16,
+                  height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),

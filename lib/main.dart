@@ -5,8 +5,14 @@ import 'screens/chat_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/journal_screen.dart';
 import 'providers/journal_entries_provider.dart';
+import 'services/backend_pdf_service.dart';
 
-void main() => runApp(const App());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Initialize PDF loading
+  await BackendPDFService.loadPDFFromAssets();
+  runApp(const App());
+}
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -19,7 +25,7 @@ class App extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Shiro - AI Mental Health Assistant',
+        title: 'SeaSmart - AI Mental Health Assistant',
         theme: ThemeData(
           useMaterial3: true,
           colorSchemeSeed: Colors.deepPurple,
@@ -79,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 Icon(Icons.psychology, size: 100, color: Colors.deepPurple),
                 const SizedBox(height: 20),
                 Text(
-                  'Shiro',
+                  'SeaSmart',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,

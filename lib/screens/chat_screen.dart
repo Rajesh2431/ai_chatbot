@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/message.dart';
 import '../services/api_service.dart';
+import '../services/backend_pdf_service.dart';
+import '../services/action_detector_service.dart';
 import 'voicechat_screen.dart';
+import 'breathing_timer.dart';
+import 'journal_screen.dart';
+import 'tap_the_calm_game.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -25,9 +30,18 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _initializeChat() {
     setState(() {
-      _messages.add(Message(text: "Hi", isUser: false));
       _messages.add(
-        Message(text: "How are you feeling today? 😊", isUser: false),
+        Message(
+          text: "Hi! I'm Saira, your mental health companion.",
+          isUser: false,
+        ),
+      );
+      _messages.add(
+        Message(
+          text:
+              "I have access to mental health resources to help you. How are you feeling today? 😊",
+          isUser: false,
+        ),
       );
     });
     _scrollToBottom();
@@ -47,8 +61,11 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final reply = await OpenRouterAPI.getResponse(text);
       if (mounted) {
+        // Detect actions in AI response
+        final actions = ActionDetectorService.detectActions(reply);
+
         setState(() {
-          _messages.add(Message(text: reply, isUser: false));
+          _messages.add(Message(text: reply, isUser: false, actions: actions));
           _isTyping = false;
         });
         _scrollToBottom();
@@ -71,6 +88,71 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _sendEmotionResponse(String emotion) {
     _sendMessage("I'm feeling $emotion");
+  }
+
+  void _showResourceInfo() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Available Resources',
+          style: TextStyle(color: Color(0xFF4A90E2)),
+        ),
+        content: SingleChildScrollView(
+          child: Text(
+            BackendPDFService.getResourceSummary(),
+            style: const TextStyle(fontSize: 14),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Got it!'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(MessageAction action) {
+    return ElevatedButton.icon(
+      onPressed: () => _handleActionTap(action),
+      icon: Icon(action.icon, size: 16),
+      label: Text(action.label, style: const TextStyle(fontSize: 12)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF4A90E2),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 2,
+      ),
+    );
+  }
+
+  void _handleActionTap(MessageAction action) {
+    switch (action.route) {
+      case '/breathing':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BreathingScreen()),
+        );
+        break;
+      case '/journal':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const JournalScreen()),
+        );
+        break;
+      case '/calm-game':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const GridCalmGame()),
+        );
+        break;
+      default:
+        // Handle unknown routes
+        break;
+    }
   }
 
   void _scrollToBottom() {
@@ -127,74 +209,96 @@ class _ChatScreenState extends State<ChatScreen> {
     final isUser = message.isUser;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        mainAxisAlignment: isUser
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: Column(
+        crossAxisAlignment: isUser
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         children: [
-          if (!isUser)
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: const Color(0xFFB3E5FC),
-              child: Image.asset(
-                'assets/icons/profile.png',
-                width: 28,
-                height: 28,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.person,
-                  color: Colors.deepOrange,
-                  size: 24,
+          Row(
+            mainAxisAlignment: isUser
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (!isUser)
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: const Color(0xFFB3E5FC),
+                  child: Image.asset(
+                    'assets/icons/profile.png',
+                    width: 28,
+                    height: 28,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.person,
+                      color: Colors.deepOrange,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              if (!isUser) const SizedBox(width: 8),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isUser
+                        ? const Color(0xFF4A90E2)
+                        : const Color(0xFFF5F7FA),
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(22),
+                      topRight: const Radius.circular(22),
+                      bottomLeft: Radius.circular(isUser ? 22 : 6),
+                      bottomRight: Radius.circular(isUser ? 6 : 22),
+                    ),
+                    boxShadow: isUser
+                        ? [
+                            BoxShadow(
+                              color: Colors.blue.withValues(alpha: 0.08),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: Text(
+                    message.text,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isUser ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          if (!isUser) const SizedBox(width: 8),
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isUser
-                    ? const Color(0xFF4A90E2)
-                    : const Color(0xFFF5F7FA),
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(22),
-                  topRight: const Radius.circular(22),
-                  bottomLeft: Radius.circular(isUser ? 22 : 6),
-                  bottomRight: Radius.circular(isUser ? 6 : 22),
+              if (isUser) const SizedBox(width: 8),
+              if (isUser)
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: const Color(0xFFB3E5FC),
+                  child: Image.asset(
+                    'assets/icons/user.png',
+                    width: 28,
+                    height: 28,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.person, color: Colors.blue, size: 24),
+                  ),
                 ),
-                boxShadow: isUser
-                    ? [
-                        BoxShadow(
-                          color: Colors.blue.withOpacity(0.08),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : [],
-              ),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  fontSize: 20,
-                  color: isUser ? Colors.white : Colors.black87,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
+            ],
           ),
-          if (isUser) const SizedBox(width: 8),
-          if (isUser)
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: const Color(0xFFB3E5FC),
-              child: Image.asset(
-                'assets/icons/user.png', // Use your user avatar image path
-                width: 28,
-                height: 28,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    const Icon(Icons.person, color: Colors.blue, size: 24),
+          // Action buttons for AI messages
+          if (!isUser && message.actions != null && message.actions!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, left: 42),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: message.actions!
+                    .map((action) => _buildActionButton(action))
+                    .toList(),
               ),
             ),
         ],
@@ -301,6 +405,32 @@ class _ChatScreenState extends State<ChatScreen> {
                     // Add menu logic here
                   },
                 ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(
+                    Icons.info_outline,
+                    color: Color(0xFF4A90E2),
+                    size: 28,
+                  ),
+                  onPressed: _showResourceInfo,
+                  tooltip: 'Available Resources',
+                ),
+                // IconButton(
+                //   icon: const Icon(
+                //     Icons.picture_as_pdf,
+                //     color: Color(0xFF4A90E2),
+                //     size: 28,
+                //   ),
+                //   onPressed: () {
+                //     Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (context) => const PDFChatScreen(),
+                //       ),
+                //     );
+                //   },
+                //   tooltip: 'Chat with PDF',
+                // ),
               ],
             ),
           ),
