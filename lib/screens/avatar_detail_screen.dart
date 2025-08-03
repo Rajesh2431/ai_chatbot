@@ -65,8 +65,12 @@ class AvatarDetailScreen extends StatelessWidget {
                       child: Image.asset(
                         imagePath,
                         fit: BoxFit.contain,
-                        // This ensures GIF animations play properly
+                        // Enhanced GIF animation support
                         gaplessPlayback: true,
+                        isAntiAlias: true,
+                        filterQuality: FilterQuality.high,
+                        // Ensure GIF animations loop properly
+                        repeat: ImageRepeat.noRepeat,
                       ),
                     ),
                   ),

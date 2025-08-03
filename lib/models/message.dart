@@ -16,10 +16,12 @@ class MessageAction {
   final String label;
   final String route;
   final IconData icon;
+  final Map<String, String>? data; // Additional data for actions like video info
 
   MessageAction({
     required this.label,
     required this.route,
     required this.icon,
+    this.data,
   });
 }

@@ -64,13 +64,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _buildAvatarOption(
-                        'assets/icons/saira.png', // Replace with your image path
+                        'lib/assets/avatar/saira.gif', // Updated to GIF
                         'Saira',
                         () => _selectAvatar('saira'),
                       ),
                       const SizedBox(width: 32),
                       _buildAvatarOption(
-                        'assets/icons/kael.png', // Replace with your image path
+                        'lib/assets/avatar/kael.gif', // Updated to GIF
                         'Kael',
                         () => _selectAvatar('kael'),
                       ),
@@ -81,8 +81,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             : AnimatedSwitcher(
                 duration: const Duration(milliseconds: 400),
                 child: selectedAvatar == 'saira'
-                    ? _buildFullAvatar('assets/icons/saira.png')
-                    : _buildFullAvatar('assets/icons/kael.png'),
+                    ? _buildFullAvatar('lib/assets/avatar/saira.gif')
+                    : _buildFullAvatar('lib/assets/avatar/kael.gif'),
               ),
       ),
     );

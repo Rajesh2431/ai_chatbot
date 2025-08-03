@@ -7,14 +7,8 @@ class AvatarService {
 
   // Available avatars
   static const List<Map<String, String>> availableAvatars = [
-    {
-      "name": "Saira",
-      "image": "lib/assets/avatar/saira.png",
-    },
-    {
-      "name": "Kael",
-      "image": "lib/assets/avatar/kael.png",
-    },
+    {"name": "Saira", "image": "lib/assets/avatar/saira.png"},
+    {"name": "Kael", "image": "lib/assets/avatar/kael.png"},
   ];
 
   // Check if user has selected an avatar
@@ -47,12 +41,9 @@ class AvatarService {
   static Future<Map<String, String>?> getSelectedAvatar() async {
     final name = await getSelectedAvatarName();
     final image = await getSelectedAvatarImage();
-    
+
     if (name != null && image != null) {
-      return {
-        'name': name,
-        'image': image,
-      };
+      return {'name': name, 'image': image};
     }
     return null;
   }

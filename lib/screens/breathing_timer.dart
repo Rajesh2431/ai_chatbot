@@ -236,13 +236,17 @@ class _BreathingScreenState extends State<BreathingScreen>
 
               // 🧘 MIDDLE - Breathing Animation (Expanded to take remaining space)
               Expanded(
+                flex: 1,
                 child: !_hasStarted
                     ? _buildDurationPanel()
                     : _buildBreathingAnimation(),
               ),
 
-              // 💬 FOOTER - Motivational Quote
-              _buildFooter(),
+              // 💬 FOOTER - Motivational Quote (Flexible to prevent overflow)
+              Flexible(
+                flex: 0,
+                child: _buildFooter(),
+              ),
             ],
           ),
         ),
@@ -253,8 +257,9 @@ class _BreathingScreenState extends State<BreathingScreen>
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Top row with back button and timer
           Row(
@@ -312,14 +317,14 @@ class _BreathingScreenState extends State<BreathingScreen>
 
           // Inhale/Exhale text
           if (_hasStarted) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(
               _statusText,
               style: const TextStyle(
-                fontSize: 28,
+                fontSize: 24,
                 color: Colors.black87,
                 fontWeight: FontWeight.w500,
-                letterSpacing: 2.0,
+                letterSpacing: 1.5,
               ),
             ),
           ],
@@ -390,21 +395,22 @@ class _BreathingScreenState extends State<BreathingScreen>
   Widget _buildFooter() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), // Reduced padding
       child: Column(
+        mainAxisSize: MainAxisSize.min, // Important: minimize space usage
         children: [
           // Stop button (only during active session)
           if (_hasStarted) ...[
             ElevatedButton.icon(
               onPressed: _stopBreathing,
-              icon: const Icon(Icons.stop, size: 20),
+              icon: const Icon(Icons.stop, size: 18),
               label: const Text("Stop Session"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red.shade50,
                 foregroundColor: Colors.red.shade700,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 15,
+                  horizontal: 24,
+                  vertical: 12, // Reduced padding
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25),
@@ -413,33 +419,37 @@ class _BreathingScreenState extends State<BreathingScreen>
                 elevation: 2,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12), // Reduced spacing
           ],
 
           // Motivational quote
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
+          Flexible( // Make it flexible to prevent overflow
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), // Reduced padding
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                _currentQuote,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14, // Slightly smaller font
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w400,
+                  fontStyle: FontStyle.italic,
+                  height: 1.3, // Reduced line height
                 ),
-              ],
-            ),
-            child: Text(
-              _currentQuote,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-                fontWeight: FontWeight.w400,
-                fontStyle: FontStyle.italic,
-                height: 1.4,
+                maxLines: 3, // Limit lines to prevent overflow
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),

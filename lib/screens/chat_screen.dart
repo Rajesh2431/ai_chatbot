@@ -1,8 +1,12 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/message.dart';
 import '../services/api_service.dart';
 import '../services/backend_pdf_service.dart';
 import '../services/action_detector_service.dart';
+import '../services/content_service.dart';
+import '../services/mood_based_chat_service.dart';
+import '../services/mood_service.dart';
 import 'voicechat_screen.dart';
 import 'breathing_timer.dart';
 import 'journal_screen.dart';
@@ -22,13 +26,47 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isTyping = false;
   bool _showEmotionButtons = true;
 
+  // Message counting for forced suggestions
+  int _messageCount = 0;
+  bool _hasShownBreathingSuggestion = false;
+  bool _hasShownJournalSuggestion = false;
+
   @override
   void initState() {
     super.initState();
     _initializeChat();
+    _initializePDF();
   }
 
-  void _initializeChat() {
+  void _initializePDF() async {
+    // Load PDF content when chat screen initializes
+    await BackendPDFService.loadPDFFromAssets();
+  }
+
+  Future<String> _getMoodIndicator() async {
+    try {
+      final hasCheckin = await MoodBasedChatService.hasCompletedDailyCheckin();
+      if (!hasCheckin) {
+        return "No Check-in";
+      }
+
+      final moodScore = await MoodService.getTodaysMoodScore();
+      if (moodScore >= 3.5) return "😊 Good Mood";
+      if (moodScore >= 2.5) return "😐 Okay Mood";
+      return "😔 Needs Support";
+    } catch (e) {
+      return "Mood Unknown";
+    }
+  }
+
+  Color _getMoodColor(String moodText) {
+    if (moodText.contains("Good")) return Colors.green;
+    if (moodText.contains("Okay")) return Colors.orange;
+    if (moodText.contains("Support")) return Colors.red;
+    return Colors.grey;
+  }
+
+  void _initializeChat() async {
     setState(() {
       _messages.add(
         Message(
@@ -36,14 +74,27 @@ class _ChatScreenState extends State<ChatScreen> {
           isUser: false,
         ),
       );
-      _messages.add(
-        Message(
-          text:
-              "I have access to mental health resources to help you. How are you feeling today? 😊",
-          isUser: false,
-        ),
-      );
     });
+
+    // Add mood-based greeting
+    try {
+      final moodGreeting = await MoodBasedChatService.getMoodBasedGreeting();
+      setState(() {
+        _messages.add(Message(text: moodGreeting, isUser: false));
+      });
+    } catch (e) {
+      // Fallback greeting if mood service fails
+      setState(() {
+        _messages.add(
+          Message(
+            text:
+                "I have access to mental health resources to help you. How are you feeling today? 😊",
+            isUser: false,
+          ),
+        );
+      });
+    }
+
     _scrollToBottom();
   }
 
@@ -54,16 +105,32 @@ class _ChatScreenState extends State<ChatScreen> {
       _messages.add(Message(text: text, isUser: true));
       _isTyping = true;
       _showEmotionButtons = false;
+      _messageCount++; // Increment message count
     });
     _controller.clear();
     _scrollToBottom();
 
     try {
-      final reply = await OpenRouterAPI.getResponse(text);
-      if (mounted) {
-        // Detect actions in AI response
-        final actions = ActionDetectorService.detectActions(reply);
+      // Check if we should force a suggestion
+      final forcedSuggestion = await _getForcedSuggestion();
 
+      String reply;
+      List<MessageAction>? actions;
+
+      if (forcedSuggestion != null) {
+        // Use forced suggestion instead of AI response
+        reply = forcedSuggestion;
+        actions = ActionDetectorService.detectActions(reply);
+      } else {
+        // Get normal AI response
+        reply = await OpenRouterAPI.getResponse(text);
+        actions = ActionDetectorService.detectActions(reply);
+      }
+
+      // Always add a random video suggestion to every AI reply
+      actions = _addRandomVideoAction(actions ?? []);
+
+      if (mounted) {
         setState(() {
           _messages.add(Message(text: reply, isUser: false, actions: actions));
           _isTyping = false;
@@ -88,6 +155,95 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _sendEmotionResponse(String emotion) {
     _sendMessage("I'm feeling $emotion");
+  }
+
+  /// Check if we should force breathing or journal suggestions
+  Future<String?> _getForcedSuggestion() async {
+    // Get mood-based suggestions
+    try {
+      final moodSuggestions =
+          await MoodBasedChatService.getMoodBasedSuggestions();
+
+      // Force breathing exercise after 3-4 messages (mood-appropriate)
+      if (_messageCount >= 3 && !_hasShownBreathingSuggestion) {
+        _hasShownBreathingSuggestion = true;
+        return moodSuggestions.isNotEmpty
+            ? moodSuggestions[0]
+            : "Let's take a moment to breathe. Try breathing exercises to center yourself 🌿";
+      }
+
+      // Force journal suggestion after 6-7 messages (mood-appropriate)
+      if (_messageCount >= 6 && !_hasShownJournalSuggestion) {
+        _hasShownJournalSuggestion = true;
+        return moodSuggestions.length > 1
+            ? moodSuggestions[1]
+            : "It might help to write down your thoughts. Try journaling to process your feelings ✨";
+      }
+
+      // Randomly suggest video or LMS content after 4-5 messages (30% chance)
+      if (_messageCount >= 4 && _messageCount <= 8) {
+        final random = Random();
+        if (random.nextDouble() < 0.3) {
+          // 30% chance
+          if (random.nextBool()) {
+            // Suggest video
+            return ContentService.getVideoSuggestionText();
+          } else {
+            // Suggest LMS
+            return ContentService.getLMSSuggestionText();
+          }
+        }
+      }
+    } catch (e) {
+      // Fallback to original suggestions if mood service fails
+      if (_messageCount >= 3 && !_hasShownBreathingSuggestion) {
+        _hasShownBreathingSuggestion = true;
+        return "Let's take a moment to breathe. Try breathing exercises to center yourself 🌿";
+      }
+
+      if (_messageCount >= 6 && !_hasShownJournalSuggestion) {
+        _hasShownJournalSuggestion = true;
+        return "It might help to write down your thoughts. Try journaling to process your feelings ✨";
+      }
+    }
+
+    return null;
+  }
+
+  /// Reset forced suggestions (useful for testing or new sessions)
+  void _resetForcedSuggestions() {
+    setState(() {
+      _messageCount = 0;
+      _hasShownBreathingSuggestion = false;
+      _hasShownJournalSuggestion = false;
+    });
+  }
+
+  /// Check if a message is a forced suggestion
+  bool _isMessageForced(String messageText) {
+    return messageText.contains("Let's take a moment to breathe") ||
+        messageText.contains("It might help to write down your thoughts");
+  }
+
+  /// Add a random video action to the actions list
+  List<MessageAction> _addRandomVideoAction(
+    List<MessageAction> existingActions,
+  ) {
+    final randomVideo = ContentService.getRandomVideo();
+
+    final videoAction = MessageAction(
+      label: "▶️ ${randomVideo['title']}",
+      route: '/video',
+      icon: Icons.play_circle_fill,
+      data: {
+        'url': randomVideo['url']!,
+        'title': randomVideo['title']!,
+        'description': randomVideo['description']!,
+      },
+    );
+
+    // Add video action to existing actions (LMS is now in header)
+    return [...existingActions, videoAction];
   }
 
   void _showResourceInfo() {
@@ -117,19 +273,23 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildActionButton(MessageAction action) {
     return ElevatedButton.icon(
       onPressed: () => _handleActionTap(action),
-      icon: Icon(action.icon, size: 16),
-      label: Text(action.label, style: const TextStyle(fontSize: 12)),
+      icon: Icon(action.icon, size: 18),
+      label: Text(
+        action.label,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+      ),
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFF4A90E2),
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        elevation: 2,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        elevation: 3,
+        shadowColor: Colors.blue.withValues(alpha: 0.3),
       ),
     );
   }
 
-  void _handleActionTap(MessageAction action) {
+  void _handleActionTap(MessageAction action) async {
     switch (action.route) {
       case '/breathing':
         Navigator.push(
@@ -149,10 +309,74 @@ class _ChatScreenState extends State<ChatScreen> {
           MaterialPageRoute(builder: (_) => const GridCalmGame()),
         );
         break;
+      case '/video':
+        // Launch YouTube video
+        if (action.data != null && action.data!['url'] != null) {
+          try {
+            await ContentService.launchVideo(action.data!['url']!);
+            _showVideoLaunchFeedback(action.data!['title'] ?? 'Video');
+          } catch (e) {
+            _showErrorFeedback(
+              'Unable to open video. Please check if you have a browser or YouTube app installed.',
+            );
+          }
+        }
+        break;
+      case '/lms':
+        // Launch LMS website
+        try {
+          await ContentService.launchLMSWebsite();
+          _showLMSLaunchFeedback();
+        } catch (e) {
+          _showErrorFeedback(
+            'Unable to open website. Please check your internet connection and browser.',
+          );
+        }
+        break;
       default:
         // Handle unknown routes
         break;
     }
+  }
+
+  void _showVideoLaunchFeedback(String videoTitle) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Opening "$videoTitle" in YouTube...'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showLMSLaunchFeedback() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Opening ${ContentService.lmsWebsiteName}...'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: Colors.blue.shade600,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showErrorFeedback(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 4),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'OK',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
   }
 
   void _scrollToBottom() {
@@ -291,14 +515,77 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           // Action buttons for AI messages
           if (!isUser && message.actions != null && message.actions!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8, left: 42),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                children: message.actions!
-                    .map((action) => _buildActionButton(action))
-                    .toList(),
+            Container(
+              margin: const EdgeInsets.only(top: 12, left: 42),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade100),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        'Quick Actions:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const Spacer(),
+                      // Learn More text button in top right corner
+                      GestureDetector(
+                        onTap: () {
+                          ContentService.launchLMSWebsite();
+                          _showLMSLaunchFeedback();
+                        },
+                        child: const Text(
+                          'Learn More',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                      // Show indicator for forced suggestions
+                      if (_isMessageForced(message.text))
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.orange.shade300),
+                          ),
+                          child: const Text(
+                            'Recommended',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: message.actions!
+                        .map((action) => _buildActionButton(action))
+                        .toList(),
+                  ),
+                ],
               ),
             ),
         ],
@@ -406,6 +693,34 @@ class _ChatScreenState extends State<ChatScreen> {
                   },
                 ),
                 const Spacer(),
+                // Mood indicator
+                FutureBuilder<String>(
+                  future: _getMoodIndicator(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getMoodColor(snapshot.data!),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          snapshot.data!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+                const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(
                     Icons.info_outline,
