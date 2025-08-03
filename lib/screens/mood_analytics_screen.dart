@@ -57,11 +57,11 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                   // Overview Card
                   _buildOverviewCard(),
                   const SizedBox(height: 20),
-                  
+
                   // Weekly Trend
                   _buildWeeklyTrendCard(),
                   const SizedBox(height: 20),
-                  
+
                   // Daily History
                   _buildDailyHistorySection(),
                 ],
@@ -78,10 +78,7 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF42A5F5),
-            Color(0xFF1E88E5),
-          ],
+          colors: [Color(0xFF42A5F5), Color(0xFF1E88E5)],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -122,10 +119,7 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                       children: [
                         const Text(
                           'Today\'s Mood',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -140,7 +134,10 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -161,10 +158,7 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
           const SizedBox(height: 12),
           Text(
             'Total Check-ins: ${moodHistory.length}',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
         ],
       ),
@@ -204,38 +198,43 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
               if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
-              
+
               final weeklyScores = snapshot.data!;
               return SizedBox(
-                height: 100,
+                height: 120, // Increased height to accommodate labels
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: List.generate(7, (index) {
                     final score = weeklyScores[index];
-                    final height = (score / 5.0) * 80;
-                    final day = DateTime.now().subtract(Duration(days: 6 - index));
-                    
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          width: 30,
-                          height: height > 0 ? height : 5,
-                          decoration: BoxDecoration(
-                            color: _getMoodColor(score),
-                            borderRadius: BorderRadius.circular(15),
+                    final height =
+                        (score / 5.0) * 70; // Reduced bar height to fit labels
+                    final day = DateTime.now().subtract(
+                      Duration(days: 6 - index),
+                    );
+
+                    return Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            width: 30,
+                            height: height > 0 ? height : 5,
+                            decoration: BoxDecoration(
+                              color: _getMoodColor(score),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _getDayName(day.weekday),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
+                          const SizedBox(height: 8),
+                          Text(
+                            _getDayName(day.weekday),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
                   }),
                 ),
@@ -265,11 +264,7 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
         ),
         child: const Column(
           children: [
-            Icon(
-              Icons.mood,
-              size: 60,
-              color: Colors.grey,
-            ),
+            Icon(Icons.mood, size: 60, color: Colors.grey),
             SizedBox(height: 16),
             Text(
               'No Check-ins Yet',
@@ -283,10 +278,7 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
             Text(
               'Complete your first daily check-in to see your mood analytics here!',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ],
         ),
@@ -308,7 +300,9 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        ...sortedDates.map((date) => _buildDailyHistoryCard(date, moodHistory[date])),
+        ...sortedDates.map(
+          (date) => _buildDailyHistoryCard(date, moodHistory[date]),
+        ),
       ],
     );
   }
@@ -352,15 +346,15 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                   ),
                   Text(
                     _formatTime(timestamp),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: _getMoodColor(overallScore).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -390,19 +384,13 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
           const SizedBox(height: 12),
           Text(
             _getMoodText(overallScore),
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
           ),
           if (questions.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               'Answered ${questions.length} questions',
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
         ],
@@ -411,12 +399,10 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
   }
 
   String _getMoodText(double score) {
-    if (score >= 4.5) return 'Feeling Amazing! 😊';
-    if (score >= 4.0) return 'Pretty Good 🙂';
-    if (score >= 3.5) return 'Doing Okay 😐';
-    if (score >= 3.0) return 'Just Okay 😐';
-    if (score >= 2.0) return 'Not Great 😔';
-    return 'Having a Tough Day 😞';
+    if (score >= 4.0) return 'Excellent! ';
+    if (score >= 3.0) return 'Good 🙂';
+    if (score >= 2.5) return 'Okay 😐';
+    return 'Needs Support 😔';
   }
 
   Color _getMoodColor(double score) {
@@ -454,8 +440,18 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
       return 'Yesterday';
     } else {
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       return '${months[date.month - 1]} ${date.day}, ${date.year}';
     }

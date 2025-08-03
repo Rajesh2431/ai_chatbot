@@ -7,6 +7,9 @@ import '../services/action_detector_service.dart';
 import '../services/content_service.dart';
 import '../services/mood_based_chat_service.dart';
 import '../services/mood_service.dart';
+import '../services/avatar_service.dart';
+import '../services/chat_history_service.dart';
+import '../widgets/chat_history_drawer.dart';
 import 'voicechat_screen.dart';
 import 'breathing_timer.dart';
 import 'journal_screen.dart';
@@ -22,6 +25,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final List<Message> _messages = [];
   bool _isTyping = false;
   bool _showEmotionButtons = true;
@@ -31,11 +35,44 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _hasShownBreathingSuggestion = false;
   bool _hasShownJournalSuggestion = false;
 
+  // Avatar information
+  String _avatarName = 'Saira';
+  String _avatarImage = 'lib/assets/avatar/saira.png';
+  
+  // Chat history state
+  bool _isViewingHistory = false;
+  String _historyDate = '';
+
   @override
   void initState() {
     super.initState();
+    _loadAvatar();
     _initializeChat();
     _initializePDF();
+  }
+
+  @override
+  void dispose() {
+    // Save chat history when leaving the screen
+    _saveChatHistory();
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _loadAvatar() async {
+    try {
+      final selectedAvatar = await AvatarService.getSelectedAvatar();
+      if (selectedAvatar != null) {
+        setState(() {
+          _avatarName = selectedAvatar['name']!;
+          _avatarImage = selectedAvatar['image']!;
+        });
+      }
+    } catch (e) {
+      // Use default avatar if loading fails
+      print('Error loading avatar: $e');
+    }
   }
 
   void _initializePDF() async {
@@ -60,17 +97,56 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Color _getMoodColor(String moodText) {
-    if (moodText.contains("Good")) return Colors.green;
+    if (moodText.contains("Excellent")) return Colors.green;
+    if (moodText.contains("Great")) return Colors.lightGreen;
+    if (moodText.contains("Good")) return Colors.lime;
     if (moodText.contains("Okay")) return Colors.orange;
     if (moodText.contains("Support")) return Colors.red;
     return Colors.grey;
   }
 
+  /// Save current chat to history
+  Future<void> _saveChatHistory() async {
+    if (_messages.isNotEmpty) {
+      final today = ChatHistoryService.getTodayDateString();
+      await ChatHistoryService.saveChatHistory(today, _messages);
+    }
+  }
+
+  /// Load chat history for a specific date
+  void _loadChatHistory(List<Message> messages) {
+    setState(() {
+      _messages.clear();
+      _messages.addAll(messages);
+      _showEmotionButtons = false; // Hide emotion buttons for historical chats
+      _isViewingHistory = true;
+      _historyDate = ChatHistoryService.getTodayDateString(); // You might want to pass the actual date
+    });
+    _scrollToBottom();
+  }
+
+  /// Start a new chat session
+  void _startNewChat() {
+    setState(() {
+      _messages.clear();
+      _messageCount = 0;
+      _hasShownBreathingSuggestion = false;
+      _hasShownJournalSuggestion = false;
+      _showEmotionButtons = true;
+      _isViewingHistory = false;
+      _historyDate = '';
+    });
+    _initializeChat();
+  }
+
   void _initializeChat() async {
+    // Wait a bit for avatar to load
+    await Future.delayed(const Duration(milliseconds: 100));
+
     setState(() {
       _messages.add(
         Message(
-          text: "Hi! I'm Saira, your mental health companion.",
+          text: "Hi! I'm $_avatarName, your mental health companion.",
           isUser: false,
         ),
       );
@@ -136,6 +212,9 @@ class _ChatScreenState extends State<ChatScreen> {
           _isTyping = false;
         });
         _scrollToBottom();
+        
+        // Save chat history after each exchange
+        _saveChatHistory();
       }
     } catch (e) {
       if (mounted) {
@@ -442,21 +521,27 @@ class _ChatScreenState extends State<ChatScreen> {
             mainAxisAlignment: isUser
                 ? MainAxisAlignment.end
                 : MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (!isUser)
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: const Color(0xFFB3E5FC),
+                ClipOval(
                   child: Image.asset(
-                    'assets/icons/profile.png',
-                    width: 28,
-                    height: 28,
+                    _avatarImage,
+                    width: 36,
+                    height: 36,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(
-                      Icons.person,
-                      color: Colors.deepOrange,
-                      size: 24,
+                    alignment: Alignment.topCenter,
+                    errorBuilder: (_, __, ___) => Image.asset(
+                      'assets/icons/profile.png',
+                      width: 36,
+                      height: 36,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.person,
+                        color: Colors.deepOrange,
+                        size: 24,
+                      ),
                     ),
                   ),
                 ),
@@ -499,16 +584,18 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               if (isUser) const SizedBox(width: 8),
               if (isUser)
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: const Color(0xFFB3E5FC),
+                ClipOval(
                   child: Image.asset(
                     'assets/icons/user.png',
-                    width: 28,
-                    height: 28,
+                    width: 36,
+                    height: 36,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.person, color: Colors.blue, size: 24),
+                    alignment: Alignment.topCenter,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.person,
+                      color: Colors.blue,
+                      size: 24,
+                    ),
                   ),
                 ),
             ],
@@ -669,7 +756,12 @@ class _ChatScreenState extends State<ChatScreen> {
     final double statusBarHeight = MediaQuery.of(context).padding.top;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
+      drawer: ChatHistoryDrawer(
+        onHistorySelected: _loadChatHistory,
+        onNewChat: _startNewChat,
+      ),
       body: Column(
         children: [
           // Top row with menu icon and status bar space
@@ -689,8 +781,31 @@ class _ChatScreenState extends State<ChatScreen> {
                     size: 32,
                   ),
                   onPressed: () {
-                    // Add menu logic here
+                    _scaffoldKey.currentState?.openDrawer();
                   },
+                ),
+                // Avatar name display with history indicator
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      _avatarName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF4A90E2),
+                      ),
+                    ),
+                    if (_isViewingHistory)
+                      const Text(
+                        'Chat History',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.orange,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                  ],
                 ),
                 const Spacer(),
                 // Mood indicator
@@ -765,18 +880,24 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: const Color(0xFFB3E5FC),
+                  ClipOval(
                     child: Image.asset(
-                      'assets/icons/profile.png',
-                      width: 22,
-                      height: 22,
+                      _avatarImage,
+                      width: 32,
+                      height: 32,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
-                        Icons.person,
-                        color: Colors.deepOrange,
-                        size: 16,
+                      alignment: Alignment.topCenter,
+                      errorBuilder: (_, __, ___) => Image.asset(
+                        'assets/icons/profile.png',
+                        width: 32,
+                        height: 32,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.person,
+                          color: Colors.deepOrange,
+                          size: 16,
+                        ),
                       ),
                     ),
                   ),

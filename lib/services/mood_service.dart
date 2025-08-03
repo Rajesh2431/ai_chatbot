@@ -66,7 +66,7 @@ class MoodService {
       return (moodData[today]['overall_score'] as num).toDouble();
     }
     
-    return 3.0; // Default neutral mood
+    return 3.0; // Default neutral mood (middle of 1-5 scale)
   }
 
   // Get mood analytics for dashboard (last 7 days)
@@ -84,7 +84,7 @@ class MoodService {
       if (moodData.containsKey(dateString)) {
         weeklyScores.add((moodData[dateString]['overall_score'] as num).toDouble());
       } else {
-        weeklyScores.add(3.0); // Default neutral if no data
+        weeklyScores.add(3.0); // Default neutral if no data (middle of 1-5 scale)
       }
     }
     
@@ -96,10 +96,10 @@ class MoodService {
     final todayScore = await getTodaysMoodScore();
     
     // Convert 1-5 scale to 1-6 scale for dashboard
-    if (todayScore >= 4.5) return 6; // Very Good
-    if (todayScore >= 4.0) return 5; // Good
-    if (todayScore >= 3.5) return 4; // Okay+
-    if (todayScore >= 3.0) return 3; // Okay
+    if (todayScore >= 4.8) return 6; // Excellent
+    if (todayScore >= 4.2) return 5; // Very Good
+    if (todayScore >= 3.5) return 4; // Good
+    if (todayScore >= 2.8) return 3; // Okay
     if (todayScore >= 2.0) return 2; // Not Great
     return 1; // Poor
   }

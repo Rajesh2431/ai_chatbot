@@ -34,46 +34,46 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
     DailyQuestion(
       question: "Good morning! How are you feeling today?",
       options: [
+        MoodOption("Excellent", "😄", 5),
         MoodOption("Great", "😊", 4),
         MoodOption("Good", "🙂", 3),
         MoodOption("Okay", "😐", 2),
-        MoodOption("Not great", "😔", 1),
       ],
     ),
     DailyQuestion(
       question: "How well did you sleep last night?",
       options: [
-        MoodOption("Very well", "😴", 4),
-        MoodOption("Good", "😊", 3),
+        MoodOption("Excellent", "😴", 5),
+        MoodOption("Very well", "😊", 4),
+        MoodOption("Good", "🙂", 3),
         MoodOption("Average", "😐", 2),
-        MoodOption("Poorly", "😪", 1),
       ],
     ),
     DailyQuestion(
       question: "What's your energy level right now?",
       options: [
-        MoodOption("High energy", "⚡", 4),
-        MoodOption("Good energy", "💪", 3),
-        MoodOption("Moderate", "🔋", 2),
-        MoodOption("Low energy", "🪫", 1),
+        MoodOption("Very high", "⚡", 5),
+        MoodOption("High", "💪", 4),
+        MoodOption("Good", "🔋", 3),
+        MoodOption("Moderate", "😐", 2),
       ],
     ),
     DailyQuestion(
       question: "How stressed do you feel today?",
       options: [
-        MoodOption("Very calm", "😌", 4),
-        MoodOption("Mostly calm", "🙂", 3),
+        MoodOption("Very calm", "😌", 5),
+        MoodOption("Calm", "🙂", 4),
+        MoodOption("Slightly tense", "😊", 3),
         MoodOption("Moderate stress", "😐", 2),
-        MoodOption("Very stressed", "😰", 1),
       ],
     ),
     DailyQuestion(
       question: "How optimistic are you feeling about today?",
       options: [
-        MoodOption("Very optimistic", "🌟", 4),
-        MoodOption("Pretty positive", "😊", 3),
+        MoodOption("Very optimistic", "🌟", 5),
+        MoodOption("Optimistic", "😊", 4),
+        MoodOption("Positive", "🙂", 3),
         MoodOption("Neutral", "😐", 2),
-        MoodOption("Not optimistic", "😕", 1),
       ],
     ),
   ];
@@ -205,12 +205,20 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
   }
 
   String _getEncouragingResponse(int score) {
-    if (score >= 4) {
+    if (score == 5) {
       final responses = [
         "That's wonderful to hear! 🌟",
-        "I'm so glad you're feeling good! 😊",
+        "I'm so glad you're feeling excellent! 😊",
         "That's fantastic! Keep up the positive energy! ✨",
         "Amazing! You're doing great! 💪",
+      ];
+      return responses[Random().nextInt(responses.length)];
+    } else if (score == 4) {
+      final responses = [
+        "That's great to hear! 😊",
+        "I'm happy you're feeling good! 💙",
+        "That's wonderful! Keep it up! ✨",
+        "Nice! You're doing well! 👍",
       ];
       return responses[Random().nextInt(responses.length)];
     } else if (score == 3) {
@@ -222,11 +230,12 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
       ];
       return responses[Random().nextInt(responses.length)];
     } else {
+      // score == 2
       final responses = [
-        "I'm here for you. Remember, tough days don't last! 💙",
+        "I'm here for you. Remember, every day is a new opportunity! 💙",
         "Thank you for sharing. You're not alone in this! 🤗",
         "I understand. Let's work together to make today better! 🌈",
-        "It's okay to have difficult days. I'm here to support you! 💚",
+        "It's okay to have challenging moments. I'm here to support you! 💚",
       ];
       return responses[Random().nextInt(responses.length)];
     }
@@ -328,7 +337,10 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
                       child: ClipOval(
                         child: Image.asset(
                           widget.avatarImage,
+                          width: 55,
+                          height: 55,
                           fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               decoration: BoxDecoration(
@@ -341,7 +353,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
                                   end: Alignment.bottomRight,
                                 ),
                               ),
-                              child: Icon(
+                              child: const Icon(
                                 Icons.person,
                                 color: Colors.white,
                                 size: 30,
@@ -450,33 +462,33 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
                   ],
                 ),
                 child: ClipOval(
-                  child: Container(
-                    padding: const EdgeInsets.all(3),
-                    child: ClipOval(
-                      child: Image.asset(
-                        widget.avatarImage,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.cyan.shade300,
-                                  Colors.cyan.shade100,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                  child: Image.asset(
+                    widget.avatarImage,
+                    width: 45,
+                    height: 45,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 45,
+                        height: 45,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.cyan.shade300,
+                              Colors.cyan.shade100,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -587,33 +599,30 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
               ],
             ),
             child: ClipOval(
-              child: Container(
-                padding: const EdgeInsets.all(3),
-                child: ClipOval(
-                  child: Image.asset(
-                    widget.avatarImage,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.cyan.shade300,
-                              Colors.cyan.shade100,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      );
-                    },
-                  ),
-                ),
+              child: Image.asset(
+                widget.avatarImage,
+                width: 45,
+                height: 45,
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 45,
+                    height: 45,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.cyan.shade300, Colors.cyan.shade100],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -667,15 +676,15 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
           int index = entry.key;
           MoodOption option = entry.value;
 
-          // Define colors for the four options (green, blue, orange, red)
+          // Define colors for the four options based on score (5=green, 4=blue, 3=orange, 2=red)
           List<Color> buttonColors = [
-            Colors.green, // First option - green
-            Colors.blue, // Second option - blue
-            Colors.orange, // Third option - orange
-            Colors.red, // Fourth option - red
+            Colors.green, // Score 5 - Excellent/Best option
+            Colors.blue, // Score 4 - Great/Good option
+            Colors.orange, // Score 3 - Good/Moderate option
+            Colors.red, // Score 2 - Okay/Lower option
           ];
 
-          Color buttonColor = buttonColors[index % buttonColors.length];
+          Color buttonColor = buttonColors[index];
 
           return OutlinedButton(
             style: OutlinedButton.styleFrom(

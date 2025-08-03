@@ -57,19 +57,19 @@ IMPORTANT INSTRUCTIONS:
   }
 
   static String _generateMoodContext(double moodScore, int moodLevel, String trend) {
-    if (moodScore >= 3.5) {
-      return "User is in a positive mood state. They're feeling good today and may be open to growth-oriented conversations, goal-setting, or sharing positive experiences.";
-    } else if (moodScore >= 2.5) {
-      return "User is in a neutral/mixed mood state. They may need gentle encouragement and balanced support. Avoid being overly cheerful but remain optimistic.";
+    if (moodScore >= 4.0) {
+      return "User is in an excellent/great mood state. They're feeling very positive today and may be open to growth-oriented conversations, goal-setting, or sharing positive experiences.";
+    } else if (moodScore >= 3.0) {
+      return "User is in a good/neutral mood state. They may need gentle encouragement and balanced support. Avoid being overly cheerful but remain optimistic.";
     } else {
       return "User is struggling today and needs extra compassion and support. Be gentle, validating, and focus on immediate comfort and coping strategies.";
     }
   }
 
   static String _getConversationStyle(double moodScore, int moodLevel) {
-    if (moodScore >= 3.5) {
-      return "- Use upbeat, encouraging language\n- Ask about positive experiences and goals\n- Suggest growth activities\n- Celebrate their good mood";
-    } else if (moodScore >= 2.5) {
+    if (moodScore >= 4.0) {
+      return "- Use upbeat, encouraging language\n- Ask about positive experiences and goals\n- Suggest growth activities\n- Celebrate their excellent mood";
+    } else if (moodScore >= 3.0) {
       return "- Use balanced, supportive language\n- Acknowledge their mixed feelings\n- Offer gentle encouragement\n- Focus on stability and small wins";
     } else {
       return "- Use extra gentle, compassionate language\n- Validate their difficult feelings\n- Focus on immediate comfort and support\n- Avoid overwhelming suggestions";
@@ -79,9 +79,9 @@ IMPORTANT INSTRUCTIONS:
   static String _getSupportStrategy(double moodScore, String trend) {
     String baseStrategy = '';
     
-    if (moodScore >= 3.5) {
-      baseStrategy = "Encourage continued positive practices, explore what's working well, suggest ways to maintain good mood.";
-    } else if (moodScore >= 2.5) {
+    if (moodScore >= 4.0) {
+      baseStrategy = "Encourage continued positive practices, explore what's working well, suggest ways to maintain excellent mood.";
+    } else if (moodScore >= 3.0) {
       baseStrategy = "Provide balanced support, help identify what might improve their day, offer gentle coping strategies.";
     } else {
       baseStrategy = "Prioritize emotional validation, offer immediate comfort, suggest simple self-care activities.";
@@ -98,12 +98,12 @@ IMPORTANT INSTRUCTIONS:
   }
 
   static String _getQuestionSuggestions(double moodScore, int moodLevel) {
-    if (moodScore >= 3.5) {
+    if (moodScore >= 4.0) {
       return '''- "What's been the highlight of your day so far?"
-- "What's contributing to your positive mood today?"
+- "What's contributing to your excellent mood today?"
 - "Is there something you're looking forward to?"
-- "What activities make you feel this good?"''';
-    } else if (moodScore >= 2.5) {
+- "What activities make you feel this amazing?"''';
+    } else if (moodScore >= 3.0) {
       return '''- "What's one small thing that could make your day a bit better?"
 - "How are you taking care of yourself today?"
 - "What's been on your mind lately?"
@@ -130,27 +130,32 @@ IMPORTANT INSTRUCTIONS:
 
   static String _interpretQuestionScore(String question, int score) {
     if (question.toLowerCase().contains('feeling')) {
-      if (score >= 4) return 'feeling great';
+      if (score == 5) return 'feeling excellent';
+      if (score == 4) return 'feeling great';
       if (score == 3) return 'feeling good';
       if (score == 2) return 'feeling okay';
       return 'struggling today';
     } else if (question.toLowerCase().contains('sleep')) {
-      if (score >= 4) return 'well-rested';
+      if (score == 5) return 'excellent sleep';
+      if (score == 4) return 'well-rested';
       if (score == 3) return 'decent sleep';
       if (score == 2) return 'average sleep';
       return 'sleep issues';
     } else if (question.toLowerCase().contains('energy')) {
-      if (score >= 4) return 'high energy';
+      if (score == 5) return 'very high energy';
+      if (score == 4) return 'high energy';
       if (score == 3) return 'good energy';
       if (score == 2) return 'moderate energy';
       return 'low energy';
     } else if (question.toLowerCase().contains('stress')) {
-      if (score >= 4) return 'very calm';
+      if (score == 5) return 'completely calm';
+      if (score == 4) return 'very calm';
       if (score == 3) return 'mostly calm';
       if (score == 2) return 'some stress';
       return 'very stressed';
     } else if (question.toLowerCase().contains('optimistic')) {
-      if (score >= 4) return 'very optimistic';
+      if (score == 5) return 'extremely optimistic';
+      if (score == 4) return 'very optimistic';
       if (score == 3) return 'positive outlook';
       if (score == 2) return 'neutral outlook';
       return 'pessimistic';
@@ -160,7 +165,8 @@ IMPORTANT INSTRUCTIONS:
 
   static String _getScoreDescription(int score) {
     switch (score) {
-      case 4: return 'Excellent';
+      case 5: return 'Excellent';
+      case 4: return 'Great';
       case 3: return 'Good';
       case 2: return 'Fair';
       case 1: return 'Poor';
@@ -181,8 +187,8 @@ IMPORTANT INSTRUCTIONS:
   }
 
   static String _getSupportLevel(double moodScore) {
-    if (moodScore >= 3.5) return 'Low - Encouragement focused';
-    if (moodScore >= 2.5) return 'Moderate - Balanced support';
+    if (moodScore >= 4.0) return 'Low - Encouragement focused';
+    if (moodScore >= 3.0) return 'Moderate - Balanced support';
     return 'High - Extra compassion needed';
   }
 
@@ -191,9 +197,9 @@ IMPORTANT INSTRUCTIONS:
     final moodScore = await MoodService.getTodaysMoodScore();
     final moodLevel = await MoodService.getCurrentMoodLevel();
     
-    if (moodScore >= 3.5) {
-      return "I can see you're having a good day! I'm here to chat and support you. 😊";
-    } else if (moodScore >= 2.5) {
+    if (moodScore >= 4.0) {
+      return "I can see you're having an excellent day! I'm here to chat and support you. 😊";
+    } else if (moodScore >= 3.0) {
       return "I'm here to listen and support you through whatever you're feeling today. 🤗";
     } else {
       return "I can sense today might be challenging for you. I'm here to provide gentle support. 💙";
@@ -209,16 +215,16 @@ IMPORTANT INSTRUCTIONS:
   static Future<List<String>> getMoodBasedSuggestions() async {
     final moodScore = await MoodService.getTodaysMoodScore();
     
-    if (moodScore >= 3.5) {
+    if (moodScore >= 4.0) {
       return [
-        "Since you're feeling great, maybe try a creative activity or set a new goal!",
+        "Since you're feeling excellent, maybe try a creative activity or set a new goal!",
         "Your positive energy could be perfect for connecting with friends or family.",
-        "Consider journaling about what's making you feel so good today.",
+        "Consider journaling about what's making you feel so amazing today.",
       ];
-    } else if (moodScore >= 2.5) {
+    } else if (moodScore >= 3.0) {
       return [
         "A gentle breathing exercise might help center your thoughts.",
-        "Writing in your journal could help process your mixed feelings.",
+        "Writing in your journal could help process your feelings.",
         "A calming activity might bring some peace to your day.",
       ];
     } else {

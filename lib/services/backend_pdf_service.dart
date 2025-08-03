@@ -20,8 +20,8 @@ class ConversationFlow {
 class BackendPDFService {
   static String? _pdfContent;
   static bool _isLoaded = false;
-  static List<ConversationFlow> _conversationFlows = [];
-  static List<String> _questions = [];
+  static final List<ConversationFlow> _conversationFlows = [];
+  static final List<String> _questions = [];
 
   /// Load PDF content from assets
   static Future<void> loadPDFFromAssets() async {
