@@ -222,14 +222,26 @@ IMPORTANT INSTRUCTIONS:
         "Consider journaling about what's making you feel so amazing today.",
       ];
     } else if (moodScore >= 3.0) {
+      final breathingTechniques = [
+        "Try some belly breathing to help center your thoughts and relax.",
+        "Box breathing might help you find focus and calm your mind.",
+        "Alternate nostril breathing could help balance your energy.",
+      ];
+      final randomBreathing = breathingTechniques[DateTime.now().millisecond % breathingTechniques.length];
       return [
-        "A gentle breathing exercise might help center your thoughts.",
+        randomBreathing,
         "Writing in your journal could help process your feelings.",
         "A calming activity might bring some peace to your day.",
       ];
     } else {
+      final breathingTechniques = [
+        "Let's try some gentle belly breathing to help you feel more grounded.",
+        "Box breathing exercises can help when you're feeling overwhelmed.",
+        "Alternate nostril breathing might help restore your inner balance.",
+      ];
+      final randomBreathing = breathingTechniques[DateTime.now().millisecond % breathingTechniques.length];
       return [
-        "Let's try some breathing exercises to help you feel more grounded.",
+        randomBreathing,
         "Writing down your thoughts might help you process difficult feelings.",
         "A peaceful, calming activity could provide some comfort right now.",
       ];

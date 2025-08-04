@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'notification_service.dart';
 
 class MoodService {
   static const String _moodDataKey = 'mood_data';
@@ -52,6 +53,9 @@ class MoodService {
     
     // Save back to preferences
     await prefs.setString(_moodDataKey, jsonEncode(moodData));
+    
+    // Cancel the completion reminder since check-in is done
+    await NotificationService.cancelCheckinCompletionReminder();
   }
 
   // Get today's overall mood score
@@ -144,5 +148,50 @@ class MoodService {
     final prefs = await SharedPreferences.getInstance();
     final moodDataJson = prefs.getString(_moodDataKey) ?? '{}';
     return jsonDecode(moodDataJson);
+  }
+
+  // Enable daily check-in notifications
+  static Future<void> enableDailyNotifications({
+    int hour = 9,
+    int minute = 0,
+  }) async {
+    await NotificationService.scheduleDailyCheckinReminder(
+      hour: hour,
+      minute: minute,
+    );
+  }
+
+  // Disable daily check-in notifications
+  static Future<void> disableDailyNotifications() async {
+    await NotificationService.cancelDailyCheckinReminder();
+  }
+
+  // Check if notifications are enabled
+  static Future<bool> areNotificationsEnabled() async {
+    return await NotificationService.areNotificationsEnabled();
+  }
+
+  // Get notification time
+  static Future<String> getNotificationTime() async {
+    return await NotificationService.getNotificationTime();
+  }
+
+  // Schedule reminder if check-in is missed
+  static Future<void> scheduleCheckinReminderIfNeeded() async {
+    final needsCheckin = await needsDailyCheckin();
+    final notificationsEnabled = await areNotificationsEnabled();
+    
+    if (needsCheckin && notificationsEnabled) {
+      await NotificationService.scheduleCheckinCompletionReminder();
+    }
+  }
+
+  // Show welcome notification for new users
+  static Future<void> showWelcomeNotification() async {
+    await NotificationService.showInstantNotification(
+      title: 'Welcome to SeaSmart! 🌟',
+      body: 'Daily check-in reminders are now enabled. We\'ll remind you at 9:00 AM each day.',
+      payload: 'welcome',
+    );
   }
 }

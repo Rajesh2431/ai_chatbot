@@ -14,11 +14,8 @@ class ActionDetectorService {
     // Only detect when AI specifically suggests breathing exercises
     if (_suggestsBreathingExercise(lowerResponse)) {
       print('✅ Detected breathing suggestion');
-      actions.add(MessageAction(
-        label: 'Try Breathing Exercise',
-        route: '/breathing',
-        icon: Icons.air,
-      ));
+      final breathingAction = getRandomBreathingTechnique();
+      actions.add(breathingAction);
     }
 
     // Only detect when AI specifically suggests journaling
@@ -100,7 +97,7 @@ class ActionDetectorService {
     return emotionalKeywords.any((keyword) => text.contains(keyword));
   }
 
-  /// Detect specific breathing exercise suggestions
+  /// Detect specific breathing exercise suggestions and return random technique
   static bool _suggestsBreathingExercise(String text) {
     List<String> actionPhrases = [
       'try breathing',
@@ -115,11 +112,60 @@ class ActionDetectorService {
       'try the breathing',
       'breathing method',
       'do some breathing',
+      'belly breathing',
+      'box breathing',
+      'alternate nostril',
+      'diaphragmatic breathing',
+      'navy seal',
+      'yogic technique',
     ];
     print('🫁 Checking breathing phrases in: $text');
     bool found = actionPhrases.any((phrase) => text.contains(phrase));
     print('🫁 Breathing detection result: $found');
     return found;
+  }
+
+  /// Get random breathing technique suggestion
+  static MessageAction getRandomBreathingTechnique() {
+    final techniques = [
+      {
+        'name': 'Belly Breathing',
+        'description': 'Deep diaphragmatic breathing to reduce stress',
+        'icon': Icons.favorite,
+        'route': '/belly-breathing',
+        'color': 0xFF64B5F6,
+        'emoji': '🫁',
+      },
+      {
+        'name': 'Box Breathing',
+        'description': '4-4-4-4 pattern used by Navy SEALs',
+        'icon': Icons.crop_square,
+        'route': '/box-breathing',
+        'color': 0xFF42A5F5,
+        'emoji': '⬜',
+      },
+      {
+        'name': 'Alternate Nostril',
+        'description': 'Ancient yogic technique for balance',
+        'icon': Icons.air,
+        'route': '/nostril-breathing',
+        'color': 0xFF29B6F6,
+        'emoji': '🌬️',
+      },
+    ];
+
+    final random = techniques[DateTime.now().millisecond % techniques.length];
+    
+    return MessageAction(
+      label: "${random['emoji']} ${random['name']}",
+      route: random['route'] as String,
+      icon: random['icon'] as IconData,
+      data: {
+        'description': random['description'] as String,
+        'color': (random['color'] as int).toString(),
+        'name': random['name'] as String,
+      },
+    );
   }
 
   /// Detect specific journaling suggestions

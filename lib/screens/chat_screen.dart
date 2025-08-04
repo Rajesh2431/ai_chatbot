@@ -12,6 +12,9 @@ import '../services/chat_history_service.dart';
 import '../widgets/chat_history_drawer.dart';
 import 'voicechat_screen.dart';
 import 'breathing_timer.dart';
+import 'belly_breathing_screen.dart';
+import 'box_breathing_screen.dart';
+import 'alternate_nostril_breathing_screen.dart';
 import 'journal_screen.dart';
 import 'tap_the_calm_game.dart';
 
@@ -205,6 +208,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Always add a random video suggestion to every AI reply
       actions = _addRandomVideoAction(actions ?? []);
+      
+      // Always add a breathing exercise suggestion to every AI reply
+      actions = _addBreathingExerciseAction(actions);
 
       if (mounted) {
         setState(() {
@@ -243,12 +249,18 @@ class _ChatScreenState extends State<ChatScreen> {
       final moodSuggestions =
           await MoodBasedChatService.getMoodBasedSuggestions();
 
-      // Force breathing exercise after 3-4 messages (mood-appropriate)
-      if (_messageCount >= 3 && !_hasShownBreathingSuggestion) {
+      // Force breathing exercise after 2-3 messages (mood-appropriate)
+      if (_messageCount >= 2 && !_hasShownBreathingSuggestion) {
         _hasShownBreathingSuggestion = true;
+        final techniques = [
+          "Let's try some belly breathing to help you relax and center yourself 🌿",
+          "How about some box breathing? It's a technique used by Navy SEALs for focus 🌿",
+          "Try alternate nostril breathing - it's an ancient technique for balance 🌿",
+        ];
+        final randomTechnique = techniques[Random().nextInt(techniques.length)];
         return moodSuggestions.isNotEmpty
             ? moodSuggestions[0]
-            : "Let's take a moment to breathe. Try breathing exercises to center yourself 🌿";
+            : randomTechnique;
       }
 
       // Force journal suggestion after 6-7 messages (mood-appropriate)
@@ -275,9 +287,14 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } catch (e) {
       // Fallback to original suggestions if mood service fails
-      if (_messageCount >= 3 && !_hasShownBreathingSuggestion) {
+      if (_messageCount >= 2 && !_hasShownBreathingSuggestion) {
         _hasShownBreathingSuggestion = true;
-        return "Let's take a moment to breathe. Try breathing exercises to center yourself 🌿";
+        final techniques = [
+          "Let's try some belly breathing to help you relax and center yourself 🌿",
+          "How about some box breathing? It's a technique used by Navy SEALs for focus 🌿",
+          "Try alternate nostril breathing - it's an ancient technique for balance 🌿",
+        ];
+        return techniques[Random().nextInt(techniques.length)];
       }
 
       if (_messageCount >= 6 && !_hasShownJournalSuggestion) {
@@ -323,6 +340,53 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Add video action to existing actions (LMS is now in header)
     return [...existingActions, videoAction];
+  }
+
+  /// Add a random breathing exercise action to the actions list
+  List<MessageAction> _addBreathingExerciseAction(
+    List<MessageAction> existingActions,
+  ) {
+    final techniques = [
+      {
+        'name': 'Belly Breathing',
+        'description': 'Deep diaphragmatic breathing to reduce stress',
+        'icon': Icons.favorite,
+        'route': '/belly-breathing',
+        'emoji': '🫁',
+        'screen': const BellyBreathingScreen(),
+      },
+      {
+        'name': 'Box Breathing',
+        'description': '4-4-4-4 pattern used by Navy SEALs',
+        'icon': Icons.crop_square,
+        'route': '/box-breathing',
+        'emoji': '⬜',
+        'screen': const BoxBreathingScreen(),
+      },
+      {
+        'name': 'Alternate Nostril',
+        'description': 'Ancient yogic technique for balance',
+        'icon': Icons.air,
+        'route': '/nostril-breathing',
+        'emoji': '🌬️',
+        'screen': const AlternateNostrilBreathingScreen(),
+      },
+    ];
+
+    final randomTechnique = techniques[Random().nextInt(techniques.length)];
+
+    final breathingAction = MessageAction(
+      label: "${randomTechnique['emoji']} ${randomTechnique['name']}",
+      route: randomTechnique['route'] as String,
+      icon: randomTechnique['icon'] as IconData,
+      data: {
+        'description': randomTechnique['description'] as String,
+        'name': randomTechnique['name'] as String,
+      },
+    );
+
+    // Add breathing action to existing actions
+    return [...existingActions, breathingAction];
   }
 
   void _showResourceInfo() {
@@ -371,6 +435,34 @@ class _ChatScreenState extends State<ChatScreen> {
   void _handleActionTap(MessageAction action) async {
     switch (action.route) {
       case '/breathing':
+        // Navigate to breathing selection screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BreathingScreen()),
+        );
+        break;
+      case '/belly-breathing':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BellyBreathingScreen()),
+        );
+        break;
+      case '/box-breathing':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BoxBreathingScreen()),
+        );
+        break;
+      case '/nostril-breathing':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AlternateNostrilBreathingScreen()),
+        );
+        break;
+      case '/breathing/belly':
+      case '/breathing/box':
+      case '/breathing/nostril':
+        // Legacy support - navigate to breathing selection screen
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const BreathingScreen()),
@@ -507,6 +599,8 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
+
+
 
   Widget _buildMessageBubble(Message message) {
     final isUser = message.isUser;

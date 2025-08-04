@@ -2,16 +2,17 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/mood_service.dart';
+import '../services/user_profile_service.dart';
 import 'dashboard_screen.dart';
 
 class DailyCheckinScreen extends StatefulWidget {
-  final String avatarName;
-  final String avatarImage;
+  final String? avatarName;
+  final String? avatarImage;
 
   const DailyCheckinScreen({
     super.key,
-    required this.avatarName,
-    required this.avatarImage,
+    this.avatarName,
+    this.avatarImage,
   });
 
   @override
@@ -78,9 +79,15 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
     ),
   ];
 
+  late String _avatarName;
+  late String _avatarImage;
+
   @override
   void initState() {
     super.initState();
+    _avatarName = widget.avatarName ?? 'Saira';
+    _avatarImage = widget.avatarImage ?? 'lib/assets/avatar/saira.png';
+    
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -103,7 +110,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
   void _startCheckin() async {
     await Future.delayed(const Duration(milliseconds: 500));
     _addAIMessage(
-      "Hello! I'm ${widget.avatarName}, your daily companion. Let's do a quick check-in to see how you're doing today! 😊",
+      "Hello! I'm $_avatarName, your daily companion. Let's do a quick check-in to see how you're doing today! 😊",
     );
 
     await Future.delayed(const Duration(milliseconds: 3000));
@@ -262,11 +269,10 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
     await MoodService.storeDailyOverallMood(averageScore);
 
     // Mark daily check-in as completed
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      'last_checkin_date',
-      DateTime.now().toIso8601String().split('T')[0],
-    );
+    await UserProfileService.markDailyCheckinComplete();
+
+    // Notifications are always enabled by default
+    // No need to check or enable them here
 
     _addAIMessage(
       "Thank you for sharing with me today! 🙏 Based on our chat, I can see how you're feeling. Remember, I'm always here when you need support!",
@@ -336,7 +342,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
                       ),
                       child: ClipOval(
                         child: Image.asset(
-                          widget.avatarImage,
+                          _avatarImage,
                           width: 55,
                           height: 55,
                           fit: BoxFit.cover,
@@ -369,7 +375,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.avatarName,
+                            _avatarName,
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -463,7 +469,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
                 ),
                 child: ClipOval(
                   child: Image.asset(
-                    widget.avatarImage,
+                    _avatarImage,
                     width: 45,
                     height: 45,
                     fit: BoxFit.cover,
@@ -600,7 +606,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
             ),
             child: ClipOval(
               child: Image.asset(
-                widget.avatarImage,
+                _avatarImage,
                 width: 45,
                 height: 45,
                 fit: BoxFit.cover,

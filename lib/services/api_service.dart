@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'backend_pdf_service.dart';
 import 'conversation_state_service.dart';
 import 'mood_based_chat_service.dart';
+import 'ai_knowledge_service.dart';
 
 class OpenRouterAPI {
   static const _url = 'https://openrouter.ai/api/v1/chat/completions';
@@ -19,6 +20,9 @@ class OpenRouterAPI {
     
     // Get mood-based context
     final moodContext = await MoodBasedChatService.getMoodBasedContext();
+    
+    // Get user-uploaded knowledge base content
+    final userKnowledgeContent = await AIKnowledgeService.getAllKnowledgeContent();
     
     // Check if we should ask a structured question
     String? structuredQuestion;
@@ -113,6 +117,8 @@ $moodContext
 $pdfContext
 
 $conversationContext
+
+${userKnowledgeContent.isNotEmpty ? 'USER UPLOADED DOCUMENTS:\n$userKnowledgeContent\n\nThe user has uploaded these PDF documents to enhance your knowledge. Reference them when providing relevant mental health guidance, techniques, or information. Acknowledge when you\'re drawing from their uploaded materials.\n' : ''}
 
 ${structuredQuestion != null ? 'SUGGESTED STRUCTURED QUESTION: $structuredQuestion' : ''}
 

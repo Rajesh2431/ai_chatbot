@@ -8,6 +8,7 @@ import 'quiz_screen.dart';
 import 'breathing_timer.dart';
 import 'memory_game.dart';
 import 'mood_analytics_screen.dart';
+import 'profile_screen.dart';
 
 import '../services/mood_service.dart';
 
@@ -157,11 +158,21 @@ class _HomeContent extends StatelessWidget {
                   // Add notification logic here
                 },
               ),
-              // Profile icon (changed to a generic person icon)
-              const CircleAvatar(
-                radius: 24,
-                backgroundColor: Colors.transparent,
-                child: Icon(Icons.person, color: Color(0xFF4A90E2), size: 40),
+              // Profile icon (clickable)
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfileScreen(),
+                    ),
+                  );
+                },
+                child: const CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Colors.transparent,
+                  child: Icon(Icons.person, color: Color(0xFF4A90E2), size: 40),
+                ),
               ),
             ],
           ),

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'notification_settings_screen.dart';
+import 'mood_analytics_screen.dart';
+import 'ai_knowledge_base_screen.dart';
 
 
 class SettingsScreen extends StatefulWidget {
@@ -28,6 +31,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       "icon": Icons.wallpaper,
       "label": "Wallpaper",
       "color": Colors.lightBlue,
+    },
+    {
+      "icon": Icons.psychology,
+      "label": "AI Knowledge Base",
+      "color": Colors.deepOrange,
     },
     {
       "icon": Icons.notifications,
@@ -61,6 +69,120 @@ class _SettingsScreenState extends State<SettingsScreen> {
       isDarkMode = value;
     });
     // You can add additional logic here to persist the theme preference or notify other parts of the app
+  }
+
+  void _handleSettingTap(BuildContext context, String label) {
+    switch (label) {
+      case 'Analytics':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MoodAnalyticsScreen(),
+          ),
+        );
+        break;
+      case 'AI Knowledge Base':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AIKnowledgeBaseScreen(),
+          ),
+        );
+        break;
+      case 'Notification':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const NotificationSettingsScreen(),
+          ),
+        );
+        break;
+      case 'Help Center':
+        _showHelpDialog(context);
+        break;
+      case 'Terms & Privacy Policy':
+        _showPrivacyDialog(context);
+        break;
+      case 'App Version':
+        _showVersionDialog(context);
+        break;
+      default:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$label feature coming soon!'),
+            backgroundColor: Colors.blue,
+          ),
+        );
+    }
+  }
+
+  void _showHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Help Center'),
+        content: const Text(
+          'SeaSmart is your AI-powered mental health companion. '
+          'Use the daily check-in to track your mood, chat with our AI assistant, '
+          'and explore relaxation activities.\n\n'
+          'For additional support, please contact your healthcare provider.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacyDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Privacy Policy'),
+        content: const SingleChildScrollView(
+          child: Text(
+            'SeaSmart Privacy Policy\n\n'
+            '• Your data is stored locally on your device\n'
+            '• We do not share personal information with third parties\n'
+            '• Chat conversations are processed securely\n'
+            '• You can delete your data anytime from the app\n\n'
+            'Terms of Service\n\n'
+            '• This app is for wellness support, not medical diagnosis\n'
+            '• Always consult healthcare professionals for serious concerns\n'
+            '• Use responsibly and as part of a comprehensive wellness plan',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showVersionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('App Version'),
+        content: const Text(
+          'SeaSmart v1.0.0\n\n'
+          'Your AI-powered mental health companion\n'
+          'Built with Flutter & powered by AI',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -120,7 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           )
                         : null,
                     onTap: () {
-                      // Handle tap
+                      _handleSettingTap(context, item['label']);
                     },
                   );
                 },

@@ -1,16 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/avatar_selection_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/journal_screen.dart';
+import 'screens/onboarding_screen.dart';
+import 'screens/daily_checkin_screen.dart';
 import 'providers/journal_entries_provider.dart';
 import 'services/backend_pdf_service.dart';
+import 'services/notification_service.dart';
+import 'services/user_profile_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Initialize PDF loading
+  
+  // Initialize services
   await BackendPDFService.loadPDFFromAssets();
+  await NotificationService.initialize();
+  
+  // Enable notifications by default (compulsory)
+  await NotificationService.enableDefaultNotifications();
+  
   runApp(const App());
 }
 
@@ -33,7 +44,9 @@ class App extends StatelessWidget {
         ),
         home: const SplashScreen(),
         routes: {
+          '/onboarding': (context) => const OnboardingScreen(),
           '/avatar-selection': (context) => const AvatarSelectionScreen(),
+          '/daily-checkin': (context) => const DailyCheckinScreen(),
           '/dashboard': (context) => const DashboardScreen(),
           '/chat': (context) => const ChatScreen(),
           '/journal': (context) => const JournalScreen(),
@@ -63,8 +76,24 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    // Always go to avatar selection screen after splash
-    Navigator.pushReplacementNamed(context, '/avatar-selection');
+    // Check if this is the user's first time
+    final isFirstTime = await UserProfileService.isFirstTime();
+    
+    if (isFirstTime) {
+      // First time user - go to onboarding
+      Navigator.pushReplacementNamed(context, '/onboarding');
+    } else {
+      // Returning user - check if they need daily check-in
+      final needsDailyCheckin = await UserProfileService.needsDailyCheckin();
+      
+      if (needsDailyCheckin) {
+        // User needs to do daily check-in
+        Navigator.pushReplacementNamed(context, '/daily-checkin');
+      } else {
+        // User already did daily check-in - go to dashboard
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      }
+    }
   }
 
   @override
