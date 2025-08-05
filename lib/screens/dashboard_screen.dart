@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'chat_screen.dart';
@@ -8,9 +9,11 @@ import 'quiz_screen.dart';
 import 'breathing_timer.dart';
 import 'memory_game.dart';
 import 'mood_analytics_screen.dart';
-import 'profile_screen.dart';
+import 'user_profile_screen.dart';
 
+import '../widgets/ai_drawer.dart';
 import '../services/mood_service.dart';
+import '../services/user_profile_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,6 +24,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final List<Widget> _pages = [
     const _HomeContent(),
@@ -40,7 +44,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final double statusBarHeight = MediaQuery.of(context).padding.top;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
+      drawer: const AIDrawer(),
       body: Padding(
         padding: EdgeInsets.only(top: statusBarHeight),
         child: _pages[_selectedIndex],
@@ -137,8 +143,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class _HomeContent extends StatelessWidget {
+class _HomeContent extends StatefulWidget {
   const _HomeContent();
+
+  @override
+  State<_HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<_HomeContent> {
+  String _userName = 'User';
+  String? _userAvatarPath;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final profile = await UserProfileService.getUserProfile();
+      if (mounted) {
+        setState(() {
+          _userName = profile['name']?.isNotEmpty == true ? profile['name']! : 'User';
+          _userAvatarPath = profile['avatarPath'];
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading user profile: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -147,31 +181,76 @@ class _HomeContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: Notification and Profile
+          // Top Row: AI Menu and User Profile
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Notification icon
+              // AI Menu icon
               IconButton(
-                icon: const Icon(Icons.menu, color: Colors.black, size: 28),
+                icon: const Icon(Icons.smart_toy, color: Color(0xFF4A90E2), size: 28),
                 onPressed: () {
-                  // Add notification logic here
+                  Scaffold.of(context).openDrawer();
                 },
+                tooltip: 'AI Settings',
               ),
-              // Profile icon (clickable)
+              // User profile icon (clickable)
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ProfileScreen(),
+                      builder: (context) => const UserProfileScreen(),
                     ),
                   );
+                  if (result == true) {
+                    _loadUserProfile();
+                  }
                 },
-                child: const CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Colors.transparent,
-                  child: Icon(Icons.person, color: Color(0xFF4A90E2), size: 40),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: _userAvatarPath != null
+                        ? (_userAvatarPath!.startsWith('lib/assets/'))
+                            ? Image.asset(
+                                _userAvatarPath!,
+                                width: 48,
+                                height: 48,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.person,
+                                  color: Color(0xFF4A90E2),
+                                  size: 28,
+                                ),
+                              )
+                            : Image.file(
+                                File(_userAvatarPath!),
+                                width: 48,
+                                height: 48,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.person,
+                                  color: Color(0xFF4A90E2),
+                                  size: 28,
+                                ),
+                              )
+                        : const Icon(
+                            Icons.person,
+                            color: Color(0xFF4A90E2),
+                            size: 28,
+                          ),
+                  ),
                 ),
               ),
             ],
@@ -190,13 +269,13 @@ class _HomeContent extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
-            child: const Padding(
-              padding: EdgeInsets.all(18),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
               child: Align(
                 alignment: Alignment.topLeft,
                 child: Text(
-                  'Hi\nCaptain!',
-                  style: TextStyle(
+                  'Hi\n$_userName!',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 38,
                     fontWeight: FontWeight.bold,

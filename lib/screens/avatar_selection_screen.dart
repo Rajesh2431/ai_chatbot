@@ -5,7 +5,12 @@ import '../routes/circular_reveal_route.dart';
 import '../services/avatar_service.dart';
 
 class AvatarSelectionScreen extends StatefulWidget {
-  const AvatarSelectionScreen({super.key});
+  final bool isChangingAvatar;
+  
+  const AvatarSelectionScreen({
+    super.key,
+    this.isChangingAvatar = false,
+  });
 
   @override
   State<AvatarSelectionScreen> createState() => _AvatarSelectionScreenState();
@@ -80,9 +85,9 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen>
                       margin: const EdgeInsets.only(bottom: 60),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -130,6 +135,7 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen>
                                     page: AvatarDetailScreen(
                                       imagePath: avatar['image']!,
                                       name: avatar['name']!,
+                                      isChangingAvatar: widget.isChangingAvatar,
                                     ),
                                     centerAlignment: tapPosition,
                                     startRadius: 80.0,

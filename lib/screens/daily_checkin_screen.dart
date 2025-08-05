@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/mood_service.dart';
 import '../services/user_profile_service.dart';
 import 'dashboard_screen.dart';

@@ -8,11 +8,13 @@ import 'daily_checkin_screen.dart';
 class AvatarDetailScreen extends StatelessWidget {
   final String imagePath;
   final String name;
+  final bool isChangingAvatar;
 
   const AvatarDetailScreen({
     super.key,
     required this.imagePath,
     required this.name,
+    this.isChangingAvatar = false,
   });
 
   @override
@@ -105,7 +107,14 @@ class AvatarDetailScreen extends StatelessWidget {
 
                     if (!context.mounted) return;
 
-                    // Check if daily check-in is needed
+                    if (isChangingAvatar) {
+                      // Just changing avatar - return to previous screen with success result
+                      Navigator.of(context).pop(true);
+                      Navigator.of(context).pop(true);
+                      return;
+                    }
+
+                    // Original onboarding flow - check if daily check-in is needed
                     final needsCheckin = await MoodService.needsDailyCheckin();
 
                     final size = MediaQuery.of(context).size;
@@ -145,9 +154,9 @@ class AvatarDetailScreen extends StatelessWidget {
                     ),
                     elevation: 2,
                   ),
-                  child: const Text(
-                    'Get Started',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+                  child: Text(
+                    isChangingAvatar ? 'Select Avatar' : 'Get Started',
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),

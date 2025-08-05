@@ -80,10 +80,10 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: _getMoodColor(moodScore).withOpacity(0.1),
+                  color: _getMoodColor(moodScore).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: _getMoodColor(moodScore).withOpacity(0.3),
+                    color: _getMoodColor(moodScore).withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
@@ -239,14 +239,18 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
     try {
       final messages = await ChatHistoryService.getChatHistory(date);
       widget.onHistorySelected(messages);
-      Navigator.pop(context); // Close drawer
+      if (mounted) {
+        Navigator.pop(context); // Close drawer
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error loading chat history: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading chat history: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -272,7 +276,7 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       await ChatHistoryService.deleteChatHistory(date);
       _loadChatHistory(); // Refresh the list
     }
@@ -285,7 +289,7 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
         children: [
           // Header
           Container(
-            height: 120,
+            height: 100,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -293,19 +297,21 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
                 colors: [Color(0xFF4A90E2), Color(0xFF357ABD)],
               ),
             ),
-            child: const SafeArea(
+            child: SafeArea(
               child: Padding(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(Icons.history, color: Colors.white, size: 32),
-                    SizedBox(width: 16),
-                    Text(
+                    const Icon(Icons.history, color: Colors.white, size: 28),
+                    const SizedBox(width: 12),
+                    const Text(
                       'Chat History',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -316,7 +322,7 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
 
           // New Chat Button
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -324,20 +330,22 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
                   widget.onNewChat();
                   Navigator.pop(context);
                 },
-                icon: const Icon(Icons.add_comment, color: Colors.white),
+                icon: const Icon(Icons.add_comment, color: Colors.white, size: 20),
                 label: const Text(
                   'New Chat',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
+                    fontSize: 16,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4A90E2),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  elevation: 2,
                 ),
               ),
             ),
@@ -398,120 +406,166 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
                           final moodScore =
                               summary['moodScore'] as double? ?? 3.0;
 
-                          return Card(
+                          return Container(
                             margin: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
+                              horizontal: 12,
+                              vertical: 3,
                             ),
-                            child: ListTile(
-                              leading: Stack(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: _getMoodColor(moodScore),
-                                    child: Text(
-                                      displayDate == 'Today'
-                                          ? 'T'
-                                          : displayDate == 'Yesterday'
-                                          ? 'Y'
-                                          : date.split('-')[2],
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right: -2,
-                                    bottom: -2,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Text(
-                                        moodEmoji,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                            child: Card(
+                              elevation: 1,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              title: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      displayDate,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
+                              child: InkWell(
+                                onTap: () => _loadChatForDate(date),
+                                onLongPress: () => _showMoodDetails(context, date, summary),
+                                borderRadius: BorderRadius.circular(12),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
+                                      // Avatar with mood emoji
+                                      Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 24,
+                                            backgroundColor: _getMoodColor(moodScore),
+                                            child: Text(
+                                              displayDate == 'Today'
+                                                  ? 'T'
+                                                  : displayDate == 'Yesterday'
+                                                  ? 'Y'
+                                                  : date.split('-')[2],
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            right: 0,
+                                            bottom: 0,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(2),
+                                              decoration: const BoxDecoration(
+                                                color: Colors.white,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Text(
+                                                moodEmoji,
+                                                style: const TextStyle(fontSize: 14),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: _getMoodColor(
-                                        moodScore,
-                                      ).withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      moodDescription,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: _getMoodColor(moodScore),
-                                        fontWeight: FontWeight.w500,
+                                      
+                                      const SizedBox(width: 16),
+                                      
+                                      // Content - structured vertically
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            // 1. Day at the top
+                                            Text(
+                                              displayDate,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                            
+                                            const SizedBox(height: 4),
+                                            
+                                            // 2. Daily check-in mood below
+                                            Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 3,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: _getMoodColor(moodScore).withValues(alpha: 0.15),
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                                child: Text(
+                                                  moodDescription,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: _getMoodColor(moodScore),
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ),
+                                            
+                                            const SizedBox(height: 6),
+                                            
+                                            // 3. Mood score at the bottom
+                                            Wrap(
+                                              children: [
+                                                Text(
+                                                  '$messageCount messages',
+                                                  style: const TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                                if (summary['moodData'] != null) ...[
+                                                  const Text(
+                                                    ' • ',
+                                                    style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    'Mood Score: ${moodScore.toStringAsFixed(1)}/5.0',
+                                                    style: TextStyle(
+                                                      color: _getMoodColor(moodScore),
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '$messageCount messages',
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  if (summary['moodData'] != null)
-                                    Text(
-                                      'Mood Score: ${moodScore.toStringAsFixed(1)}/5.0',
-                                      style: TextStyle(
-                                        color: _getMoodColor(moodScore),
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
+                                      
+                                      // Menu button
+                                      PopupMenuButton<String>(
+                                        icon: const Icon(Icons.more_vert, size: 20, color: Colors.grey),
+                                        onSelected: (value) {
+                                          if (value == 'delete') {
+                                            _deleteChatHistory(date);
+                                          }
+                                        },
+                                        itemBuilder: (context) => [
+                                          const PopupMenuItem(
+                                            value: 'delete',
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.delete, color: Colors.red, size: 18),
+                                                SizedBox(width: 8),
+                                                Text('Delete'),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                ],
-                              ),
-                              trailing: PopupMenuButton<String>(
-                                onSelected: (value) {
-                                  if (value == 'delete') {
-                                    _deleteChatHistory(date);
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  const PopupMenuItem(
-                                    value: 'delete',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.delete, color: Colors.red),
-                                        SizedBox(width: 8),
-                                        Text('Delete'),
-                                      ],
-                                    ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
-                              onTap: () => _loadChatForDate(date),
-                              onLongPress: () =>
-                                  _showMoodDetails(context, date, summary),
                             ),
                           );
                         },
@@ -521,10 +575,11 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
           ),
 
           // Footer
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.all(16),
+          const Divider(height: 1),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton.icon(
                   onPressed: () async {
@@ -551,14 +606,20 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
                       ),
                     );
 
-                    if (confirmed == true) {
+                    if (confirmed == true && mounted) {
                       await ChatHistoryService.clearAllChatHistory();
                       _loadChatHistory();
                     }
                   },
-                  icon: const Icon(Icons.clear_all, size: 16),
-                  label: const Text('Clear All'),
-                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  icon: const Icon(Icons.clear_all, size: 18),
+                  label: const Text(
+                    'Clear All',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
                 ),
               ],
             ),

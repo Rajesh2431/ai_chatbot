@@ -12,6 +12,7 @@ class UserProfileService {
   static const String _keyUserLocation = 'user_location';
   static const String _keyUserRelationshipStatus = 'user_relationship_status';
   static const String _keyUserEmergencyContact = 'user_emergency_contact';
+  static const String _keyUserAvatarPath = 'user_avatar_path';
   static const String _keyLastDailyCheckin = 'last_daily_checkin_date';
 
   /// Check if this is the user's first time opening the app
@@ -39,7 +40,7 @@ class UserProfileService {
   }
 
   /// Get user profile data
-  static Future<Map<String, String>> getUserProfile() async {
+  static Future<Map<String, String?>> getUserProfile() async {
     final prefs = await SharedPreferences.getInstance();
     return {
       'name': prefs.getString(_keyUserName) ?? '',
@@ -51,6 +52,7 @@ class UserProfileService {
       'location': prefs.getString(_keyUserLocation) ?? '',
       'relationshipStatus': prefs.getString(_keyUserRelationshipStatus) ?? '',
       'emergencyContact': prefs.getString(_keyUserEmergencyContact) ?? '',
+      'avatarPath': prefs.getString(_keyUserAvatarPath),
     };
   }
 
@@ -65,18 +67,20 @@ class UserProfileService {
     String? location,
     String? relationshipStatus,
     String? emergencyContact,
+    String? avatarPath,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     
     await prefs.setString(_keyUserName, name);
-    if (age != null) await prefs.setString(_keyUserAge, age);
-    if (email != null) await prefs.setString(_keyUserEmail, email);
-    if (phone != null) await prefs.setString(_keyUserPhone, phone);
-    if (gender != null) await prefs.setString(_keyUserGender, gender);
-    if (hobbies != null) await prefs.setString(_keyUserHobbies, hobbies);
-    if (location != null) await prefs.setString(_keyUserLocation, location);
-    if (relationshipStatus != null) await prefs.setString(_keyUserRelationshipStatus, relationshipStatus);
-    if (emergencyContact != null) await prefs.setString(_keyUserEmergencyContact, emergencyContact);
+    if (age != null && age.isNotEmpty) await prefs.setString(_keyUserAge, age);
+    if (email != null && email.isNotEmpty) await prefs.setString(_keyUserEmail, email);
+    if (phone != null && phone.isNotEmpty) await prefs.setString(_keyUserPhone, phone);
+    if (gender != null && gender.isNotEmpty) await prefs.setString(_keyUserGender, gender);
+    if (hobbies != null && hobbies.isNotEmpty) await prefs.setString(_keyUserHobbies, hobbies);
+    if (location != null && location.isNotEmpty) await prefs.setString(_keyUserLocation, location);
+    if (relationshipStatus != null && relationshipStatus.isNotEmpty) await prefs.setString(_keyUserRelationshipStatus, relationshipStatus);
+    if (emergencyContact != null && emergencyContact.isNotEmpty) await prefs.setString(_keyUserEmergencyContact, emergencyContact);
+    if (avatarPath != null && avatarPath.isNotEmpty) await prefs.setString(_keyUserAvatarPath, avatarPath);
     
     // Mark profile as complete if name is provided
     if (name.isNotEmpty) {
@@ -88,6 +92,18 @@ class UserProfileService {
   static Future<String> getUserName() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_keyUserName) ?? 'User';
+  }
+
+  /// Save user avatar path
+  static Future<void> saveUserAvatar(String avatarPath) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyUserAvatarPath, avatarPath);
+  }
+
+  /// Get user avatar path
+  static Future<String?> getUserAvatarPath() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyUserAvatarPath);
   }
 
   /// Check if user needs daily check-in today
@@ -120,6 +136,7 @@ class UserProfileService {
     await prefs.remove(_keyUserLocation);
     await prefs.remove(_keyUserRelationshipStatus);
     await prefs.remove(_keyUserEmergencyContact);
+    await prefs.remove(_keyUserAvatarPath);
     await prefs.remove(_keyLastDailyCheckin);
   }
 }

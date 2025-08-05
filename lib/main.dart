@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/avatar_selection_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -14,14 +13,14 @@ import 'services/user_profile_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize services
   await BackendPDFService.loadPDFFromAssets();
   await NotificationService.initialize();
-  
+
   // Enable notifications by default (compulsory)
   await NotificationService.enableDefaultNotifications();
-  
+
   runApp(const App());
 }
 
@@ -78,14 +77,14 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // Check if this is the user's first time
     final isFirstTime = await UserProfileService.isFirstTime();
-    
+
     if (isFirstTime) {
       // First time user - go to onboarding
       Navigator.pushReplacementNamed(context, '/onboarding');
     } else {
       // Returning user - check if they need daily check-in
       final needsDailyCheckin = await UserProfileService.needsDailyCheckin();
-      
+
       if (needsDailyCheckin) {
         // User needs to do daily check-in
         Navigator.pushReplacementNamed(context, '/daily-checkin');
@@ -102,7 +101,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.white,
       body: Center(
         child: Image.asset(
-          'lib/assets/videos/splashscreen.gif',
+          'lib/assets/videos/splash1.gif',
           width: 1080,
           height: 1920,
           fit: BoxFit.cover,

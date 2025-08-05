@@ -6,7 +6,6 @@ import '../services/backend_pdf_service.dart';
 import '../services/action_detector_service.dart';
 import '../services/content_service.dart';
 import '../services/mood_based_chat_service.dart';
-import '../services/mood_service.dart';
 import '../services/avatar_service.dart';
 import '../services/chat_history_service.dart';
 import '../widgets/chat_history_drawer.dart';
@@ -41,7 +40,7 @@ class _ChatScreenState extends State<ChatScreen> {
   // Avatar information
   String _avatarName = 'Saira';
   String _avatarImage = 'lib/assets/avatar/saira.png';
-  
+
   // Chat history state
   bool _isViewingHistory = false;
   String _historyDate = '';
@@ -83,31 +82,6 @@ class _ChatScreenState extends State<ChatScreen> {
     await BackendPDFService.loadPDFFromAssets();
   }
 
-  Future<String> _getMoodIndicator() async {
-    try {
-      final hasCheckin = await MoodBasedChatService.hasCompletedDailyCheckin();
-      if (!hasCheckin) {
-        return "No Check-in";
-      }
-
-      final moodScore = await MoodService.getTodaysMoodScore();
-      if (moodScore >= 3.5) return "😊 Good Mood";
-      if (moodScore >= 2.5) return "😐 Okay Mood";
-      return "😔 Needs Support";
-    } catch (e) {
-      return "Mood Unknown";
-    }
-  }
-
-  Color _getMoodColor(String moodText) {
-    if (moodText.contains("Excellent")) return Colors.green;
-    if (moodText.contains("Great")) return Colors.lightGreen;
-    if (moodText.contains("Good")) return Colors.lime;
-    if (moodText.contains("Okay")) return Colors.orange;
-    if (moodText.contains("Support")) return Colors.red;
-    return Colors.grey;
-  }
-
   /// Save current chat to history
   Future<void> _saveChatHistory() async {
     if (_messages.isNotEmpty) {
@@ -123,7 +97,8 @@ class _ChatScreenState extends State<ChatScreen> {
       _messages.addAll(messages);
       _showEmotionButtons = false; // Hide emotion buttons for historical chats
       _isViewingHistory = true;
-      _historyDate = ChatHistoryService.getTodayDateString(); // You might want to pass the actual date
+      _historyDate =
+          ChatHistoryService.getTodayDateString(); // You might want to pass the actual date
     });
     _scrollToBottom();
   }
@@ -208,7 +183,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Always add a random video suggestion to every AI reply
       actions = _addRandomVideoAction(actions ?? []);
-      
+
       // Always add a breathing exercise suggestion to every AI reply
       actions = _addBreathingExerciseAction(actions);
 
@@ -218,7 +193,7 @@ class _ChatScreenState extends State<ChatScreen> {
           _isTyping = false;
         });
         _scrollToBottom();
-        
+
         // Save chat history after each exchange
         _saveChatHistory();
       }
@@ -456,7 +431,9 @@ class _ChatScreenState extends State<ChatScreen> {
       case '/nostril-breathing':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const AlternateNostrilBreathingScreen()),
+          MaterialPageRoute(
+            builder: (_) => const AlternateNostrilBreathingScreen(),
+          ),
         );
         break;
       case '/breathing/belly':
@@ -600,8 +577,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-
-
   Widget _buildMessageBubble(Message message) {
     final isUser = message.isUser;
     return Padding(
@@ -685,11 +660,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     height: 36,
                     fit: BoxFit.cover,
                     alignment: Alignment.topCenter,
-                    errorBuilder: (_, __, ___) => const Icon(
-                      Icons.person,
-                      color: Colors.blue,
-                      size: 24,
-                    ),
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.person, color: Colors.blue, size: 24),
                   ),
                 ),
             ],
@@ -902,34 +874,6 @@ class _ChatScreenState extends State<ChatScreen> {
                   ],
                 ),
                 const Spacer(),
-                // Mood indicator
-                FutureBuilder<String>(
-                  future: _getMoodIndicator(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getMoodColor(snapshot.data!),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          snapshot.data!,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-                const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(
                     Icons.info_outline,
