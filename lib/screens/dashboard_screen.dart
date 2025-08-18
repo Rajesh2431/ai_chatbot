@@ -14,6 +14,7 @@ import 'user_profile_screen.dart';
 import '../widgets/ai_drawer.dart';
 import '../services/mood_service.dart';
 import '../services/user_profile_service.dart';
+import '../services/avatar_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -153,11 +154,14 @@ class _HomeContent extends StatefulWidget {
 class _HomeContentState extends State<_HomeContent> {
   String _userName = 'User';
   String? _userAvatarPath;
+  String _aiAvatarName = 'Saira';
+  String _aiAvatarImage = 'lib/assets/avatar/saira.png';
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
+    _loadAIAvatar();
   }
 
   Future<void> _loadUserProfile() async {
@@ -165,12 +169,28 @@ class _HomeContentState extends State<_HomeContent> {
       final profile = await UserProfileService.getUserProfile();
       if (mounted) {
         setState(() {
-          _userName = profile['name']?.isNotEmpty == true ? profile['name']! : 'User';
+          _userName = profile['name']?.isNotEmpty == true
+              ? profile['name']!
+              : 'User';
           _userAvatarPath = profile['avatarPath'];
         });
       }
     } catch (e) {
       debugPrint('Error loading user profile: $e');
+    }
+  }
+
+  Future<void> _loadAIAvatar() async {
+    try {
+      final selectedAvatar = await AvatarService.getSelectedAvatar();
+      if (selectedAvatar != null && mounted) {
+        setState(() {
+          _aiAvatarName = selectedAvatar['name']!;
+          _aiAvatarImage = selectedAvatar['image']!;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading AI avatar: $e');
     }
   }
 
@@ -187,7 +207,11 @@ class _HomeContentState extends State<_HomeContent> {
             children: [
               // AI Menu icon
               IconButton(
-                icon: const Icon(Icons.smart_toy, color: Color(0xFF4A90E2), size: 28),
+                icon: const Icon(
+                  Icons.smart_toy,
+                  color: Color(0xFF4A90E2),
+                  size: 28,
+                ),
                 onPressed: () {
                   Scaffold.of(context).openDrawer();
                 },
@@ -204,6 +228,7 @@ class _HomeContentState extends State<_HomeContent> {
                   );
                   if (result == true) {
                     _loadUserProfile();
+                    _loadAIAvatar();
                   }
                 },
                 child: Container(
@@ -223,28 +248,28 @@ class _HomeContentState extends State<_HomeContent> {
                   child: ClipOval(
                     child: _userAvatarPath != null
                         ? (_userAvatarPath!.startsWith('lib/assets/'))
-                            ? Image.asset(
-                                _userAvatarPath!,
-                                width: 48,
-                                height: 48,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(
-                                  Icons.person,
-                                  color: Color(0xFF4A90E2),
-                                  size: 28,
-                                ),
-                              )
-                            : Image.file(
-                                File(_userAvatarPath!),
-                                width: 48,
-                                height: 48,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(
-                                  Icons.person,
-                                  color: Color(0xFF4A90E2),
-                                  size: 28,
-                                ),
-                              )
+                              ? Image.asset(
+                                  _userAvatarPath!,
+                                  width: 48,
+                                  height: 48,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                    Icons.person,
+                                    color: Color(0xFF4A90E2),
+                                    size: 28,
+                                  ),
+                                )
+                              : Image.file(
+                                  File(_userAvatarPath!),
+                                  width: 48,
+                                  height: 48,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                    Icons.person,
+                                    color: Color(0xFF4A90E2),
+                                    size: 28,
+                                  ),
+                                )
                         : const Icon(
                             Icons.person,
                             color: Color(0xFF4A90E2),
@@ -256,39 +281,191 @@ class _HomeContentState extends State<_HomeContent> {
             ],
           ),
           const SizedBox(height: 24),
-          // Greeting Card
+          // AI Avatar Greeting Card
           Container(
             width: double.infinity,
-            height: 200,
+            height: 220,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
-              image: const DecorationImage(
-                image: AssetImage(
-                  'lib/assets/icons/ocean_bg.png',
-                ), // Replace with your image
-                fit: BoxFit.cover,
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF4FC3F7), // Light blue
+                  Color(0xFF29B6F6), // Medium blue
+                  Color(0xFF0288D1), // Darker blue
+                ],
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withValues(alpha: 0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: Text(
-                  'Hi\n$_userName!',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 38,
-                    fontWeight: FontWeight.bold,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black26,
-                        blurRadius: 6,
-                        offset: Offset(2, 2),
+            child: Stack(
+              children: [
+                // Decorative elements (bubbles/coral effect)
+                Positioned(
+                  bottom: -20,
+                  right: -20,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: -30,
+                  right: 50,
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.08),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 20,
+                  left: -10,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.12),
+                    ),
+                  ),
+                ),
+
+                // Main content
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      // Left side - Greeting text
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Hi',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 24,
+                                fontWeight: FontWeight.w400,
+                                shadows: const [
+                                  Shadow(
+                                    color: Colors.black26,
+                                    blurRadius: 4,
+                                    offset: Offset(1, 1),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              _userName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black26,
+                                    blurRadius: 6,
+                                    offset: Offset(2, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'I\'m $_aiAvatarName, your AI companion',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.85),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                shadows: const [
+                                  Shadow(
+                                    color: Colors.black26,
+                                    blurRadius: 3,
+                                    offset: Offset(1, 1),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Right side - AI Avatar (Bigger)
+                      Expanded(
+                        flex: 1,
+                        child: Container(
+                          alignment: Alignment.centerRight,
+                          child: Container(
+                            width: 160,
+                            height: 160,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withValues(alpha: 0.2),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.4),
+                                width: 4,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.25),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
+                                ),
+                                BoxShadow(
+                                  color: Colors.blue.withValues(alpha: 0.3),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  _aiAvatarImage,
+                                  width: 140,
+                                  height: 140,
+                                  fit: BoxFit.cover,
+                                  alignment: Alignment.topCenter,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.smart_toy,
+                                      size: 70,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
@@ -497,15 +674,15 @@ class _HomeContentState extends State<_HomeContent> {
               ),
               _GameTile(
                 title: 'Memory Game',
-                backgroundImage: 'lib/assets/icons/game_bg.png',
+                backgroundImage: 'lib/assets/icons/game3.png',
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const MemoryGame()),
                 ),
               ),
               _GameTile(
-                title: 'Game Name',
-                backgroundImage: 'lib/assets/images/game4.jpg',
+                title: 'x',
+                backgroundImage: 'lib/assets/icons/game4.png',
                 onTap: () {},
               ),
             ],

@@ -331,8 +331,32 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) {
                             if (value != null && value.isNotEmpty) {
+                              // Basic email format validation
                               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                                return 'Enter a valid email';
+                                return 'Please enter a valid email address';
+                              }
+                              
+                              // Check for common email domains
+                              final commonDomains = [
+                                '@gmail.com',
+                                '@outlook.com',
+                                '@hotmail.com',
+                                '@yahoo.com',
+                                '@icloud.com',
+                                '@protonmail.com',
+                                '@aol.com',
+                                '@live.com',
+                                '@msn.com',
+                                '@yandex.com',
+                                '@mail.com',
+                                '@zoho.com',
+                              ];
+                              
+                              final email = value.toLowerCase();
+                              bool hasValidDomain = commonDomains.any((domain) => email.endsWith(domain));
+                              
+                              if (!hasValidDomain) {
+                                return 'Please use a common email provider\n(Gmail, Outlook, Yahoo, etc.)';
                               }
                             }
                             return null;

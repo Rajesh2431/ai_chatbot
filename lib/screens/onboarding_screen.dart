@@ -609,6 +609,45 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       filled: true,
                       fillColor: Colors.white,
                     ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your email address';
+                      }
+
+                      // Basic email format validation
+                      if (!RegExp(
+                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      ).hasMatch(value)) {
+                        return 'Please enter a valid email address';
+                      }
+
+                      // Check for common email domains
+                      final commonDomains = [
+                        '@gmail.com',
+                        '@outlook.com',
+                        '@hotmail.com',
+                        '@yahoo.com',
+                        '@icloud.com',
+                        '@protonmail.com',
+                        '@aol.com',
+                        '@live.com',
+                        '@msn.com',
+                        '@yandex.com',
+                        '@mail.com',
+                        '@zoho.com',
+                      ];
+
+                      final email = value.toLowerCase();
+                      bool hasValidDomain = commonDomains.any(
+                        (domain) => email.endsWith(domain),
+                      );
+
+                      if (!hasValidDomain) {
+                        return 'Please use a common email provider\n(Gmail, Outlook, Yahoo, etc.)';
+                      }
+
+                      return null;
+                    },
                   ),
 
                   const SizedBox(height: 16),
