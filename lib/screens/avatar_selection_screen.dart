@@ -3,7 +3,9 @@ import 'avatar_detail_screen.dart';
 import '../routes/circular_reveal_route.dart';
 
 class AvatarSelectionScreen extends StatelessWidget {
-  final List<Map<String, dynamic>> avatars = [
+  final bool isChangingAvatar;
+  
+  static const List<Map<String, dynamic>> avatars = [
     {
       "name": "Saira",
       "image": "lib/assets/avatar/saira.png",
@@ -13,6 +15,11 @@ class AvatarSelectionScreen extends StatelessWidget {
       "image": "lib/assets/avatar/kael.png",
     },
   ];
+
+  const AvatarSelectionScreen({
+    super.key,
+    this.isChangingAvatar = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +57,11 @@ class AvatarSelectionScreen extends StatelessWidget {
 
                       Navigator.of(context).push(
                         CircularRevealRoute(
-                          page: AvatarDetailScreen(imagePath: avatar['image'], name: avatar['name']),
+                          page: AvatarDetailScreen(
+                            imagePath: avatar['image'], 
+                            name: avatar['name'],
+                            isChangingAvatar: isChangingAvatar,
+                          ),
                           centerAlignment: tapPosition,
                           startRadius: 80.0,
                           revealColor: const Color(0xFF52B3E0),

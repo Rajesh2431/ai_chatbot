@@ -1,11 +1,11 @@
-# ai_chatbot
+# SeaSmart
 
 A Flutter app for mental health support, journaling, and relaxation games.
 
 ## Features
 
 - **AI Chatbot:**  
-  Chat with Shiro, your empathetic mental health assistant.
+  Chat with SeaSmart, your empathetic mental health assistant.
 - **Voice Chat:**  
   Speak with the AI using speech recognition and hear responses with text-to-speech.
 - **Journal:**  
@@ -22,17 +22,20 @@ A Flutter app for mental health support, journaling, and relaxation games.
 ## Getting Started
 
 1. **Clone the repository:**
+
    ```sh
-   git clone https://github.com/rajesh2431/ai_chatbot.git
-   cd ai_chatbot
+   git clone https://github.com/rajesh2431/seasmart.git
+   cd seasmart
    ```
 
 2. **Install dependencies:**
+
    ```sh
    flutter pub get
    ```
 
 3. **Run the app:**
+
    ```sh
    flutter run
    ```

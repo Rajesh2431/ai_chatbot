@@ -36,8 +36,11 @@ class CircularRevealRoute extends PageRouteBuilder {
   @override
   bool get maintainState => true;
 
+<<<<<<< HEAD
   Animation<double>? _animation;
 
+=======
+>>>>>>> main
   @override
   Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
     return page;
@@ -45,7 +48,10 @@ class CircularRevealRoute extends PageRouteBuilder {
 
   @override
   Widget buildTransitions(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) {
+<<<<<<< HEAD
     _animation = animation;
+=======
+>>>>>>> main
     final size = MediaQuery.of(context).size;
 
     // Calculate max radius to cover the screen from centerAlignment

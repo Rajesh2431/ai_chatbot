@@ -1,10 +1,21 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import '../widget/message_bubble.dart';
 import '../models/message.dart';
 import '../services/api_service.dart';
-import '../services/depression_service.dart';
-import '../widget/option_bubble.dart';
-import '../screens/breathing_timer.dart'; // 👈 Import breathing screen
+import '../services/backend_pdf_service.dart';
+import '../services/action_detector_service.dart';
+import '../services/content_service.dart';
+import '../services/mood_based_chat_service.dart';
+import '../services/avatar_service.dart';
+import '../services/chat_history_service.dart';
+import '../widgets/chat_history_drawer.dart';
+import 'voicechat_screen.dart';
+import 'breathing_timer.dart';
+import 'belly_breathing_screen.dart';
+import 'box_breathing_screen.dart';
+import 'alternate_nostril_breathing_screen.dart';
+import 'journal_screen.dart';
+import 'tap_the_calm_game.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -16,161 +27,511 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final List<Message> _messages = [];
   bool _isTyping = false;
-  bool _isQuestionnaireActive = false;
-  int _currentQuestionIndex = 0;
-  int _totalScore = 0;
-  bool _awaitingPostExerciseFeedback = false;
+  bool _showEmotionButtons = true;
+
+  // Message counting for forced suggestions
+  int _messageCount = 0;
+  bool _hasShownBreathingSuggestion = false;
+  bool _hasShownJournalSuggestion = false;
+
+  // Avatar information
+  String _avatarName = 'Saira';
+  String _avatarImage = 'lib/assets/avatar/saira.png';
+
+  // Chat history state
+  bool _isViewingHistory = false;
+  String _historyDate = '';
 
   @override
   void initState() {
     super.initState();
+    _loadAvatar();
+    _initializeChat();
+    _initializePDF();
+  }
+
+  @override
+  void dispose() {
+    // Save chat history when leaving the screen
+    _saveChatHistory();
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _loadAvatar() async {
+    try {
+      final selectedAvatar = await AvatarService.getSelectedAvatar();
+      if (selectedAvatar != null) {
+        setState(() {
+          _avatarName = selectedAvatar['name']!;
+          _avatarImage = selectedAvatar['image']!;
+        });
+      }
+    } catch (e) {
+      // Use default avatar if loading fails
+      print('Error loading avatar: $e');
+    }
+  }
+
+  void _initializePDF() async {
+    // Load PDF content when chat screen initializes
+    await BackendPDFService.loadPDFFromAssets();
+  }
+
+  /// Save current chat to history
+  Future<void> _saveChatHistory() async {
+    if (_messages.isNotEmpty) {
+      final today = ChatHistoryService.getTodayDateString();
+      await ChatHistoryService.saveChatHistory(today, _messages);
+    }
+  }
+
+  /// Load chat history for a specific date
+  void _loadChatHistory(List<Message> messages) {
+    setState(() {
+      _messages.clear();
+      _messages.addAll(messages);
+      _showEmotionButtons = false; // Hide emotion buttons for historical chats
+      _isViewingHistory = true;
+      _historyDate =
+          ChatHistoryService.getTodayDateString(); // You might want to pass the actual date
+    });
+    _scrollToBottom();
+  }
+
+  /// Start a new chat session
+  void _startNewChat() {
+    setState(() {
+      _messages.clear();
+      _messageCount = 0;
+      _hasShownBreathingSuggestion = false;
+      _hasShownJournalSuggestion = false;
+      _showEmotionButtons = true;
+      _isViewingHistory = false;
+      _historyDate = '';
+    });
     _initializeChat();
   }
 
   void _initializeChat() async {
-    final welcome = DepressionService.getRandomWelcomeMessage();
-    setState(() {
-      _messages.add(Message(text: welcome, isUser: false));
-      _isQuestionnaireActive = true;
-    });
-    _scrollToBottom();
-    await Future.delayed(Duration(seconds: 1));
-    _askNextQuestion();
-  }
+    // Wait a bit for avatar to load
+    await Future.delayed(const Duration(milliseconds: 100));
 
-  void _askNextQuestion() {
-    if (_currentQuestionIndex < DepressionService.questions.length) {
-      final q = DepressionService.questions[_currentQuestionIndex];
+    setState(() {
+      _messages.add(
+        Message(
+          text: "Hi! I'm $_avatarName, your mental health companion.",
+          isUser: false,
+        ),
+      );
+    });
+
+    // Add mood-based greeting
+    try {
+      final moodGreeting = await MoodBasedChatService.getMoodBasedGreeting();
       setState(() {
-        _messages.add(Message(text: q.text, isUser: false));
+        _messages.add(Message(text: moodGreeting, isUser: false));
       });
-      _scrollToBottom();
-    } else {
-      final result = DepressionService.getResultMessage(_totalScore);
-      final activities = DepressionService.getRecommendedActivities(result);
+    } catch (e) {
+      // Fallback greeting if mood service fails
       setState(() {
-        _messages.add(
-          Message(text: "Your depression level: $result", isUser: false),
-        );
-        _messages.add(Message(text: activities, isUser: false));
         _messages.add(
           Message(
             text:
-                "Here’s a task to start with: Try one of the listed activities today and write about how it made you feel. Tap below to start a breathing exercise.",
+                "I have access to mental health resources to help you. How are you feeling today? 😊",
             isUser: false,
-          ),
-        );
-        _isQuestionnaireActive = false;
-      });
-      _scrollToBottom();
-
-      Future.delayed(Duration(seconds: 1), () {
-        showModalBottomSheet(
-          // ignore: use_build_context_synchronously
-          context: context,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-          backgroundColor: Colors.black87,
-          builder: (context) => Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text("Start Breathing Exercise", style: TextStyle(color: Colors.white, fontSize: 18)),
-                SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () async {
-                    final completed = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const BreathingExerciseScreen(durationSeconds: 60),
-                      ),
-                    );
-                    if (completed == true) {
-                      setState(() {
-                        _messages.add(Message(
-                          text: "How do you feel after the breathing exercise?",
-                          isUser: false,
-                        ));
-                        _awaitingPostExerciseFeedback = true;
-                      });
-                      _scrollToBottom();
-                    }
-                  },
-                  child: Text("1 Minute"),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final completed = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const BreathingExerciseScreen(durationSeconds: 120),
-                      ),
-                    );
-                    if (completed == true) {
-                      setState(() {
-                        _messages.add(Message(
-                          text: "How do you feel after the breathing exercise?",
-                          isUser: false,
-                        ));
-                        _awaitingPostExerciseFeedback = true;
-                      });
-                      _scrollToBottom();
-                    }
-                  },
-                  child: Text("2 Minutes"),
-                ),
-              ],
-            ),
           ),
         );
       });
     }
-  }
 
-  void _submitAnswer(int score) {
-    final currentQuestion = DepressionService.questions[_currentQuestionIndex];
-    final selectedOption = currentQuestion.options[
-        currentQuestion.scores.indexOf(score)];
-    setState(() {
-      _messages.add(Message(text: selectedOption, isUser: true));
-    });
-    _totalScore += score;
-    _currentQuestionIndex++;
-    _askNextQuestion();
+    _scrollToBottom();
   }
 
   void _sendMessage(String text) async {
-    if (text.isEmpty || _isTyping || _isQuestionnaireActive) return;
+    if (text.isEmpty || _isTyping) return;
+
     setState(() {
       _messages.add(Message(text: text, isUser: true));
       _isTyping = true;
+      _showEmotionButtons = false;
+      _messageCount++; // Increment message count
     });
     _controller.clear();
     _scrollToBottom();
 
-    String reply;
-    if (_awaitingPostExerciseFeedback) {
-      reply = "Thank you for sharing. Remember, it’s okay to feel what you feel. Let's keep exploring ways to feel better.";
-      _awaitingPostExerciseFeedback = false;
-    } else {
-      reply = await OpenRouterAPI.getResponse(text);
+    try {
+      // Check if we should force a suggestion
+      final forcedSuggestion = await _getForcedSuggestion();
+
+      String reply;
+      List<MessageAction>? actions;
+
+      if (forcedSuggestion != null) {
+        // Use forced suggestion instead of AI response
+        reply = forcedSuggestion;
+        actions = ActionDetectorService.detectActions(reply);
+      } else {
+        // Get normal AI response
+        reply = await OpenRouterAPI.getResponse(text);
+        actions = ActionDetectorService.detectActions(reply);
+      }
+
+      // Always add a random video suggestion to every AI reply
+      actions = _addRandomVideoAction(actions ?? []);
+
+      // Always add a breathing exercise suggestion to every AI reply
+      actions = _addBreathingExerciseAction(actions);
+
+      if (mounted) {
+        setState(() {
+          _messages.add(Message(text: reply, isUser: false, actions: actions));
+          _isTyping = false;
+        });
+        _scrollToBottom();
+
+        // Save chat history after each exchange
+        _saveChatHistory();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _messages.add(
+            Message(
+              text: "Sorry, I'm having trouble connecting. Please try again.",
+              isUser: false,
+            ),
+          );
+          _isTyping = false;
+        });
+        _scrollToBottom();
+      }
+    }
+  }
+
+  void _sendEmotionResponse(String emotion) {
+    _sendMessage("I'm feeling $emotion");
+  }
+
+  /// Check if we should force breathing or journal suggestions
+  Future<String?> _getForcedSuggestion() async {
+    // Get mood-based suggestions
+    try {
+      final moodSuggestions =
+          await MoodBasedChatService.getMoodBasedSuggestions();
+
+      // Force breathing exercise after 2-3 messages (mood-appropriate)
+      if (_messageCount >= 2 && !_hasShownBreathingSuggestion) {
+        _hasShownBreathingSuggestion = true;
+        final techniques = [
+          "Let's try some belly breathing to help you relax and center yourself 🌿",
+          "How about some box breathing? It's a technique used by Navy SEALs for focus 🌿",
+          "Try alternate nostril breathing - it's an ancient technique for balance 🌿",
+        ];
+        final randomTechnique = techniques[Random().nextInt(techniques.length)];
+        return moodSuggestions.isNotEmpty
+            ? moodSuggestions[0]
+            : randomTechnique;
+      }
+
+      // Force journal suggestion after 6-7 messages (mood-appropriate)
+      if (_messageCount >= 6 && !_hasShownJournalSuggestion) {
+        _hasShownJournalSuggestion = true;
+        return moodSuggestions.length > 1
+            ? moodSuggestions[1]
+            : "It might help to write down your thoughts. Try journaling to process your feelings ✨";
+      }
+
+      // Randomly suggest video or LMS content after 4-5 messages (30% chance)
+      if (_messageCount >= 4 && _messageCount <= 8) {
+        final random = Random();
+        if (random.nextDouble() < 0.3) {
+          // 30% chance
+          if (random.nextBool()) {
+            // Suggest video
+            return ContentService.getVideoSuggestionText();
+          } else {
+            // Suggest LMS
+            return ContentService.getLMSSuggestionText();
+          }
+        }
+      }
+    } catch (e) {
+      // Fallback to original suggestions if mood service fails
+      if (_messageCount >= 2 && !_hasShownBreathingSuggestion) {
+        _hasShownBreathingSuggestion = true;
+        final techniques = [
+          "Let's try some belly breathing to help you relax and center yourself 🌿",
+          "How about some box breathing? It's a technique used by Navy SEALs for focus 🌿",
+          "Try alternate nostril breathing - it's an ancient technique for balance 🌿",
+        ];
+        return techniques[Random().nextInt(techniques.length)];
+      }
+
+      if (_messageCount >= 6 && !_hasShownJournalSuggestion) {
+        _hasShownJournalSuggestion = true;
+        return "It might help to write down your thoughts. Try journaling to process your feelings ✨";
+      }
     }
 
+    return null;
+  }
+
+  /// Reset forced suggestions (useful for testing or new sessions)
+  void _resetForcedSuggestions() {
     setState(() {
-      _messages.add(Message(text: reply, isUser: false));
-      _isTyping = false;
+      _messageCount = 0;
+      _hasShownBreathingSuggestion = false;
+      _hasShownJournalSuggestion = false;
     });
-    _scrollToBottom();
+  }
+
+  /// Check if a message is a forced suggestion
+  bool _isMessageForced(String messageText) {
+    return messageText.contains("Let's take a moment to breathe") ||
+        messageText.contains("It might help to write down your thoughts");
+  }
+
+  /// Add a random video action to the actions list
+  List<MessageAction> _addRandomVideoAction(
+    List<MessageAction> existingActions,
+  ) {
+    final randomVideo = ContentService.getRandomVideo();
+
+    final videoAction = MessageAction(
+      label: "▶️ ${randomVideo['title']}",
+      route: '/video',
+      icon: Icons.play_circle_fill,
+      data: {
+        'url': randomVideo['url']!,
+        'title': randomVideo['title']!,
+        'description': randomVideo['description']!,
+      },
+    );
+
+    // Add video action to existing actions (LMS is now in header)
+    return [...existingActions, videoAction];
+  }
+
+  /// Add a random breathing exercise action to the actions list
+  List<MessageAction> _addBreathingExerciseAction(
+    List<MessageAction> existingActions,
+  ) {
+    final techniques = [
+      {
+        'name': 'Belly Breathing',
+        'description': 'Deep diaphragmatic breathing to reduce stress',
+        'icon': Icons.favorite,
+        'route': '/belly-breathing',
+        'emoji': '🫁',
+        'screen': const BellyBreathingScreen(),
+      },
+      {
+        'name': 'Box Breathing',
+        'description': '4-4-4-4 pattern used by Navy SEALs',
+        'icon': Icons.crop_square,
+        'route': '/box-breathing',
+        'emoji': '⬜',
+        'screen': const BoxBreathingScreen(),
+      },
+      {
+        'name': 'Alternate Nostril',
+        'description': 'Ancient yogic technique for balance',
+        'icon': Icons.air,
+        'route': '/nostril-breathing',
+        'emoji': '🌬️',
+        'screen': const AlternateNostrilBreathingScreen(),
+      },
+    ];
+
+    final randomTechnique = techniques[Random().nextInt(techniques.length)];
+
+    final breathingAction = MessageAction(
+      label: "${randomTechnique['emoji']} ${randomTechnique['name']}",
+      route: randomTechnique['route'] as String,
+      icon: randomTechnique['icon'] as IconData,
+      data: {
+        'description': randomTechnique['description'] as String,
+        'name': randomTechnique['name'] as String,
+      },
+    );
+
+    // Add breathing action to existing actions
+    return [...existingActions, breathingAction];
+  }
+
+  void _showResourceInfo() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Available Resources',
+          style: TextStyle(color: Color(0xFF4A90E2)),
+        ),
+        content: SingleChildScrollView(
+          child: Text(
+            BackendPDFService.getResourceSummary(),
+            style: const TextStyle(fontSize: 14),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Got it!'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(MessageAction action) {
+    return ElevatedButton.icon(
+      onPressed: () => _handleActionTap(action),
+      icon: Icon(action.icon, size: 18),
+      label: Text(
+        action.label,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF4A90E2),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        elevation: 3,
+        shadowColor: Colors.blue.withValues(alpha: 0.3),
+      ),
+    );
+  }
+
+  void _handleActionTap(MessageAction action) async {
+    switch (action.route) {
+      case '/breathing':
+        // Navigate to breathing selection screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BreathingScreen()),
+        );
+        break;
+      case '/belly-breathing':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BellyBreathingScreen()),
+        );
+        break;
+      case '/box-breathing':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BoxBreathingScreen()),
+        );
+        break;
+      case '/nostril-breathing':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const AlternateNostrilBreathingScreen(),
+          ),
+        );
+        break;
+      case '/breathing/belly':
+      case '/breathing/box':
+      case '/breathing/nostril':
+        // Legacy support - navigate to breathing selection screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BreathingScreen()),
+        );
+        break;
+      case '/journal':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const JournalScreen()),
+        );
+        break;
+      case '/calm-game':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const GridCalmGame()),
+        );
+        break;
+      case '/video':
+        // Launch YouTube video
+        if (action.data != null && action.data!['url'] != null) {
+          try {
+            await ContentService.launchVideo(action.data!['url']!);
+            _showVideoLaunchFeedback(action.data!['title'] ?? 'Video');
+          } catch (e) {
+            _showErrorFeedback(
+              'Unable to open video. Please check if you have a browser or YouTube app installed.',
+            );
+          }
+        }
+        break;
+      case '/lms':
+        // Launch LMS website
+        try {
+          await ContentService.launchLMSWebsite();
+          _showLMSLaunchFeedback();
+        } catch (e) {
+          _showErrorFeedback(
+            'Unable to open website. Please check your internet connection and browser.',
+          );
+        }
+        break;
+      default:
+        // Handle unknown routes
+        break;
+    }
+  }
+
+  void _showVideoLaunchFeedback(String videoTitle) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Opening "$videoTitle" in YouTube...'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showLMSLaunchFeedback() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Opening ${ContentService.lmsWebsiteName}...'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: Colors.blue.shade600,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showErrorFeedback(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 4),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'OK',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
   }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
+          0.0, // For reverse: true, scroll to top (which is the bottom of the chat)
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
@@ -178,117 +539,418 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  Widget _buildInputBar() {
-    final sendEnabled = !_isTyping && !_isQuestionnaireActive;
+  Widget _buildEmotionButtons() {
+    if (!_showEmotionButtons) return const SizedBox.shrink();
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFF2C2C2C),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.add, color: Colors.white70),
-            const SizedBox(width: 8),
-            const Icon(Icons.tune, color: Colors.white70),
-            const SizedBox(width: 8),
-            Expanded(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          _buildEmotionButton("Happy", "😊", Colors.green),
+          _buildEmotionButton("Sad", "😢", Colors.blue),
+          _buildEmotionButton("Depressed", "😔", Colors.orange),
+          _buildEmotionButton("Frustrated", "😤", Colors.red),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmotionButton(String emotion, String emoji, Color color) {
+    return OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        side: BorderSide(color: color.withOpacity(0.4)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        backgroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      ),
+      onPressed: () => _sendEmotionResponse(emotion.toLowerCase()),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emotion, style: TextStyle(color: color, fontSize: 16)),
+          const SizedBox(width: 6),
+          Text(emoji, style: const TextStyle(fontSize: 16)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageBubble(Message message) {
+    final isUser = message.isUser;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Column(
+        crossAxisAlignment: isUser
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: isUser
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!isUser)
+                ClipOval(
+                  child: Image.asset(
+                    _avatarImage,
+                    width: 36,
+                    height: 36,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                    errorBuilder: (_, __, ___) => Image.asset(
+                      'assets/icons/profile.png',
+                      width: 36,
+                      height: 36,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.person,
+                        color: Colors.deepOrange,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+              if (!isUser) const SizedBox(width: 8),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isUser
+                        ? const Color(0xFF4A90E2)
+                        : const Color(0xFFF5F7FA),
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(22),
+                      topRight: const Radius.circular(22),
+                      bottomLeft: Radius.circular(isUser ? 22 : 6),
+                      bottomRight: Radius.circular(isUser ? 6 : 22),
+                    ),
+                    boxShadow: isUser
+                        ? [
+                            BoxShadow(
+                              color: Colors.blue.withValues(alpha: 0.08),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: Text(
+                    message.text,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isUser ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              if (isUser) const SizedBox(width: 8),
+              if (isUser)
+                ClipOval(
+                  child: Image.asset(
+                    'assets/icons/user.png',
+                    width: 36,
+                    height: 36,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.person, color: Colors.blue, size: 24),
+                  ),
+                ),
+            ],
+          ),
+          // Action buttons for AI messages
+          if (!isUser && message.actions != null && message.actions!.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(top: 12, left: 42),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade100),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        'Quick Actions:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const Spacer(),
+                      // Learn More text button in top right corner
+                      GestureDetector(
+                        onTap: () {
+                          ContentService.launchLMSWebsite();
+                          _showLMSLaunchFeedback();
+                        },
+                        child: const Text(
+                          'Learn More',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                      // Show indicator for forced suggestions
+                      if (_isMessageForced(message.text))
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.orange.shade300),
+                          ),
+                          child: const Text(
+                            'Recommended',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: message.actions!
+                        .map((action) => _buildActionButton(action))
+                        .toList(),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFE0E0E0))),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xFFE0E0E0)),
+                borderRadius: BorderRadius.circular(25),
+                color: Colors.white,
+              ),
               child: TextField(
                 controller: _controller,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(fontSize: 16),
                 decoration: const InputDecoration(
-                  hintText: "Ask anything",
-                  hintStyle: TextStyle(color: Colors.white54),
+                  hintText: "Ask for anything?",
+                  hintStyle: TextStyle(color: Colors.grey),
                   border: InputBorder.none,
                 ),
-                onSubmitted: sendEnabled ? (text) => _sendMessage(text) : null,
+                onSubmitted: _sendMessage,
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.mic, color: Colors.white70),
-              onPressed: sendEnabled ? () {} : null,
+          ),
+          const SizedBox(width: 8),
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              border: Border.all(color: const Color(0xFFE0E0E0)),
+              shape: BoxShape.circle,
+              color: Colors.white,
             ),
-            IconButton(
-              icon: Icon(
-                Icons.send,
-                color: sendEnabled ? Colors.white70 : Colors.white24,
-              ),
-              onPressed: sendEnabled
-                  ? () => _sendMessage(_controller.text.trim())
-                  : null,
+            child: IconButton(
+              icon: const Icon(Icons.graphic_eq, color: Color(0xFF4A90E2)),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const VoiceChatScreen(),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 6),
+          Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+              color: Color(0xFF4A90E2),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.send, color: Colors.white),
+              onPressed: _isTyping
+                  ? null
+                  : () => _sendMessage(_controller.text.trim()),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Get status bar height for proper top spacing
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E1E),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF1E1E1E),
-        elevation: 0,
-        leading: const Icon(Icons.menu, color: Colors.white),
-        title: const Text(
-          "Mental Health AI",
-          style: TextStyle(color: Colors.white),
-        ),
-        actions: const [
-          SizedBox(width: 16),
-        ],
+      key: _scaffoldKey,
+      backgroundColor: Colors.white,
+      drawer: ChatHistoryDrawer(
+        onHistorySelected: _loadChatHistory,
+        onNewChat: _startNewChat,
       ),
       body: Column(
         children: [
-          const SizedBox(height: 24),
+          // Top row with menu icon and status bar space
+          Padding(
+            padding: EdgeInsets.only(
+              top: statusBarHeight + 16, // Add status bar height
+              left: 16,
+              right: 16,
+              bottom: 4,
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.menu,
+                    color: Color(0xFF4A90E2),
+                    size: 32,
+                  ),
+                  onPressed: () {
+                    _scaffoldKey.currentState?.openDrawer();
+                  },
+                ),
+                // Avatar name display with history indicator
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      _avatarName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF4A90E2),
+                      ),
+                    ),
+                    if (_isViewingHistory)
+                      const Text(
+                        'Chat History',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.orange,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                  ],
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(
+                    Icons.info_outline,
+                    color: Color(0xFF4A90E2),
+                    size: 28,
+                  ),
+                  onPressed: _showResourceInfo,
+                  tooltip: 'Available Resources',
+                ),
+                // IconButton(
+                //   icon: const Icon(
+                //     Icons.picture_as_pdf,
+                //     color: Color(0xFF4A90E2),
+                //     size: 28,
+                //   ),
+                //   onPressed: () {
+                //     Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (context) => const PDFChatScreen(),
+                //       ),
+                //     );
+                //   },
+                //   tooltip: 'Chat with PDF',
+                // ),
+              ],
+            ),
+          ),
           Expanded(
             child: ListView(
               controller: _scrollController,
-              padding: const EdgeInsets.only(bottom: 0),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              reverse: true,
               children: [
-                if (_messages.isNotEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10),
-                    child: Divider(color: Colors.white24),
-                  ),
-                ..._messages.map(
-                  (msg) => MessageBubble(text: msg.text, isUser: msg.isUser),
-                ),
-                if (_isQuestionnaireActive &&
-                    _currentQuestionIndex <
-                        DepressionService.questions.length)
-                  Wrap(
-                    children: List.generate(
-                      DepressionService
-                          .questions[_currentQuestionIndex]
-                          .options
-                          .length,
-                      (i) => OptionBubble(
-                        label: DepressionService
-                            .questions[_currentQuestionIndex]
-                            .options[i],
-                        onTap: () => _submitAnswer(
-                          DepressionService
-                              .questions[_currentQuestionIndex]
-                              .scores[i],
+                const SizedBox(height: 8),
+                ..._messages.reversed.map((msg) => _buildMessageBubble(msg)),
+              ],
+            ),
+          ),
+          if (_isTyping)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: Row(
+                children: [
+                  ClipOval(
+                    child: Image.asset(
+                      _avatarImage,
+                      width: 32,
+                      height: 32,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                      errorBuilder: (_, __, ___) => Image.asset(
+                        'assets/icons/profile.png',
+                        width: 32,
+                        height: 32,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.person,
+                          color: Colors.deepOrange,
+                          size: 16,
                         ),
                       ),
                     ),
                   ),
-                if (_isTyping)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 20, bottom: 12),
-                    child: Text(
-                      "Typing...",
-                      style: TextStyle(color: Colors.white54),
+                  const SizedBox(width: 10),
+                  const Text(
+                    "Typing...",
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
                     ),
                   ),
-              ],
+                ],
+              ),
             ),
-          ),
+          _buildEmotionButtons(),
           _buildInputBar(),
         ],
       ),
