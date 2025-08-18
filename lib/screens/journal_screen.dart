@@ -245,17 +245,32 @@ class _JournalScreenState extends State<JournalScreen>
                       calendarBuilders: CalendarBuilders(
                         markerBuilder: (context, date, events) {
                           if (events.isNotEmpty) {
-                            return Positioned(
-                              bottom: 1,
-                              child: Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.blue,
+                            final mood = (events.first as JournalEntry).mood;
+                            if (mood != null && _moodEmojis.containsKey(mood)) {
+                              return Positioned(
+                                bottom: 1,
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: AnimatedEmoji(
+                                    _moodEmojis[mood]!,
+                                    size: 20,
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
+                            } else {
+                              return Positioned(
+                                bottom: 1,
+                                child: Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                              );
+                            }
                           }
                           return null;
                         },
@@ -273,7 +288,12 @@ class _JournalScreenState extends State<JournalScreen>
                     ),
                   ),
                 const SizedBox(height: 20),
-                if (_emojiVisible)
+                if (_emojiVisible) ...[
+                  const Text(
+                    'Choose your mood',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color.fromARGB(221, 46, 46, 46)),
+                  ),
+                  const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
@@ -338,6 +358,7 @@ class _JournalScreenState extends State<JournalScreen>
                             }).toList(),
                           ),
                   ),
+                ],
                 if (_emojiSelected) ...[
                   const SizedBox(height: 16),
                   const Text("Add your memories as text or record audio."),
@@ -692,4 +713,3 @@ class WaveformPainter extends CustomPainter {
   bool shouldRepaint(covariant WaveformPainter oldDelegate) =>
       oldDelegate.animationValue != animationValue;
 }
-
