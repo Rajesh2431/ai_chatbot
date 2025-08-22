@@ -6,10 +6,12 @@ import 'screens/dashboard_screen.dart';
 import 'screens/journal_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/daily_checkin_screen.dart';
+import 'screens/login_screen.dart';
 import 'providers/journal_entries_provider.dart';
 import 'services/backend_pdf_service.dart';
 import 'services/notification_service.dart';
 import 'services/user_profile_service.dart';
+import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +45,7 @@ class App extends StatelessWidget {
         ),
         home: const SplashScreen(),
         routes: {
+          '/login': (context) => const LoginScreen(),
           '/onboarding': (context) => const OnboardingScreen(),
           '/avatar-selection': (context) => const AvatarSelectionScreen(),
           '/daily-checkin': (context) => const DailyCheckinScreen(),
@@ -71,11 +74,20 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _navigateAfterSplash() async {
     // Wait for splash screen duration
-    await Future.delayed(const Duration(seconds: 9));
+    await Future.delayed(const Duration(seconds: 3)); // Reduced splash time
 
     if (!mounted) return;
 
-    // Check if this is the user's first time
+    // Check if user is logged in
+    final isLoggedIn = await AuthService.isLoggedIn();
+
+    if (!isLoggedIn) {
+      // User not logged in - go to login screen
+      Navigator.pushReplacementNamed(context, '/login');
+      return;
+    }
+
+    // User is logged in - check if this is their first time
     final isFirstTime = await UserProfileService.isFirstTime();
 
     if (isFirstTime) {
@@ -131,5 +143,15 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
       ),
     );
+  }
+}
+
+class AuthService {
+  // Existing methods and properties
+
+  static Future<bool> isLoggedIn() async {
+    // TODO: Implement actual login check logic
+    // For now, return false or true as placeholder
+    return false;
   }
 }

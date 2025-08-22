@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'notification_settings_screen.dart';
 import 'mood_analytics_screen.dart';
 import 'ai_knowledge_base_screen.dart';
+import '../services/auth_service.dart';
 
 
 class SettingsScreen extends StatefulWidget {
@@ -62,6 +63,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       "label": "App Version",
       "color": Colors.teal,
     },
+    {
+      "icon": Icons.logout,
+      "label": "Logout",
+      "color": Colors.red,
+    },
   ];
 
   void toggleTheme(bool value) {
@@ -105,6 +111,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         break;
       case 'App Version':
         _showVersionDialog(context);
+        break;
+      case 'Logout':
+        _showLogoutDialog(context);
         break;
       default:
         ScaffoldMessenger.of(context).showSnackBar(
@@ -179,6 +188,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+              
+              // Show loading indicator
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+              
+              // Logout user
+              await AuthService.logout();
+              
+              if (context.mounted) {
+                // Navigate to login screen and clear all previous routes
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/login',
+                  (route) => false,
+                );
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Logout'),
           ),
         ],
       ),
