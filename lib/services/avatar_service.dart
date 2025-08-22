@@ -7,8 +7,8 @@ class AvatarService {
 
   // Available avatars
   static const List<Map<String, String>> availableAvatars = [
-    {"name": "Saira", "image": "lib/assets/avatar/saira.png"},
-    {"name": "Kael", "image": "lib/assets/avatar/kael.png"},
+    {"name": "Saira", "image": "lib/assets/avatar/saira.gif"},
+    {"name": "Kael", "image": "lib/assets/avatar/kael.gif"},
   ];
 
   // Check if user has selected an avatar

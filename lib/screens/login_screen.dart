@@ -53,12 +53,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (result['success'] == true) {
-  Navigator.pushReplacementNamed(context, '/dashboard');
-} else {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text("❌ Login failed: ${result['message']}")),
-  );
-}
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+      );
+    } else {
+      _showErrorSnackBar(result['message'] ?? 'Login failed');
+    }
   }
 
   Future<void> _handleGoogleSignIn() async {
