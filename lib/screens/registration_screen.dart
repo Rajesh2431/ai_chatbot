@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import 'onboarding_screen.dart';
-import 'dashboard_screen.dart';
-import '../services/user_profile_service.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});

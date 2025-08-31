@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
+
 import '../services/mood_service.dart';
 import '../services/notification_service.dart';
 
@@ -15,6 +17,24 @@ class _NotificationSettingsScreenState
   bool _notificationsEnabled = false;
   TimeOfDay _selectedTime = const TimeOfDay(hour: 9, minute: 0);
   bool _isLoading = true;
+
+  final List<String> _notificationMessages = [
+    "🌞 Start your day with a smile!",
+    "Remember: Progress, not perfection.",
+    "Take a deep breath. You’ve got this!",
+    "Consistency is key to growth.",
+    "Your mental health matters every day.",
+    "Small steps lead to big changes.",
+    "You are stronger than you think.",
+    "Pause. Reflect. Recharge.",
+    "Self-care isn’t selfish.",
+    "Every day is a new beginning.",
+    "Your journey is unique. Embrace it!",
+    "Keep going, you’re doing great!",
+    "Celebrate your wins, no matter how small.",
+    "Be kind to yourself today.",
+    "You’re not alone on this journey.",
+  ];
 
   @override
   void initState() {
@@ -36,8 +56,6 @@ class _NotificationSettingsScreenState
       _isLoading = false;
     });
   }
-
-
 
   Future<void> _selectTime() async {
     final TimeOfDay? picked = await showTimePicker(
@@ -335,13 +353,16 @@ class _NotificationSettingsScreenState
   }
 
   Future<void> _sendTestNotification() async {
+    final random = Random();
+    final message = _notificationMessages[random.nextInt(_notificationMessages.length)];
+
     await NotificationService.showTestNotification();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Test notification sent! Check your notification panel.',
+            'Test notification sent: "$message"',
           ),
           backgroundColor: Colors.green,
         ),

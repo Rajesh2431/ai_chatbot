@@ -46,6 +46,7 @@ class AuthService {
         final token = res.data["token"];
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("auth_token", token);
+        await prefs.setString("user_email", email); // Save the email for later use
 
         return {
           "success": true,
@@ -63,6 +64,7 @@ class AuthService {
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove("auth_token");
+    await prefs.remove("user_email");
   }
 
   static Future<String?> getToken() async {
@@ -77,5 +79,10 @@ class AuthService {
       dio.options.headers["Authorization"] = "Token $token";
     }
     return dio;
+  }
+
+  static Future<bool> isLoggedIn() async {
+    final token = await getToken();
+    return token != null;
   }
 }

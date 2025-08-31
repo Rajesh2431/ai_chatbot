@@ -5,11 +5,12 @@ import 'chat_screen.dart';
 import 'journal_screen.dart';
 import 'setting_screen.dart';
 import 'tap_the_calm_game.dart';
-import 'quiz_screen.dart';
+//import 'quiz_screen.dart';
 import 'breathing_timer.dart';
 import 'memory_game.dart';
 import 'mood_analytics_screen.dart';
 import 'user_profile_screen.dart';
+import 'know_screen.dart';
 
 import '../widgets/ai_drawer.dart';
 import '../services/mood_service.dart';
@@ -30,7 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final List<Widget> _pages = [
     const _HomeContent(),
     const JournalScreen(),
-    const QuizScreen(),
+    const KnowScreen(),
     const SettingsScreen(),
   ];
 

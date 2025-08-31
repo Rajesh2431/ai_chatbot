@@ -68,6 +68,12 @@ class UserProfileService {
     String? relationshipStatus,
     String? emergencyContact,
     String? avatarPath,
+    String? rank,
+    String? yearsExperience,
+    String? company,
+    String? homeLocation,
+    String? spouseName,
+    String? childrenNames,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     
@@ -131,12 +137,17 @@ class UserProfileService {
     await prefs.remove(_keyUserAge);
     await prefs.remove(_keyUserEmail);
     await prefs.remove(_keyUserPhone);
-    await prefs.remove(_keyUserGender);
+    //await prefs.remove(_keyUserGender);
     await prefs.remove(_keyUserHobbies);
     await prefs.remove(_keyUserLocation);
     await prefs.remove(_keyUserRelationshipStatus);
     await prefs.remove(_keyUserEmergencyContact);
     await prefs.remove(_keyUserAvatarPath);
     await prefs.remove(_keyLastDailyCheckin);
+  }
+
+  static Future<String> getUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyUserEmail) ?? '';
   }
 }

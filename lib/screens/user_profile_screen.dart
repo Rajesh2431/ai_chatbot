@@ -651,7 +651,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     void Function(String?)? onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       onChanged: onChanged,
       isExpanded: true,
       decoration: InputDecoration(

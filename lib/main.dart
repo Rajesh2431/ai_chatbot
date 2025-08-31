@@ -11,7 +11,6 @@ import 'providers/journal_entries_provider.dart';
 import 'services/backend_pdf_service.dart';
 import 'services/notification_service.dart';
 import 'services/user_profile_service.dart';
-import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,7 +45,7 @@ class App extends StatelessWidget {
         home: const SplashScreen(),
         routes: {
           '/login': (context) => const LoginScreen(),
-          '/onboarding': (context) => const OnboardingScreen(),
+          '/onboarding': (context) => OnboardingScreen(userEmail: ''),
           '/avatar-selection': (context) => const AvatarSelectionScreen(),
           '/daily-checkin': (context) => const DailyCheckinScreen(),
           '/dashboard': (context) => const DashboardScreen(),

@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'registration_screen.dart';
 import 'onboarding_screen.dart';
-import 'dashboard_screen.dart';
 //import 'home_screen.dart'; // Add this import
-import '../services/user_profile_service.dart';
 
 import 'package:dio/dio.dart';
 
@@ -45,34 +43,77 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    final result = await AuthService.login(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
-
-    setState(() => _isLoading = false);
-
-    if (result['success'] == true) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+    try {
+      final result = await AuthService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
       );
-    } else {
-      _showErrorSnackBar(result['message'] ?? 'Login failed');
+
+      setState(() => _isLoading = false);
+
+      if (result['success'] == true) {
+        final String loggedInEmail = _emailController.text.trim();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OnboardingScreen(
+              userEmail: loggedInEmail, // Pass email to onboarding
+            ),
+          ),
+        );
+      } else {
+        _showErrorDialog('Login Failed', result['message'] ?? 'An unknown error occurred');
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showErrorDialog('Login Error', 'An unexpected error occurred: ${e.toString()}');
     }
   }
 
   Future<void> _handleGoogleSignIn() async {
     // TODO: Implement Google Sign-In
-    _showErrorSnackBar('Google Sign-In not implemented yet');
+    _showErrorDialog('Feature Not Available', 'Google Sign-In is not implemented yet');
   }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-      ),
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            title,
+            style: const TextStyle(
+              color: Color(0xFF4A90E2),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            message,
+            style: TextStyle(
+              color: Colors.grey.shade700,
+              fontSize: 16,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'OK',
+                style: TextStyle(
+                  color: Color(0xFF4A90E2),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          backgroundColor: Colors.white,
+        );
+      },
     );
   }
 
@@ -335,7 +376,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 TextButton(
                                   onPressed: () {
                                     // TODO: Implement forgot password
-                                    _showErrorSnackBar('Forgot password not implemented yet');
+                                    _showErrorDialog('Feature Not Available', 'Forgot password is not implemented yet');
                                   },
                                   child: const Text(
                                     'Forgot Password ?',
@@ -393,7 +434,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Text(
                                   "Don't have an account? ",
                                   style: TextStyle(
-                                    color: Colors.grey.shade600,
+                                    color: const Color.fromARGB(255, 205, 188, 188),
                                     fontSize: 14,
                                   ),
                                 ),
