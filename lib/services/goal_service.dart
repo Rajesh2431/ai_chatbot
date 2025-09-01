@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_service.dart';
 import 'user_profile_service.dart';
 

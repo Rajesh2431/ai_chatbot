@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'goal_settings.Dart'; // Import goal settings page
+import '../services/soar_card_service.dart';
+import '../models/soar_card_answer.dart';
 
 class QuizPage extends StatefulWidget {
   final String userEmail;
   
-  QuizPage({super.key, required this.userEmail});
+  const QuizPage({super.key, required this.userEmail});
 
   @override
   State<QuizPage> createState() => _QuizPageState();
@@ -99,6 +101,9 @@ class _QuizPageState extends State<QuizPage> {
   Future<void> submitQuizAnswers() async {
     final url = Uri.parse('http://127.0.0.1:8000/api/submitquiz/');
     
+    // Collect all answers for local storage
+    List<SoarCardAnswer> localAnswers = [];
+    
     // Collect all answers and submit them individually
     int successCount = 0;
     int failureCount = 0;
@@ -108,9 +113,18 @@ class _QuizPageState extends State<QuizPage> {
       final questions = section['questions'] as List<dynamic>;
       for (final question in questions) {
         final questionId = question['id'].toString();
+        final questionText = question['text'] ?? '';
         final answerText = _answerControllers[questionId]?.text ?? '';
         
         if (answerText.isNotEmpty) {
+          // Add to local answers list
+          localAnswers.add(SoarCardAnswer(
+            questionId: questionId,
+            questionText: questionText,
+            answer: answerText,
+            createdAt: DateTime.now(),
+          ));
+
           try {
             final response = await http.post(
               url,
@@ -147,6 +161,11 @@ class _QuizPageState extends State<QuizPage> {
           }
         }
       }
+    }
+
+    // Save answers locally regardless of API success/failure
+    if (localAnswers.isNotEmpty) {
+      await SoarCardService.saveSoarCardAnswers(localAnswers);
     }
 
     if (successCount > 0 && failureCount == 0) {
@@ -425,7 +444,7 @@ class _QuizPageState extends State<QuizPage> {
                   
                   // Confirm Button (only show on last section)
                   if (_currentSectionIndex == _sections.length - 1)
-                    Container(
+                    SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(

@@ -7,6 +7,7 @@ import '../services/avatar_service.dart';
 class AvatarSelectionScreen extends StatefulWidget {
   final bool isChangingAvatar;
   
+  
   const AvatarSelectionScreen({
     super.key,
     this.isChangingAvatar = false,

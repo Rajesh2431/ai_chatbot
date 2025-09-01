@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/soar_card_service.dart';
+import '../services/goal_service.dart';
+import '../models/soar_card_answer.dart';
+import '../models/goal_data.dart';
 
 class KnowScreen extends StatefulWidget {
   const KnowScreen({super.key});
@@ -9,80 +13,361 @@ class KnowScreen extends StatefulWidget {
 }
 
 class _KnowScreenState extends State<KnowScreen> {
-  // For new goal input
-  String _selectedGoalType = 'Long Term';
-  String _selectedGoal = '';
+  // For new goal input - using same structure as goal_settings.dart
+  String? _selectedGoal;
+  String? _selectedGoalType;
   final TextEditingController _notesController = TextEditingController();
 
   final List<String> _goalOptions = [
-    'Improve Communication',
-    'Increase Productivity',
-    'Enhance Wellbeing',
-    'Build Confidence',
-    'Other',
+    'Fitness',
+    'Study',
+    'Career',
+    'Finance',
+    'Health',
+    'Relationships',
+    'Personal Growth',
   ];
 
-  // For displaying stored quiz Q&A and goals
-  List<Map<String, String>> _quizAnswers = [];
-  List<Map<String, String>> _userGoals = [];
+  final List<String> _goalTypeOptions = [
+    'Short Term (1-3 months)',
+    'Mid Term (3-12 months)',
+    'Long Term (1+ years)',
+  ];
+
+  // For displaying stored data
+  List<SoarCardAnswer> _soarCardAnswers = [];
+  List<GoalData> _userGoals = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadQuizAnswers();
-    _loadUserGoals();
+    _loadAllData();
   }
 
-  Future<void> _loadQuizAnswers() async {
-    final prefs = await SharedPreferences.getInstance();
-    final quizString = prefs.getString('soar_card_answers');
-    if (quizString != null && quizString.isNotEmpty) {
-      final List<Map<String, String>> loaded = quizString.split('|').map((e) {
-        final parts = e.split(';');
-        return {
-          'question': parts[0],
-          'answer': parts.length > 1 ? parts[1] : '',
-        };
-      }).toList();
+  Future<void> _loadAllData() async {
+    setState(() => _isLoading = true);
+
+    await Future.wait([_loadSoarCardAnswers(), _loadUserGoals()]);
+
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _loadSoarCardAnswers() async {
+    try {
+      final answers = await SoarCardService.loadSoarCardAnswers();
       setState(() {
-        _quizAnswers = loaded;
+        _soarCardAnswers = answers;
       });
+    } catch (e) {
+      debugPrint('Error loading SOAR card answers: $e');
     }
   }
 
   Future<void> _loadUserGoals() async {
-    final prefs = await SharedPreferences.getInstance();
-    final goalsString = prefs.getString('user_goals');
-    if (goalsString != null && goalsString.isNotEmpty) {
-      final List<Map<String, String>> loaded = goalsString.split('|').map((e) {
-        final parts = e.split(';');
-        return {
-          'goal': parts[0],
-          'type': parts.length > 1 ? parts[1] : '',
-          'notes': parts.length > 2 ? parts[2] : '',
-        };
-      }).toList();
-      setState(() {
-        _userGoals = loaded;
-      });
+    try {
+      // Load from API first
+      final result = await GoalService.getUserGoals();
+      if (result['success'] == true) {
+        final apiGoals = result['goals'] as List<dynamic>? ?? [];
+        final goals = apiGoals
+            .map(
+              (goal) => GoalData(
+                goal: goal['goals'] ?? 'Unknown Goal',
+                type: goal['terms'] ?? 'Unknown Duration',
+                notes: goal['notes'] ?? '',
+                createdAt:
+                    DateTime.tryParse(goal['date_created'] ?? '') ??
+                    DateTime.now(),
+                progress:
+                    0.0, // Progress would need to be calculated separately
+              ),
+            )
+            .toList();
+
+        setState(() {
+          _userGoals = goals;
+        });
+      } else {
+        // Fallback to local storage if API fails
+        await _loadUserGoalsFromLocal();
+      }
+    } catch (e) {
+      debugPrint('Error loading goals from API: $e');
+      // Fallback to local storage
+      await _loadUserGoalsFromLocal();
+    }
+  }
+
+  Future<void> _loadUserGoalsFromLocal() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final goalsString = prefs.getString('user_goals');
+      if (goalsString != null && goalsString.isNotEmpty) {
+        final goals = goalsString.split('|').map((e) {
+          final parts = e.split(';');
+          return GoalData(
+            goal: parts[0],
+            type: parts.length > 1 ? parts[1] : '',
+            notes: parts.length > 2 ? parts[2] : '',
+            createdAt: DateTime.now(),
+          );
+        }).toList();
+
+        setState(() {
+          _userGoals = goals;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading goals from local storage: $e');
     }
   }
 
   Future<void> _saveNewGoal() async {
-    final prefs = await SharedPreferences.getInstance();
-    final newGoal = {
-      'goal': _selectedGoal,
-      'type': _selectedGoalType,
-      'notes': _notesController.text,
-    };
-    setState(() {
-      _userGoals.add(newGoal);
-    });
-    final goalsString = _userGoals.map((g) => '${g['goal']};${g['type']};${g['notes']}').join('|');
-    await prefs.setString('user_goals', goalsString);
-    _selectedGoal = '';
-    _notesController.clear();
-    setState(() {});
+    if (_selectedGoal == null || _selectedGoalType == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select both goal category and duration'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      // Call the API to create goal
+      final result = await GoalService.createGoal(
+        terms: _selectedGoalType!,
+        goals: _selectedGoal!,
+        notes: _notesController.text,
+      );
+
+      if (result['success'] == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+
+        // Clear form
+        setState(() {
+          _selectedGoal = null;
+          _selectedGoalType = null;
+          _notesController.clear();
+        });
+
+        // Refresh goals list
+        await _loadUserGoals();
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error saving goal: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to save goal. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildGoalPanel({
+    required String title,
+    required String subtitle,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.blue[700],
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              if (subtitle.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputCard({required String title, required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151),
+              ),
+            ),
+            const SizedBox(height: 8),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoalCard(GoalData goal) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.flag,
+                    color: Color(0xFF667EEA),
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    goal.goal,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1F2937),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF667EEA),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    goal.type,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (goal.notes.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                goal.notes,
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+            ],
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
+                const SizedBox(width: 4),
+                Text(
+                  _formatDate(goal.createdAt.toIso8601String()),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(String? dateString) {
+    if (dateString == null) return 'recently';
+
+    try {
+      final date = DateTime.parse(dateString);
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inDays > 0) {
+        return '${difference.inDays} days ago';
+      } else if (difference.inHours > 0) {
+        return '${difference.inHours} hours ago';
+      } else if (difference.inMinutes > 0) {
+        return '${difference.inMinutes} minutes ago';
+      } else {
+        return 'just now';
+      }
+    } catch (e) {
+      return 'recently';
+    }
   }
 
   @override
@@ -90,292 +375,288 @@ class _KnowScreenState extends State<KnowScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          child: Column(
-            children: [
-              // Top bar with avatar and placeholder
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: Colors.grey[300],
-                  ),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              // Tab buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _TabButton(label: 'Know', selected: true),
-                  const SizedBox(width: 8),
-                  _TabButton(label: 'Show', selected: false),
-                  const SizedBox(width: 8),
-                  _TabButton(label: 'Grow', selected: false),
-                ],
-              ),
-              const SizedBox(height: 18),
-              // SOAR Card Panel with Q&A
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
                 ),
-                padding: const EdgeInsets.all(16),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Soar Card',
-                      style: TextStyle(fontSize: 18, color: Colors.black87, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    if (_quizAnswers.isEmpty)
-                      const Text('No answers yet.', style: TextStyle(color: Colors.grey)),
-                    ..._quizAnswers.map((qa) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            qa['question'] ?? '',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                    // Top bar with avatar and placeholder
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CircleAvatar(
+                          radius: 22,
+                          backgroundColor: Colors.grey[300],
+                        ),
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          Text(
-                            qa['answer'] ?? '',
-                            style: const TextStyle(color: Colors.black87),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    // Tab buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _TabButton(label: 'Know', selected: true),
+                        const SizedBox(width: 8),
+                        _TabButton(label: 'Show', selected: false),
+                        const SizedBox(width: 8),
+                        _TabButton(label: 'Grow', selected: false),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    // SOAR Card Panel with Q&A
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withValues(alpha: 0.08),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                    )),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 22),
-              // New Goals Section
-              Row(
-                children: [
-                  Text(
-                    'New',
-                    style: TextStyle(
-                      color: Colors.blue[700],
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Soar Card',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          if (_soarCardAnswers.isEmpty)
+                            const Text(
+                              'No answers yet.',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ..._soarCardAnswers.map(
+                            (answer) => Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 6.0,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    answer.questionText,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    answer.answer,
+                                    style: const TextStyle(
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Goals',
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                      fontWeight: FontWeight.w500,
-                      fontSize: 16,
+                    const SizedBox(height: 22),
+                    // New Goals Panel
+                    _buildGoalPanel(
+                      title: 'New',
+                      subtitle: 'Goals',
+                      child: Column(
+                        children: [
+                          // Goal Selection Dropdown
+                          _buildInputCard(
+                            title: 'Choose Your Goal',
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _selectedGoal,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: 'Select a goal category',
+                                hintStyle: TextStyle(color: Colors.grey[600]),
+                              ),
+                              items: _goalOptions.map((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(
+                                    value,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedGoal = value;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Goal Duration Dropdown
+                          _buildInputCard(
+                            title: 'Goal Duration',
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _selectedGoalType,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: 'Select duration',
+                                hintStyle: TextStyle(color: Colors.grey[600]),
+                              ),
+                              items: _goalTypeOptions.map((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(
+                                    value,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedGoalType = value;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Notes Field
+                          _buildInputCard(
+                            title: 'Additional Notes',
+                            child: TextField(
+                              controller: _notesController,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                hintText:
+                                    'Describe your goal, motivation, or specific targets...',
+                                border: InputBorder.none,
+                                hintStyle: TextStyle(color: Colors.grey[600]),
+                              ),
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          // Create Goal Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF667EEA),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 2,
+                              ),
+                              onPressed: _saveNewGoal,
+                              child: const Text(
+                                'Create Goal',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              // Goal Dropdown
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.07),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
+                    const SizedBox(height: 24),
+                    // Existing Goals Panel
+                    _buildGoalPanel(
+                      title: 'Goals',
+                      subtitle: '',
+                      child: _userGoals.isEmpty
+                          ? Column(
+                              children: [
+                                Icon(
+                                  Icons.emoji_events,
+                                  size: 48,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'No goals yet',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Create your first goal above!',
+                                  style: TextStyle(
+                                    color: Colors.grey[500],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Column(
+                              children: _userGoals
+                                  .map((goal) => _buildGoalCard(goal))
+                                  .toList(),
+                            ),
                     ),
-                  ],
-                ),
-                child: DropdownButton<String>(
-                  value: _selectedGoal.isEmpty ? null : _selectedGoal,
-                  hint: const Text('Set Goal'),
-                  isExpanded: true,
-                  underline: const SizedBox(),
-                  items: _goalOptions.map((goal) {
-                    return DropdownMenuItem(
-                      value: goal,
-                      child: Text(goal),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedGoal = value ?? '';
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Goal Type Tabs
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _GoalTypeButton(
-                    label: 'Long Term',
-                    selected: _selectedGoalType == 'Long Term',
-                    onTap: () {
-                      setState(() => _selectedGoalType = 'Long Term');
-                    },
-                  ),
-                  const SizedBox(width: 10),
-                  _GoalTypeButton(
-                    label: 'Mid Term',
-                    selected: _selectedGoalType == 'Mid Term',
-                    onTap: () {
-                      setState(() => _selectedGoalType = 'Mid Term');
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Notes Field
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.07),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _notesController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    hintText: 'Notes',
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              // Confirm Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[600],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  onPressed: () {
-                    if (_selectedGoal.isNotEmpty) {
-                      _saveNewGoal();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Goal saved!')),
-                      );
-                    }
-                  },
-                  child: const Text(
-                    'Confirm',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                ),
-              ),
-              // Previous Goals Section
-              const SizedBox(height: 32),
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Previous Goal Informations',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 10),
-                    if (_userGoals.isEmpty)
-                      const Text('No goals yet.', style: TextStyle(color: Colors.grey)),
-                    ..._userGoals.map((goal) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    // Collected Badges Section
+                    const SizedBox(height: 18),
+                    Align(
+                      alignment: Alignment.centerLeft,
                       child: Text(
-                        '${goal['goal']} (${goal['type']})\nNotes: ${goal['notes']}',
-                        style: const TextStyle(color: Colors.black87),
+                        'Collected Badges',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
-                    )),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: List.generate(
+                        4,
+                        (index) => Container(
+                          width: 54,
+                          height: 54,
+                          margin: const EdgeInsets.only(right: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey[300]!,
+                              width: 1,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Collected Badges displayed With out border line',
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
                   ],
                 ),
               ),
-              // Collected Badges Section
-              const SizedBox(height: 18),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Collected Badges',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: List.generate(
-                  4,
-                  (index) => Container(
-                    width: 54,
-                    height: 54,
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.grey[300]!,
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Collected Badges displayed With out border line',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -395,7 +676,7 @@ class _TabButton extends StatelessWidget {
         boxShadow: selected
             ? [
                 BoxShadow(
-                  color: Colors.blue.withOpacity(0.15),
+                  color: Colors.blue.withValues(alpha: 0.15),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -413,43 +694,6 @@ class _TabButton extends StatelessWidget {
           color: selected ? Colors.white : Colors.blue[600],
           fontWeight: FontWeight.bold,
           fontSize: 15,
-        ),
-      ),
-    );
-  }
-}
-
-class _GoalTypeButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _GoalTypeButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: selected ? Colors.blue[600] : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: selected ? Colors.blue[600]! : Colors.grey[300]!,
-            width: 1.5,
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : Colors.blue[600],
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
         ),
       ),
     );

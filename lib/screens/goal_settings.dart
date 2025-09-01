@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/goal_service.dart';
-import 'package:flutter/services.dart';
-import 'package:dio/dio.dart';
 import 'avatar_selection_screen.dart'; // Import your next page here
 
 class GoalPage extends StatefulWidget {
+  const GoalPage({super.key});
+
   @override
   State<GoalPage> createState() => _GoalPageState();
 }
@@ -162,7 +162,7 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
                         _buildInputCard(
                           title: "Choose Your Goal",
                           child: DropdownButtonFormField<String>(
-                            value: selectedGoal,
+                            initialValue: selectedGoal,
                             decoration: InputDecoration(
                               border: InputBorder.none,
                               hintText: "Select a goal category",
@@ -191,7 +191,7 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
                         _buildInputCard(
                           title: "Goal Duration",
                           child: DropdownButtonFormField<String>(
-                            value: selectedDuration,
+                            initialValue: selectedDuration,
                             decoration: InputDecoration(
                               border: InputBorder.none,
                               hintText: "Select duration",
