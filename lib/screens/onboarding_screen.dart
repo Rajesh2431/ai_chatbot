@@ -1,9 +1,11 @@
 import 'dart:ui';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import '../services/user_profile_service.dart';
-//import 'avatar_selection_screen.dart';
-import 'soar_card.dart'; // <-- Import QuestionPage
+import '../services/auth_service.dart';
+import 'avatar_selection_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final String userEmail;
@@ -13,16 +15,21 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with TickerProviderStateMixin {
   final PageController _pageController = PageController();
   final _basicInfoFormKey = GlobalKey<FormState>();
   final _contactInfoFormKey = GlobalKey<FormState>();
   final _additionalInfoFormKey = GlobalKey<FormState>();
 
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
   int _currentPage = 0;
   final int _totalPages = 4;
 
-  // Controllers
+  // Controllers - keeping all existing controllers for backend compatibility
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
   final _rankController = TextEditingController();
@@ -42,12 +49,62 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    // Pre-populate email field with the login email
-    _emailController.text = widget.userEmail;
+    // Remove setting emailController.text to widget.userEmail to allow manual input
+    //_emailController.text = widget.userEmail;
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
+    _animationController.forward();
+    _checkAndNavigateIfFormFilled();
+  }
+
+  Future<void> _checkAndNavigateIfFormFilled() async {
+    bool isFilled = await checkFormFilled();
+    if (isFilled && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              AvatarSelectionScreen(userEmail: widget.userEmail),
+        ),
+      );
+    }
+  }
+
+  Future<bool> checkFormFilled() async {
+    final url = Uri.parse(
+      'https://strivehigh.thirdvizion.com/api/sailorformfilled/${widget.userEmail}/',
+    );
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['is_filled'] == true;
+      }
+    } catch (e) {
+      // Handle error or ignore
+    }
+    return false;
   }
 
   @override
   void dispose() {
+    _animationController.dispose();
     _pageController.dispose();
     _nameController.dispose();
     _ageController.dispose();
@@ -74,6 +131,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );
+        _animationController.reset();
+        _animationController.forward();
       }
     } else {
       _completeOnboarding();
@@ -88,13 +147,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         return true;
 
       case 1: // Basic Info
-        _basicInfoFormKey.currentState?.validate(); // show inline errors
+        _basicInfoFormKey.currentState?.validate();
         if (_nameController.text.trim().isEmpty) missingFields.add('Name');
-        final ageText = _ageController.text.trim();
-        final age = int.tryParse(ageText);
-        if (ageText.isEmpty || age == null || age <= 0) {
-          missingFields.add('Valid Age');
-        }
+        // final ageText = _ageController.text.trim();
+        // final age = int.tryParse(ageText);
+        //  if (ageText.isEmpty || age == null || age <= 0) {
+        //    missingFields.add('Valid Age');
+        //  }
         if (_rankController.text.trim().isEmpty) {
           missingFields.add('Rank/Position');
         }
@@ -107,23 +166,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         break;
 
       case 2: // Contact Info
-        _contactInfoFormKey.currentState?.validate(); // show inline errors
-        final phone = _phoneController.text.trim();
-        if (phone.isEmpty) {
-          missingFields.add('Phone Number');
+        _contactInfoFormKey.currentState?.validate();
+        if (_emailController.text.trim().isEmpty) {
+          missingFields.add('Email');
         } else {
-          final phoneRegex = RegExp(r'^[0-9]{10,15}$');
-          if (!phoneRegex.hasMatch(phone)) {
-            missingFields.add('Valid Phone Number');
+          final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+          if (!emailRegex.hasMatch(_emailController.text.trim())) {
+            missingFields.add('Valid Email');
           }
         }
+        //final phone = _phoneController.text.trim();
+        // if (phone.isEmpty) {
+        //   missingFields.add('Phone Number');
+        // } else {
+        //   final phoneRegex = RegExp(r'^[0-9]{10,15}$');
+        //   if (!phoneRegex.hasMatch(phone)) {
+        //     missingFields.add('Valid Phone Number');
+        //   }
+        // }
         if (_homeLocationController.text.trim().isEmpty) {
           missingFields.add('Home Location');
         }
         break;
 
       case 3: // Additional Info
-        // Only hobbies is required here; spouse/children optional
         if (_hobbiesController.text.trim().isEmpty) {
           missingFields.add('Hobbies');
         }
@@ -143,32 +209,59 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
+      _animationController.reset();
+      _animationController.forward();
     }
   }
 
   Future<void> _completeOnboarding() async {
     if (_validateCurrentPage()) {
-      // Prepare data for API with backend-expected field names
-      final Map<String, dynamic> sailorData = {
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color.fromARGB(255, 118, 147, 147)),
+          ),
+        ),
+      );
+
+      int? parseIntOrNull(String text) {
+        if (text.isEmpty) return null;
+        return int.tryParse(text);
+      }
+
+      Map<String, dynamic> sailorData = {
         "name": _nameController.text.trim(),
         "email": _emailController.text.trim(),
-        "age": _ageController.text.trim(),
+        "age": parseIntOrNull(_ageController.text.trim()),
         "rank": _rankController.text.trim(),
-        "phone_number": _phoneController.text.trim(),
-        "experience_years": _yearsExperienceController.text.trim(),
-        "spouse_name": _spouseNameController.text.trim(),
-        "childern_names": _childrenNamesController.text.trim(),
+        "experience_years": parseIntOrNull(_yearsExperienceController.text.trim()),
         "home_location": _homeLocationController.text.trim(),
         "hobbies": _hobbiesController.text.trim(),
         "company_name": _companyController.text.trim(),
       };
 
+      if (_phoneController.text.trim().isNotEmpty) {
+        sailorData["phone_number"] = _phoneController.text.trim();
+      }
+      if (_spouseNameController.text.trim().isNotEmpty) {
+        sailorData["spouse_name"] = _spouseNameController.text.trim();
+      }
+      if (_childrenNamesController.text.trim().isNotEmpty) {
+        sailorData["children_names"] = _childrenNamesController.text.trim();
+      }
+
       try {
-        final dio = Dio();
+        final dio = await AuthService.authedDio();
         final response = await dio.post(
-          "http://127.0.0.1:8000/api/sailorform/",
+          "${AuthService.baseUrl}sailorform/",
           data: sailorData,
         );
+
+        Navigator.of(context).pop(); // Close loading dialog
+
         if (response.statusCode == 201 || response.statusCode == 200) {
           await UserProfileService.setNotFirstTime();
 
@@ -176,109 +269,133 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => QuizPage(userEmail: _emailController.text.trim()),
+                builder: (context) =>
+                    AvatarSelectionScreen(userEmail: widget.userEmail),
               ),
             );
           }
         } else {
-          // Show error if API fails
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to save profile: ${response.statusCode}')),
-          );
+          _showErrorSnackBar('Failed to save profile: ${response.statusCode}');
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        Navigator.of(context).pop(); // Close loading dialog
+        _showErrorSnackBar('Error: ${e.toString()}');
       }
     }
   }
 
-  // ---- Glass Alert for Missing Info ----
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade400,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
   void _showValidationAlert(List<String> missingFields) {
     showDialog(
       context: context,
       barrierColor: Colors.black54,
       builder: (context) {
         return Dialog(
-          backgroundColor: Colors.white.withOpacity(0.10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.white.withOpacity(0.3)),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: const [
-                        Icon(Icons.error_outline, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text(
-                          'Missing Information',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF3498DB).withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.warning_rounded,
+                    color: Colors.orange.shade600,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Missing Information',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Please fill in the following required fields:',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ...missingFields.map(
+                  (field) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          size: 8,
+                          color: Colors.orange.shade600,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            field,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF2C3E50),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Please fill in the following required fields:',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    ...missingFields.map(
-                      (f) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.chevron_right,
-                                color: Colors.white70, size: 18),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                f,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text(
-                          'OK',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3498DB),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Got it',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -286,43 +403,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ---- UI ----
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
+  return Scaffold(
+    resizeToAvoidBottomInset: true,
+    backgroundColor: const Color(0xFFF5F7FA),
+    body: GestureDetector(
+      // Dismiss keyboard when tapping outside input fields
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color.fromARGB(255, 255, 255, 255), Color.fromARGB(255, 148, 179, 205), Color(0xFF90CAF9)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+          image: DecorationImage(
+              image: AssetImage('lib/assets/images/back.png'),
+              fit: BoxFit.cover,
+            ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              // Progress indicator
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: List.generate(_totalPages, (index) {
-                    return Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: index <= _currentPage
-                              ? Colors.white
-                              : Colors.white.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-
-              // Pages
+              // Pages with keyboard-aware scrolling
               Expanded(
                 child: PageView(
                   controller: _pageController,
@@ -330,68 +429,183 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     setState(() {
                       _currentPage = index;
                     });
+                    // Dismiss keyboard when changing pages
+                    FocusScope.of(context).unfocus();
                   },
                   children: [
-                    _buildWelcomePage(),
+                    _buildJourneyPage(),
                     _buildBasicInfoPage(),
                     _buildContactInfoPage(),
-                    _buildAdditionalInfoPage(),
+                    _buildPersonalInfoPage(),
                   ],
                 ),
               ),
 
-              // Navigation buttons
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: Row(
+              // Keyboard-aware navigation section
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                // Adjust padding when keyboard is visible
+                padding: EdgeInsets.only(
+                  left: 24,
+                  right: 24,
+                  top: 20,
+                  bottom: MediaQuery.of(context).viewInsets.bottom > 0 
+                    ? 10  // Reduced padding when keyboard is visible
+                    : 20, // Normal padding when keyboard is hidden
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Back/Next Navigation for pages 1-3
                     if (_currentPage > 0)
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: _previousPage,
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.white),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: [
+                            // Back Button
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF3498DB),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(28),
+                                  onTap: () {
+                                    // Dismiss keyboard before navigation
+                                    FocusScope.of(context).unfocus();
+                                    _previousPage();
+                                  },
+                                  child: const Icon(
+                                    Icons.arrow_back,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
+                            
+                            // Page Indicator
+                            Row(
+                              children: List.generate(_totalPages - 1, (index) {
+                                final pageIndex = index + 1;
+                                return Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: _currentPage == pageIndex
+                                          ? const Color(0xFF3498DB)
+                                          : const Color(0xFFBDC3C7),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ),
+                            const Spacer(),
+                            
+                            // Next/Complete Button
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: _currentPage == _totalPages - 1
+                                    ? const Color(0xFF27AE60)
+                                    : const Color(0xFF3498DB),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (_currentPage == _totalPages - 1
+                                            ? const Color(0xFF27AE60)
+                                            : const Color(0xFF3498DB))
+                                        .withValues(alpha: 0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(28),
+                                  onTap: () {
+                                    // Dismiss keyboard before navigation
+                                    FocusScope.of(context).unfocus();
+                                    _nextPage();
+                                  },
+                                  child: Icon(
+                                    _currentPage == _totalPages - 1
+                                        ? Icons.check
+                                        : Icons.arrow_forward,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // Journey Page Navigation (first page)
+                    if (_currentPage == 0)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            FocusScope.of(context).unfocus();
+                            _nextPage();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3498DB),
+                            foregroundColor: Colors.white,
+                            elevation: 8,
+                            shadowColor: const Color(0xFF3498DB).withValues(alpha: 0.3),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(28),
                             ),
                           ),
-                          child: const Text(
-                            'Back',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      )
-                    else
-                      const Expanded(child: SizedBox()),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _nextPage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 255, 249, 249),
-                          foregroundColor: Color(0xFF4A90E2),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 5,
-                        ),
-                        child: Text(
-                          _currentPage == _totalPages - 1
-                              ? 'Get Started'
-                              : 'Next',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "Let's Start your journey",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_forward,
+                                  color: Color(0xFF3498DB),
+                                  size: 20,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -399,385 +613,1114 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ),
       ),
-    );
-  }
-
-Widget _glassFormWrapper({required Widget child}) {
-  return Container(
-    padding: const EdgeInsets.all(24),
-    decoration: BoxDecoration(
-      color: const Color.fromARGB(255, 255, 253, 253).withOpacity(0.15),
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(
-        color: const Color.fromARGB(255, 68, 68, 68).withOpacity(0.3),
-        width: 1.5,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: const Color.fromARGB(255, 134, 180, 219).withOpacity(0.2), // shadow color
-          blurRadius: 12, // softness of shadow
-          spreadRadius: 2, // how much it spreads
-          offset: const Offset(4, 6), // position of shadow (x, y)
-        ),
-      ],
     ),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-        child: child,
+  );
+}
+
+  Widget _buildBasicInfoPage() {
+  return SingleChildScrollView(
+    padding: const EdgeInsets.all(24),
+    child: FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Form(
+          key: _basicInfoFormKey,
+          child: Column(
+            children: [
+              const SizedBox(height: 5),
+              // Header
+              const Text(
+                'Sea Smart',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF3498DB),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Basic Information',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2C3E50),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+
+              // Anchor Icon
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                child: Image.asset(
+                  'lib/assets/images/anc.png',
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              // Description
+              const Text(
+                'Tell us about yourself to get started\non your journey.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF7F8C8D),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+
+              // Name Field
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Name',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextFormField(
+                      controller: _nameController,
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) {
+                        FocusScope.of(context).nextFocus();
+                      },
+                      decoration: const InputDecoration(
+                        hintText: 'Full Name',
+                        hintStyle: TextStyle(
+                          color: Color(0xFFBDC3C7),
+                          fontSize: 16,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.person_outline,
+                          color: Color(0xFF3498DB),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Name is required';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+
+
+              // Rank/Position Field
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Rank/Position',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: DropdownButtonFormField<String>(
+                      value: _rankController.text.isNotEmpty ? _rankController.text : null,
+                      items: const [
+                        DropdownMenuItem(value: 'Captain', child: Text('Captain')),
+                        DropdownMenuItem(value: 'Chief Officer', child: Text('Chief Officer')),
+                        DropdownMenuItem(value: 'Second Officer', child: Text('Second Officer')),
+                        // DropdownMenuItem(value: 'Third Officer', child: Text('Third Officer')),
+                        // DropdownMenuItem(value: 'Chief Engineer', child: Text('Chief Engineer')),
+                        // DropdownMenuItem(value: 'Second Engineer', child: Text('Second Engineer')),
+                        // DropdownMenuItem(value: 'Third Engineer', child: Text('Third Engineer')),
+                        // DropdownMenuItem(value: 'Fourth Engineer', child: Text('Fourth Engineer')),
+                        // DropdownMenuItem(value: 'Chief Mate', child: Text('Chief Mate')),
+                        // DropdownMenuItem(value: 'Second Mate', child: Text('Second Mate')),
+                        // DropdownMenuItem(value: 'Third Mate', child: Text('Third Mate')),
+                        // DropdownMenuItem(value: 'Deck Cadet', child: Text('Deck Cadet')),
+                        // DropdownMenuItem(value: 'Engine Cadet', child: Text('Engine Cadet')),
+                        // DropdownMenuItem(value: 'Able Seaman', child: Text('Able Seaman')),
+                        // DropdownMenuItem(value: 'Ordinary Seaman', child: Text('Ordinary Seaman')),
+                        // DropdownMenuItem(value: 'Bosun', child: Text('Bosun')),
+                        // DropdownMenuItem(value: 'AB', child: Text('AB')),
+                        // DropdownMenuItem(value: 'OS', child: Text('OS')),
+                        // DropdownMenuItem(value: 'Cook', child: Text('Cook')),
+                        // DropdownMenuItem(value: 'Steward', child: Text('Steward')),
+                        // DropdownMenuItem(value: 'Other', child: Text('Other')),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _rankController.text = value ?? '';
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        hintText: 'Select Your Position',
+                        hintStyle: TextStyle(
+                          color: Color(0xFFBDC3C7),
+                          fontSize: 16,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.work_outline,
+                          color: Color(0xFF3498DB),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Rank/Position is required';
+                        }
+                        return null;
+                      },
+                      style: const TextStyle(
+                        color: Color(0xFF2C3E50),
+                        fontSize: 16,
+                      ),
+                      dropdownColor: Colors.white,
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Color(0xFF3498DB),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Years of Experience Field
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Years of Experience',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextFormField(
+                      controller: _yearsExperienceController,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) {
+                        FocusScope.of(context).nextFocus();
+                      },
+                      decoration: const InputDecoration(
+                        hintText: 'Years',
+                        hintStyle: TextStyle(
+                          color: Color(0xFFBDC3C7),
+                          fontSize: 16,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.timeline,
+                          color: Color(0xFF3498DB),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Years of Experience is required';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Company Name Field
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Company Name',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextFormField(
+                      controller: _companyController,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) {
+                        FocusScope.of(context).unfocus();
+                      },
+                      decoration: const InputDecoration(
+                        hintText: 'Company Name',
+                        hintStyle: TextStyle(
+                          color: Color(0xFFBDC3C7),
+                          fontSize: 16,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.business,
+                          color: Color(0xFF3498DB),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Company Name is required';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 100), // Extra space for navigation
+            ],
+          ),
+        ),
       ),
     ),
   );
 }
 
-
-  Widget _buildWelcomePage() {
-    return Padding(
-      padding: const EdgeInsets.all(40),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-            ),
-            child: const Icon(
-              Icons.psychology,
-              size: 60,
-              color: Color(0xFF4A90E2),
-            ),
-          ),
-          const SizedBox(height: 40),
-          const Text(
-            'Welcome to SeaSmart',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Your personal mental health companion',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.white,
-              fontWeight: FontWeight.w300,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 40),
-          const Text(
-            'Let\'s get to know you better so we can provide personalized support for your mental wellness journey.',
-            style: TextStyle(fontSize: 16, color: Colors.white, height: 1.5),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBasicInfoPage() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Form(
-        key: _basicInfoFormKey,
+// Journey Page - Keyboard Friendly
+Widget _buildJourneyPage() {
+  return SingleChildScrollView(
+    padding: const EdgeInsets.all(24),
+    child: FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 20),
+            // Header
             const Text(
-              'Tell us about yourself',
+              'Your Journey with',
               style: TextStyle(
                 fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 250, 250, 250),
-                shadows: [
-                  Shadow(
-                    offset: Offset(2, 2),
-                    blurRadius: 4,
-                    color: Color.fromARGB(255, 1, 142, 250),
-                  ),
-                ],
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2C3E50),
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'This helps us personalize your experience',
-              style: TextStyle(
-                fontSize: 20,
-                color: Color.fromARGB(255, 103, 199, 251),
-                fontWeight: FontWeight.w600,
-                  shadows: [
-                  Shadow(
-                    offset: Offset(2, 2),
-                    blurRadius: 4,
-                    color: Color.fromARGB(197, 130, 204, 246),
+            const SizedBox(height: 8),
+            RichText(
+              textAlign: TextAlign.center,
+              text: const TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Sea',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF3498DB),
+                    ),
+                  ),
+                  TextSpan(
+                    text: 'Smart',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C3E50),
+                    ),
                   ),
                 ],
               ),
-              textAlign: TextAlign.center,
-              
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Powered by StriveHigh',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF7F8C8D),
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 40),
-            _glassFormWrapper(
-              child: Column(
+            
+            // Know Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF3E0),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFFFF9800).withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF9800).withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextFormField(
-                    controller: _nameController,
-                    style: const TextStyle(color: Color.fromARGB(255, 244, 217, 217)),
-                    cursorColor: Colors.white,
-                    decoration: _inputDecoration(
-                      label: 'Your Name',
-                      icon: Icons.person_outline,
-                      
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Name is required';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _ageController,
-                    style: const TextStyle(color: Colors.white),
-                    cursorColor: Colors.white,
-                    keyboardType: TextInputType.number,
-                    decoration: _inputDecoration(
-                      label: 'Age',
-                      icon: Icons.cake_outlined,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Age is required';
-                      }
-                      final age = int.tryParse(value);
-                      if (age == null || age <= 0) {
-                        return 'Enter a valid age';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _rankController,
-                    style: const TextStyle(color: Colors.white),
-                    cursorColor: Colors.white,
-                    decoration: _inputDecoration(
-                      label: 'Rank/Position',
-                      icon: Icons.work_outline,
+                  Text(
+                    'Know',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFE65100),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _yearsExperienceController,
-                    style: const TextStyle(color: Colors.white),
-                    cursorColor: Colors.white,
-                    keyboardType: TextInputType.number,
-                    decoration: _inputDecoration(
-                      label: 'Years of Experience',
-                      icon: Icons.timeline_outlined,
+                  SizedBox(height: 10),
+                  Text(
+                    'Start by understanding your strengths, habits, and needs. Quick reflections and guided check-ins help us personalize your journey.',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Color(0xFF2C3E50),
+                      height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _companyController,
-                    style: const TextStyle(color: Colors.white),
-                    cursorColor: Colors.white,
-                    decoration: _inputDecoration(
-                      label: 'Company Name',
-                      icon: Icons.business_outlined,
+                  SizedBox(height: 16),
+                  Text(
+                    'Know Yourself',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFE65100),
                     ),
                   ),
                 ],
               ),
             ),
+            
+            // Grow Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE3F2FD),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFF2196F3).withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2196F3).withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Grow',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1565C0),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Explore interactive lessons and calming practices designed to strengthen both your mind and professional skills at sea.',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Color(0xFF2C3E50),
+                      height: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Grow Your Skills',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1565C0),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Show Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.only(bottom: 30),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F5E8),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Show',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2E7D32),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Celebrate milestones, track your wellbeing, and share achievements that keep you motivated throughout your voyage.',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Color(0xFF2C3E50),
+                      height: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Show Your Progress',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2E7D32),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 100), // Extra space for navigation button
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildContactInfoPage() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Form(
-        key: _contactInfoFormKey,
+  return SingleChildScrollView(
+    padding: const EdgeInsets.all(24),
+    child: FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 5),
+            // Header
+            const Text(
+              'Sea Smart',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF3498DB),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
             const Text(
               'Contact Information',
               style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 255, 255, 255),
-                shadows: [
-                  Shadow(
-                    offset: Offset(2, 2),
-                    blurRadius: 4,
-                    color: Colors.black45,
-                  ),
-                ],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'How can we reach you?',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white70,
-                fontWeight: FontWeight.w300,
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2C3E50),
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
-            _glassFormWrapper(
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _phoneController,
-                    style: const TextStyle(color: Colors.white),
-                    cursorColor: Colors.white,
-                    keyboardType: TextInputType.phone,
-                    decoration: _inputDecoration(
-                      label: 'Phone Number',
-                      icon: Icons.phone_outlined,
-                      
+
+            // Anchor Icon
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(40),
+                // boxShadow: [
+                //   BoxShadow(
+                //     color: const Color(0xFF3498DB).withValues(alpha: 0.2),
+                //     blurRadius: 15,
+                //     offset: const Offset(0, 8),
+                //   ),
+                // ],
+              ),
+              child: Image.asset(
+                'lib/assets/images/anc.png',
+                width: 80,
+                height: 80,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            // Description
+            const Text(
+              'Share your details so we can stay connected\non your voyage.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xFF7F8C8D),
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
+
+            // Email Field
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Email',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    onFieldSubmitted: (_) {
+                      FocusScope.of(context).nextFocus();
+                    },
+                    decoration: const InputDecoration(
+                      hintText: 'Email',
+                      hintStyle: TextStyle(
+                        color: Color(0xFFBDC3C7),
+                        fontSize: 16,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.email_outlined,
+                        color: Color(0xFF3498DB),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
                     ),
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Phone number is required';
+                      if (value == null || value.isEmpty) {
+                        return 'Email is required';
                       }
-                      final phoneRegex = RegExp(r'^[0-9]{10,15}$');
-                      if (!phoneRegex.hasMatch(value.trim())) {
-                        return 'Enter a valid phone number';
+                      final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                      if (!emailRegex.hasMatch(value)) {
+                        return 'Enter a valid email';
                       }
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _homeLocationController,
-                    style: const TextStyle(color: Colors.white),
-                    cursorColor: Colors.white,
-                    decoration: _inputDecoration(
-                      label: 'Home Location',
-                      icon: Icons.location_on_outlined,
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Phone Field
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Phone (Optional)',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      hintText: 'Number',
+                      hintStyle: TextStyle(
+                        color: Color(0xFFBDC3C7),
+                        fontSize: 16,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.phone_outlined,
+                        color: Color(0xFF3498DB),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+            const SizedBox(height: 24),
+
+            // Home Field
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Home',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextFormField(
+                    controller: _homeLocationController,
+                    decoration: const InputDecoration(
+                      hintText: 'Location',
+                      hintStyle: TextStyle(
+                        color: Color(0xFFBDC3C7),
+                        fontSize: 16,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.home_outlined,
+                        color: Color(0xFF3498DB),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 100), // Extra space for navigation
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildAdditionalInfoPage() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Form(
-        key: _additionalInfoFormKey,
+  Widget _buildPersonalInfoPage() {
+  return SingleChildScrollView(
+    padding: const EdgeInsets.all(24),
+    child: FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 5),
+            // Header
             const Text(
-              'Additional Information',
+              'Sea Smart',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
-                shadows: [
-                  Shadow(
-                    offset: Offset(2, 2),
-                    blurRadius: 4,
-                    color: Color.fromARGB(115, 46, 45, 45),
-                  ),
-                ],
+                color: Color(0xFF3498DB),
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             const Text(
-              'A few more details for your profile',
+              'Personal Information',
               style: TextStyle(
-                fontSize: 16,
-                color: Colors.white70,
-                fontWeight: FontWeight.w300,
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2C3E50),
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
-            _glassFormWrapper(
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _hobbiesController,
-                    style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
-                    cursorColor: const Color.fromARGB(255, 255, 255, 255),
-                    decoration: _inputDecoration(
-                      label: 'Hobbies',
-                      icon: Icons.sports_soccer_outlined,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _spouseNameController,
-                    style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
-                    cursorColor: const Color.fromARGB(255, 0, 0, 0),
-                    decoration: _inputDecoration(
-                      label: 'Spouse Name (optional)',
-                      icon: Icons.person_2_outlined,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _childrenNamesController,
-                    style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
-                    cursorColor: const Color.fromARGB(255, 255, 249, 249),
-                    decoration: _inputDecoration(
-                      label: 'Children Names (optional)',
-                      icon: Icons.child_care_outlined,
-                    ),
-                  ),
-                ],
+
+            // Anchor Icon
+           Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(40),
+                // boxShadow: [
+                //   BoxShadow(
+                //     color: const Color(0xFF3498DB).withValues(alpha: 0.2),
+                //     blurRadius: 15,
+                //     offset: const Offset(0, 8),
+                //   ),
+                // ],
+              ),
+              child: Image.asset(
+                'lib/assets/images/anc.png',
+                width: 80,
+                height: 80,
+                fit: BoxFit.contain,
               ),
             ),
+            const SizedBox(height: 30),
+
+            // Description
+            const Text(
+              'Personalize your voyage with a little info\nabout you.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xFF7F8C8D),
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
+
+            // Hobbies Field
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Hobbies',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextFormField(
+                    controller: _hobbiesController,
+                    decoration: const InputDecoration(
+                      hintText: 'Interest',
+                      hintStyle: TextStyle(
+                        color: Color(0xFFBDC3C7),
+                        fontSize: 16,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.interests_outlined,
+                        color: Color(0xFF3498DB),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Spouse Field
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Spouse (Optional)',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextFormField(
+                    controller: _spouseNameController,
+                    decoration: const InputDecoration(
+                      hintText: 'Spouse Name',
+                      hintStyle: TextStyle(
+                        color: Color(0xFFBDC3C7),
+                        fontSize: 16,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.person_outline,
+                        color: Color(0xFF3498DB),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Children Field
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Children (Optional)',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextFormField(
+                    controller: _childrenNamesController,
+                    decoration: const InputDecoration(
+                      hintText: 'Child Name',
+                      hintStyle: TextStyle(
+                        color: Color(0xFFBDC3C7),
+                        fontSize: 16,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.child_care_outlined,
+                        color: Color(0xFF3498DB),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 100), // Extra space for navigation
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  InputDecoration _inputDecoration({required String label, required IconData icon}) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: TextStyle(color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.9)),
-      prefixIcon: Icon(icon, color: const Color.fromARGB(255, 255, 253, 253).withOpacity(0.9)),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.3)),
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    int maxLines = 1,
+    bool enabled = true,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.2)),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        validator: validator,
+        maxLines: maxLines,
+        enabled: enabled,
+        style: const TextStyle(color: Colors.white, fontSize: 16),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(
+            color: Colors.white.withValues(alpha: 0.7),
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(
+            icon,
+            color: Colors.white.withValues(alpha: 0.7),
+            size: 22,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 16,
+          ),
+          errorStyle: const TextStyle(color: Colors.orange, fontSize: 12),
+        ),
+        cursorColor: Colors.white,
       ),
-      focusedBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(10)),
-        borderSide: BorderSide(color: Color.fromARGB(255, 255, 252, 252), width: 2),
-      ),
-      filled: true,
-      fillColor: const Color.fromARGB(255, 255, 243, 243).withOpacity(0.05),
     );
   }
 }

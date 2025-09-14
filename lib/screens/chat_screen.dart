@@ -181,8 +181,8 @@ class _ChatScreenState extends State<ChatScreen> {
         actions = ActionDetectorService.detectActions(reply);
       }
 
-      // Always add a random video suggestion to every AI reply
-      actions = _addRandomVideoAction(actions ?? []);
+      // Add intelligent video suggestion based on user message
+      actions = _addIntelligentVideoAction(actions ?? [], text);
 
       // Always add a breathing exercise suggestion to every AI reply
       actions = _addBreathingExerciseAction(actions);
@@ -296,7 +296,53 @@ class _ChatScreenState extends State<ChatScreen> {
         messageText.contains("It might help to write down your thoughts");
   }
 
-  /// Add a random video action to the actions list
+  /// Add intelligent video suggestion based on user message
+  List<MessageAction> _addIntelligentVideoAction(
+    List<MessageAction> existingActions,
+    String userMessage,
+  ) {
+    // Try to get a relevant video based on user message
+    final suggestedVideo = ContentService.analyzeMessageAndSuggestVideo(userMessage);
+    
+    // If no relevant video found, use random video as fallback
+    final videoToSuggest = suggestedVideo ?? ContentService.getRandomVideo();
+    
+    // Detect emotions to customize the label
+    final emotions = ContentService.analyzeMessageSentiment(userMessage);
+    
+    String videoLabel = "▶️ ${videoToSuggest['title']}";
+    
+    // Customize label based on detected emotions or relevance
+    if (suggestedVideo != null) {
+      if (emotions.contains('anxiety')) {
+        videoLabel = "🌿 ${videoToSuggest['title']} (For Anxiety)";
+      } else if (emotions.contains('sadness') || emotions.contains('loneliness')) {
+        videoLabel = "💙 ${videoToSuggest['title']} (For Support)";
+      } else if (emotions.contains('anger')) {
+        videoLabel = "🧘 ${videoToSuggest['title']} (For Calm)";
+      } else {
+        videoLabel = "🎯 ${videoToSuggest['title']} (Recommended)";
+      }
+    }
+
+    final videoAction = MessageAction(
+      label: videoLabel,
+      route: '/video',
+      icon: suggestedVideo != null ? Icons.recommend : Icons.play_circle_fill,
+      data: {
+        'url': videoToSuggest['url']!,
+        'title': videoToSuggest['title']!,
+        'description': videoToSuggest['description']!,
+        'isRelevant': suggestedVideo != null ? 'true' : 'false',
+        'detectedEmotions': emotions.join(', '),
+      },
+    );
+
+    // Add video action to existing actions
+    return [...existingActions, videoAction];
+  }
+
+  /// Add a random video action to the actions list (kept for backward compatibility)
   List<MessageAction> _addRandomVideoAction(
     List<MessageAction> existingActions,
   ) {
@@ -389,6 +435,11 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildActionButton(MessageAction action) {
+    // Special styling for video actions
+    if (action.route == '/video') {
+      return _buildVideoActionButton(action);
+    }
+    
     return ElevatedButton.icon(
       onPressed: () => _handleActionTap(action),
       icon: Icon(action.icon, size: 18),
@@ -403,6 +454,117 @@ class _ChatScreenState extends State<ChatScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         elevation: 3,
         shadowColor: Colors.blue.withValues(alpha: 0.3),
+      ),
+    );
+  }
+
+  Widget _buildVideoActionButton(MessageAction action) {
+    final isRelevant = action.data?['isRelevant'] == 'true';
+    final description = action.data?['description'] ?? '';
+    final emotions = action.data?['detectedEmotions'] ?? '';
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: isRelevant 
+              ? [Colors.green.shade400, Colors.green.shade600]
+              : [Colors.red.shade400, Colors.red.shade600],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isRelevant ? Colors.green : Colors.red).withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _handleActionTap(action),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      isRelevant ? Icons.recommend : Icons.play_circle_fill,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        action.label,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (isRelevant)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'MATCH',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                if (description.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 12,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                if (isRelevant && emotions.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.psychology,
+                        color: Colors.white.withValues(alpha: 0.8),
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          'Detected: $emotions',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -458,11 +620,23 @@ class _ChatScreenState extends State<ChatScreen> {
         );
         break;
       case '/video':
-        // Launch YouTube video
+        // Launch YouTube video with enhanced feedback
         if (action.data != null && action.data!['url'] != null) {
           try {
             await ContentService.launchVideo(action.data!['url']!);
-            _showVideoLaunchFeedback(action.data!['title'] ?? 'Video');
+            
+            // Show enhanced feedback for relevant videos
+            final isRelevant = action.data!['isRelevant'] == 'true';
+            final emotions = action.data!['detectedEmotions'] ?? '';
+            
+            if (isRelevant && emotions.isNotEmpty) {
+              _showRelevantVideoFeedback(
+                action.data!['title'] ?? 'Video',
+                emotions,
+              );
+            } else {
+              _showVideoLaunchFeedback(action.data!['title'] ?? 'Video');
+            }
           } catch (e) {
             _showErrorFeedback(
               'Unable to open video. Please check if you have a browser or YouTube app installed.',
@@ -494,6 +668,38 @@ class _ChatScreenState extends State<ChatScreen> {
         duration: const Duration(seconds: 2),
         backgroundColor: Colors.red.shade600,
         behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showRelevantVideoFeedback(String videoTitle, String emotions) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Opening recommended video: "$videoTitle"',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Selected based on: $emotions',
+              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9)),
+            ),
+          ],
+        ),
+        duration: const Duration(seconds: 3),
+        backgroundColor: Colors.green.shade600,
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'Great!',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
       ),
     );
   }

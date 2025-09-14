@@ -409,9 +409,9 @@ class _KnowScreenState extends State<KnowScreen> {
                       children: [
                         _TabButton(label: 'Know', selected: true),
                         const SizedBox(width: 8),
-                        _TabButton(label: 'Show', selected: false),
-                        const SizedBox(width: 8),
                         _TabButton(label: 'Grow', selected: false),
+                        const SizedBox(width: 8),
+                        _TabButton(label: 'Show', selected: false),
                       ],
                     ),
                     const SizedBox(height: 18),

@@ -10,7 +10,7 @@ import 'breathing_timer.dart';
 import 'memory_game.dart';
 import 'mood_analytics_screen.dart';
 import 'user_profile_screen.dart';
-import 'know_screen.dart';
+import 'grow_screen.dart';
 
 import '../widgets/ai_drawer.dart';
 import '../services/mood_service.dart';
@@ -31,7 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final List<Widget> _pages = [
     const _HomeContent(),
     const JournalScreen(),
-    const KnowScreen(),
+    const GrowScreen(),
     const SettingsScreen(),
   ];
 

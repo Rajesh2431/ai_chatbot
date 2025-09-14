@@ -5,13 +5,11 @@ import 'package:http/http.dart' as http;
 import 'goal_settings.dart';
 import 'soar_card_analysis.dart';
 import '../services/soar_card_service.dart';
-import '../services/user_profile_service.dart';
 import '../models/soar_card_answer.dart';
 
 class QuizPage extends StatefulWidget {
-  final String? userEmail;
-
-  const QuizPage({super.key, this.userEmail});
+  final String userEmail;
+  const QuizPage({super.key, required this.userEmail});
 
   @override
   State<QuizPage> createState() => _QuizPageState();
@@ -32,20 +30,12 @@ class _QuizPageState extends State<QuizPage> {
 
   Map<String, List<GlobalKey>> _questionKeys = {};
 
-  String userEmail = '';
-
   bool get _hasAtLeastOneAnswer =>
       _selectedAnswers.values.any((answer) => answer.isNotEmpty);
 
   @override
   void initState() {
     super.initState();
-    _loadUserEmail();
-  }
-
-  Future<void> _loadUserEmail() async {
-    userEmail = widget.userEmail ?? await UserProfileService.getUserEmail();
-    print('Loaded userEmail: $userEmail');
     _fetchQuizDetails();
   }
 
@@ -186,66 +176,66 @@ class _QuizPageState extends State<QuizPage> {
         }
       }
     }
-      if (scores.isNotEmpty) {
-        double avg = scores.reduce((a, b) => a + b) / scores.length;
-        await _sendCategoryAverageToSubmitQuiz(userEmail, category, avg);
-        setState(() {
-          _categorySubmitted[category] = true;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Category $category submitted successfully!')),
-        );
-        if (_categorySubmitted.length == _categories.length) {
-            // Calculate and send overall average
-            List<int> allScores = [];
-            _selectedAnswers.forEach((questionId, answer) {
-              for (var q in _questions) {
-                if (q['id'].toString() == questionId) {
-                  List<String> options = q['options'] as List<String>;
-                  int index = options.indexOf(answer);
-                  int score = (options.length - index) * 10; // First option 50, last 10 for 5 options
-                  if (score > 0) {
-                    allScores.add(score);
-                  }
-                  break;
+    if (scores.isNotEmpty) {
+      double avg = scores.reduce((a, b) => a + b) / scores.length;
+      await _sendCategoryAverageToSubmitQuiz(widget.userEmail, category, avg);
+      setState(() {
+        _categorySubmitted[category] = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Category $category submitted successfully!')),
+      );
+      if (_categorySubmitted.length == _categories.length) {
+          // Calculate and send overall average
+          List<int> allScores = [];
+          _selectedAnswers.forEach((questionId, answer) {
+            for (var q in _questions) {
+              if (q['id'].toString() == questionId) {
+                List<String> options = q['options'] as List<String>;
+                int index = options.indexOf(answer);
+                int score = (options.length - index) * 10; // First option 50, last 10 for 5 options
+                if (score > 0) {
+                  allScores.add(score);
                 }
-              }
-            });
-            if (allScores.isNotEmpty) {
-              double overallAvg = allScores.reduce((a, b) => a + b) / allScores.length;
-              // Use new API endpoint for overall average
-              final url = Uri.parse('https://strivehigh.thirdvizion.com/api/quizansoverallstroe/');
-              final body = json.encode({
-                'email': userEmail,
-                'overall_avg': overallAvg,
-              });
-              try {
-                final response = await http.post(
-                  url,
-                  headers: {'Content-Type': 'application/json'},
-                  body: body,
-                );
-                if (response.statusCode == 200 || response.statusCode == 201) {
-                  print('Overall average sent successfully');
-                } else {
-                  print('Failed to send overall average: ${response.statusCode}');
-                }
-              } catch (e) {
-                print('Error sending overall average: $e');
+                break;
               }
             }
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SoarDashboardPage(userEmail: userEmail),
-              ),
-            );
+          });
+          if (allScores.isNotEmpty) {
+            double overallAvg = allScores.reduce((a, b) => a + b) / allScores.length;
+            // Use new API endpoint for overall average
+            final url = Uri.parse('https://strivehigh.thirdvizion.com/api/quizansoverallstroe/');
+            final body = json.encode({
+              'email': widget.userEmail,
+              'overall_avg': overallAvg,
+            });
+            try {
+              final response = await http.post(
+                url,
+                headers: {'Content-Type': 'application/json'},
+                body: body,
+              );
+              if (response.statusCode == 200 || response.statusCode == 201) {
+                print('Overall average sent successfully');
+              } else {
+                print('Failed to send overall average: ${response.statusCode}');
+              }
+            } catch (e) {
+              print('Error sending overall average: $e');
+            }
           }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No answers for this category.')),
-        );
-      }
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SoarDashboardPage(userEmail: widget.userEmail),
+            ),
+          );
+        }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No answers for this category.')),
+      );
+    }
   }
 
   Future<void> _submitAssessment() async {
@@ -298,12 +288,12 @@ class _QuizPageState extends State<QuizPage> {
       );
       // Send each category average to submitquiz API
       for (var entry in categoryAverages.entries) {
-        await _sendCategoryAverageToSubmitQuiz(userEmail, entry.key, entry.value);
+        await _sendCategoryAverageToSubmitQuiz(widget.userEmail, entry.key, entry.value);
       }
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => GoalPage(userEmail: userEmail),
+          builder: (context) => GoalPage(userEmail: widget.userEmail),
         ),
       );
     } else {
@@ -323,7 +313,7 @@ class _QuizPageState extends State<QuizPage> {
       decoration: const BoxDecoration(
         color: Colors.blue,
         image: DecorationImage(
-          image: AssetImage('lib/assets/images/world.png'),
+          image: AssetImage('assets/images/world.png'),
           fit: BoxFit.cover,
         ),
         borderRadius: BorderRadius.only(
@@ -331,12 +321,8 @@ class _QuizPageState extends State<QuizPage> {
           bottomRight: Radius.circular(20),
         ),
       ),
-
-      
-
       child: Column(
         children: const [
-          const SizedBox(height: 20),
           Text(
             "Know",
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
@@ -457,7 +443,7 @@ class _QuizPageState extends State<QuizPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => SoarDashboardPage(userEmail: userEmail),
+                      builder: (context) => SoarDashboardPage(userEmail: widget.userEmail),
                     ),
                   );
                 }

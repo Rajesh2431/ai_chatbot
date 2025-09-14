@@ -1,9 +1,12 @@
+import 'package:SeaSmart/screens/grow_screen.dart';
 import 'package:flutter/material.dart';
 import '../services/goal_service.dart';
-import 'avatar_selection_screen.dart'; // Import your next page here
+import 'daily_checkin_screen.dart';
 
 class GoalPage extends StatefulWidget {
-  const GoalPage({super.key});
+  final String? userEmail;
+
+  const GoalPage({super.key, this.userEmail});
 
   @override
   State<GoalPage> createState() => _GoalPageState();
@@ -11,21 +14,25 @@ class GoalPage extends StatefulWidget {
 
 class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin {
   String? selectedGoal;
-  final List<String> goalOptions = ["Fitness", "Study", "Career", "Finance", "Health", "Relationships", "Personal Growth"];
+  final List<String> goalOptions = [
+    "Fitness", "Study", "Career", "Finance", "Health", "Relationships", "Personal Growth"
+  ];
   String? selectedDuration;
-  final List<String> durationOptions = ["Short Term (1-3 months)", "Mid Term (3-12 months)", "Long Term (1+ years)"];
-  
+  final List<String> durationOptions = [
+    "Mid Term (3-12 months)", "Long Term (1+ years)"
+  ];
+
   late TabController _tabController;
   final TextEditingController notesController = TextEditingController();
-  final List<Map<String, dynamic>> userGoals = [
-    {'goal': 'Fitness', 'duration': 'Mid Term', 'progress': 0.6, 'created': '2 weeks ago'},
-    {'goal': 'Study', 'duration': 'Short Term', 'progress': 0.3, 'created': '1 week ago'},
-  ];
+  final List<Map<String, dynamic>> userGoals = [];
+
+  // Custom blue color (manual RGBA)
+  final Color primaryBlue = const Color.fromRGBO(14, 165, 233, 1); // #0EA5E9
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this, animationDuration: Duration(milliseconds: 500));
     _loadUserGoals();
   }
 
@@ -34,13 +41,12 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
     if (result['success'] == true) {
       setState(() {
         userGoals.clear();
-        // Convert API response to the format expected by the UI
         final apiGoals = result['goals'] as List<dynamic>? ?? [];
         for (var goal in apiGoals) {
           userGoals.add({
             'goal': goal['goals'] ?? 'Unknown Goal',
             'duration': goal['terms'] ?? 'Unknown Duration',
-            'progress': 0.0, // Progress would need to be calculated or stored separately
+            'progress': 0.0,
             'created': _formatDate(goal['date_created']),
           });
         }
@@ -50,12 +56,11 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
 
   String _formatDate(String? dateString) {
     if (dateString == null) return 'recently';
-    
     try {
       final date = DateTime.parse(dateString);
       final now = DateTime.now();
       final difference = now.difference(date);
-      
+
       if (difference.inDays > 0) {
         return '${difference.inDays} days ago';
       } else if (difference.inHours > 0) {
@@ -73,307 +78,217 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: Column(
+      // ✅ Gradient background
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color.fromRGBO(224, 242, 254, 1), // light blue
+              Color.fromRGBO(240, 249, 255, 1), // even lighter
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Stack(
           children: [
-            // App Bar with gradient background
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+            // Main content column
+            Column(
+              children: [
+                // ✅ AppBar
+                SafeArea(
+                  child: AppBar(
+                    backgroundColor: primaryBlue,
+                    elevation: 0,
+                    toolbarHeight: 100, // Increased height for head area
+                    leading: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () => Navigator.pop(context),
                     ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      "Goal Settings",
+                    title: const Text(
+                      "Goal",
                       style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
                     ),
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.info_outline, color: Colors.white, size: 24),
-                      onPressed: () {},
+                    centerTitle: true,
+                  ),
+                ),
+
+                const SizedBox(height: 40), // Increased gap between heading and content
+
+                // ✅ Tab Switcher
+               Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicator: BoxDecoration(
+
+                      color: primaryBlue,
+                      borderRadius: BorderRadius.circular(70),
+
+
                     ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Toggle Tabs with modern design
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
+                    indicatorPadding: EdgeInsets.symmetric(horizontal: -60),
+                    labelColor: Colors.white,
+                    unselectedLabelColor: primaryBlue,
+                    tabs: const [
+                      Tab(text: "New Goal"),
+                      Tab(text: "Goals"),
+                    ],
                   ),
-                ],
-              ),
-              child: TabBar(
-                controller: _tabController,
-                indicator: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                labelColor: Colors.white,
-                unselectedLabelColor: Color(0xFF64748B),
-                labelStyle: TextStyle(fontWeight: FontWeight.w600),
-                unselectedLabelStyle: TextStyle(fontWeight: FontWeight.w500),
-                tabs: const [
-                  Tab(text: " New Goal"),
-                  Tab(text: " My Goals"),
-                ],
-              ),
-            ),
+),
 
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // ---------------- New Goal Tab ----------------
-                  SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Goal Selection Card
-                        _buildInputCard(
-                          title: "Choose Your Goal",
-                          child: DropdownButtonFormField<String>(
-                            initialValue: selectedGoal,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: "Select a goal category",
-                              hintStyle: TextStyle(color: Colors.grey[600]),
-                            ),
-                            items: goalOptions.map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(
-                                  value,
-                                  style: TextStyle(fontSize: 16),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // ---------------- New Goal ----------------
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            _buildInputCard(
+                              child: DropdownButtonFormField<String>(
+                                value: selectedGoal,
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: "Set Goal",
                                 ),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                selectedGoal = value;
-                              });
-                            },
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // Duration Selection Card
-                        _buildInputCard(
-                          title: "Goal Duration",
-                          child: DropdownButtonFormField<String>(
-                            initialValue: selectedDuration,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: "Select duration",
-                              hintStyle: TextStyle(color: Colors.grey[600]),
+                                items: goalOptions.map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                                onChanged: (value) => setState(() => selectedGoal = value),
+                              ),
                             ),
-                            items: durationOptions.map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(
-                                  value,
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                selectedDuration = value;
-                              });
-                            },
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // Notes Card
-                        _buildInputCard(
-                          title: "Additional Notes",
-                          child: TextField(
-                            controller: notesController,
-                            maxLines: 4,
-                            decoration: InputDecoration(
-                              hintText: "Describe your goal, motivation, or specific targets...",
-                              border: InputBorder.none,
-                              hintStyle: TextStyle(color: Colors.grey[600]),
-                            ),
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Badges Info
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Color(0xFFEFF6FF),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Color(0xFFBFDBFE), width: 1),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.emoji_events, color: Color(0xFFF59E0B), size: 24),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  "Earn badges as you progress towards your goals!",
-                                  style: TextStyle(
-                                    color: Color(0xFF475569),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildHoverButton(
+                                    isSelected: selectedDuration == "Mid Term (3-12 months)",
+                                    text: "Mid Term",
+                                    onPressed: () => setState(() => selectedDuration = "Mid Term (3-12 months)"),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        // Confirm Button
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF667EEA),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 2,
-                            ),
-                            onPressed: () async {
-                              if (selectedGoal != null && selectedDuration != null) {
-                                // Call the API to create goal
-                                final result = await GoalService.createGoal(
-                                  terms: selectedDuration!,
-                                  goals: selectedGoal!,
-                                  notes: notesController.text,
-                                );
-
-                                if (result['success'] == true) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(result['message']),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-
-                                  // Clear form
-                                  setState(() {
-                                    selectedGoal = null;
-                                    selectedDuration = null;
-                                    notesController.clear();
-                                  });
-
-                                  // Refresh goals list
-                                  await _loadUserGoals();
-
-                                  // 🚀 Redirect to next page after success
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => AvatarSelectionScreen(), // <- your next page
-                                    ),
-                                  );
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(result['message']),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please select both goal category and duration'),
-                                    backgroundColor: Colors.orange,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildHoverButton(
+                                    isSelected: selectedDuration == "Long Term (1+ years)",
+                                    text: "Long Term",
+                                    onPressed: () => setState(() => selectedDuration = "Long Term (1+ years)"),
                                   ),
-                                );
-                              }
-                            },
-                            child: const Text(
-                              "Create Goal",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            _buildInputCard(
+                              child: TextField(
+                                controller: notesController,
+                                maxLines: 3,
+                                decoration: const InputDecoration(
+                                  hintText: "Notes",
+                                  border: InputBorder.none,
+                                ),
                               ),
                             ),
-                          ),
-                        )
+                            const SizedBox(height: 24),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: primaryBlue,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  if (selectedGoal != null && selectedDuration != null) {
+                                    final result = await GoalService.createGoal(
+                                      terms: selectedDuration!,
+                                      goals: selectedGoal!,
+                                      notes: notesController.text,
+                                    );
 
-                      ],
-                    ),
-                  ),
-
-                  // ---------------- Goals Tab ----------------
-                  userGoals.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.emoji_events, size: 64, color: Color(0xFFCBD5E1)),
-                              const SizedBox(height: 16),
-                              Text(
-                                "No goals yet",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF64748B),
+                                    if (result['success'] == true) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(result['message']), backgroundColor: Colors.green),
+                                      );
+                                      setState(() {
+                                        selectedGoal = null;
+                                        selectedDuration = null;
+                                        notesController.clear();
+                                      });
+                                      _loadUserGoals();
+                                      Navigator.push(context,MaterialPageRoute(builder: (_) => const DailyCheckinScreen()));
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(result['message']), backgroundColor: Colors.red),
+                                      );
+                                    }
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Please select both goal category and duration'),
+                                        backgroundColor: Colors.orange,
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: const Text(
+                                  "Confirm",
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                "Create your first goal to get started!",
-                                style: TextStyle(
-                                  color: Color(0xFF94A3B8),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: userGoals.length,
-                          itemBuilder: (context, index) {
-                            final goal = userGoals[index];
-                            return _buildGoalCard(goal);
-                          },
+                            ),
+                          ],
                         ),
-                ],
+                      ),
+
+                      // ---------------- Goals ----------------
+                      userGoals.isEmpty
+                          ? const Center(
+                              child: Text("No goals yet", style: TextStyle(color: Colors.grey)),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: userGoals.length,
+                              itemBuilder: (context, index) => _buildGoalCard(userGoals[index]),
+                            ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            // Absolutely positioned circular container
+            Positioned(
+              top: 81, // Adjust this value to move vertically
+              right: 190, // Adjust this value to move horizontally
+              child: Container(
+                width: 120,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.white .withOpacity(0),
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
           ],
@@ -382,127 +297,100 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
     );
   }
 
-  Widget _buildInputCard({required String title, required Widget child}) {
+  // ✅ Card Builder with Shadow
+  Widget _buildInputCard({required Widget child}) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: primaryBlue.withOpacity(0.2)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 6,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF374151),
-              ),
-            ),
-            const SizedBox(height: 8),
-            child,
-          ],
-        ),
-      ),
+      child: child,
     );
   }
 
   Widget _buildGoalCard(Map<String, dynamic> goal) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: primaryBlue.withOpacity(0.2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.flag, color: Color(0xFF667EEA), size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    goal['goal'],
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1F2937),
-                    ),
-                  ),
-                ),
-                Chip(
-                  label: Text(
-                    goal['duration'],
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  backgroundColor: Color(0xFF667EEA),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            LinearProgressIndicator(
-              value: goal['progress'],
-              backgroundColor: Color(0xFFE5E7EB),
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
-              minHeight: 6,
-              borderRadius: BorderRadius.circular(3),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "${(goal['progress'] * 100).toStringAsFixed(0)}% Complete",
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF6B7280),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  "Created ${goal['created']}",
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF9CA3AF),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(goal['goal'],
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: primaryBlue)),
+          const SizedBox(height: 6),
+          Text(goal['duration'], style: TextStyle(color: primaryBlue.withOpacity(0.7))),
+          const SizedBox(height: 8),
+          LinearProgressIndicator(
+            value: goal['progress'],
+            backgroundColor: primaryBlue.withOpacity(0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(primaryBlue),
+            minHeight: 6,
+          ),
+          const SizedBox(height: 6),
+          Text("Created ${goal['created']}",
+              style: TextStyle(color: primaryBlue.withOpacity(0.7), fontSize: 12)),
+        ],
       ),
     );
   }
+
+  Widget _buildHoverButton({
+    required bool isSelected,
+    required String text,
+    required VoidCallback onPressed,
+  }) {
+    return StatefulBuilder(
+      builder: (context, setState) {
+        bool isHovered = false;
+        return MouseRegion(
+          onEnter: (_) => setState(() => isHovered = true),
+          onExit: (_) => setState(() => isHovered = false),
+          child: ElevatedButton(
+            onPressed: onPressed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isSelected
+                  ? primaryBlue
+                  : isHovered
+                      ? primaryBlue.withOpacity(0.1)
+                      : Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: isSelected ? BorderSide.none : BorderSide(color: primaryBlue.withOpacity(0.2)),
+              ),
+            ),
+            child: Text(
+              text,
+              style: TextStyle(
+                color: isSelected ? Colors.white : primaryBlue,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
-
-

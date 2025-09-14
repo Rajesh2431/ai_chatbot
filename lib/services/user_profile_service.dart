@@ -118,7 +118,8 @@ class UserProfileService {
     final lastCheckinDate = prefs.getString(_keyLastDailyCheckin);
     final today = DateTime.now().toIso8601String().split('T')[0]; // YYYY-MM-DD format
     
-    return lastCheckinDate != today;
+    // If no previous check-in date or different date, user needs check-in
+    return lastCheckinDate == null || lastCheckinDate != today;
   }
 
   /// Mark daily check-in as completed for today

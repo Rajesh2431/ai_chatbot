@@ -37,6 +37,7 @@ dependencies:
   timezone: ^0.9.4
   flutter_local_notifications: ^18.0.1
   dio: ^5.9.0
+  fl_chart: ^0.66.1
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
@@ -57,6 +58,8 @@ flutter:
     - lib/assets/videos/
     - lib/assets/sources/
     - lib/assets/avatar/
-    
+    - lib/assets/images/
+    - lib/assets/images/login_background.png
+    - lib/assets/images/login_background1.png
 # Change App Icon Command
 # flutter pub run flutter_launcher_icons:main

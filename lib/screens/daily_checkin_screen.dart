@@ -2,17 +2,13 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../services/mood_service.dart';
 import '../services/user_profile_service.dart';
-import 'dashboard_screen.dart';
+import 'grow_screen.dart';
 
 class DailyCheckinScreen extends StatefulWidget {
   final String? avatarName;
   final String? avatarImage;
 
-  const DailyCheckinScreen({
-    super.key,
-    this.avatarName,
-    this.avatarImage,
-  });
+  const DailyCheckinScreen({super.key, this.avatarName, this.avatarImage});
 
   @override
   State<DailyCheckinScreen> createState() => _DailyCheckinScreenState();
@@ -86,7 +82,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
     super.initState();
     _avatarName = widget.avatarName ?? 'Saira';
     _avatarImage = widget.avatarImage ?? 'lib/assets/avatar/saira.png';
-    
+
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -279,7 +275,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
 
     await Future.delayed(const Duration(milliseconds: 2000));
     _addAIMessage(
-      "Let's head to your dashboard where you can explore activities that might help brighten your day! 🌟",
+      "Let's head to your growth center where you can explore activities that might help brighten your day! 🌟",
     );
 
     await Future.delayed(const Duration(milliseconds: 3000));
@@ -287,9 +283,11 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
   }
 
   void _navigateToDashboard() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const DashboardScreen()),
-    );
+    if (mounted) {
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => GrowScreen()));
+    }
   }
 
   @override
@@ -297,15 +295,19 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFE3F2FD), // Light blue
-              Color(0xFFF0F8FF), // Alice blue
-              Color(0xFFF5F5F5), // Light gray
-            ],
+          image: DecorationImage(
+            image: AssetImage('lib/assets/images/gradent.png'),
+            fit: BoxFit.cover,
           ),
+          // gradient: LinearGradient(
+          //   begin: Alignment.topCenter,
+          //   end: Alignment.bottomCenter,
+          //   colors: [
+          //     Color(0xFFE3F2FD), // Light blue
+          //     Color(0xFFF0F8FF), // Alice blue
+          //     Color(0xFFF5F5F5), // Light gray
+          //   ],
+          // ),
         ),
         child: SafeArea(
           child: Column(

@@ -97,12 +97,17 @@ class _JournalScreenState extends State<JournalScreen>
   }
 
   Future<void> _initializeRecorder() async {
-    var status = await Permission.microphone.request();
-    if (status != PermissionStatus.granted) {
-      throw RecordingPermissionException('Microphone permission not granted');
+    try {
+      var status = await Permission.microphone.request();
+      if (status != PermissionStatus.granted) {
+        print('Microphone permission not granted');
+        return;
+      }
+      await _recorder.openRecorder();
+      _recorder.setSubscriptionDuration(const Duration(milliseconds: 500));
+    } catch (e) {
+      print('Error initializing recorder: $e');
     }
-    await _recorder.openRecorder();
-    _recorder.setSubscriptionDuration(const Duration(milliseconds: 500));
   }
 
   void _confirmEntry() async {

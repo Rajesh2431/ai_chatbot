@@ -6,11 +6,12 @@ import '../services/avatar_service.dart';
 
 class AvatarSelectionScreen extends StatefulWidget {
   final bool isChangingAvatar;
-  
+  final String userEmail;
   
   const AvatarSelectionScreen({
     super.key,
     this.isChangingAvatar = false,
+    this.userEmail = '',
   });
 
   @override
@@ -43,220 +44,169 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen>
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    
     return Scaffold(
-      body: AnimatedBuilder(
-        animation: _gradientAnimation,
-        builder: (context, child) {
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color.lerp(
-                    Colors.lightBlue.shade300,
-                    Colors.teal.shade300,
-                    _gradientAnimation.value,
-                  )!,
-                  Color.lerp(
-                    Colors.teal.shade400,
-                    Colors.lightBlue.shade400,
-                    _gradientAnimation.value,
-                  )!,
-                  Color.lerp(
-                    Colors.lightBlue.shade500,
-                    Colors.teal.shade500,
-                    _gradientAnimation.value,
-                  )!,
-                ],
-                stops: const [0.0, 0.5, 1.0],
-              ),
-            ),
-            child: SafeArea(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Glassmorphism title container
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      margin: const EdgeInsets.only(bottom: 60),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: Colors.white.withValues(alpha: 0.2),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: RichText(
-                            text: const TextSpan(
-                              text: 'Choose Your ',
-                              style: TextStyle(
-                                fontSize: 28,
+      resizeToAvoidBottomInset: false ,
+      body: Container(
+        decoration: BoxDecoration(
+          // Add your background image here
+          image: const DecorationImage(
+            image: AssetImage('lib/assets/images/ava_sel.png'), // Replace with your background image
+            fit: BoxFit.cover,
+          ),
+          // Fallback gradient if no background image
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.blue.shade50,
+              Colors.blue.shade100,
+              Colors.blue.shade200,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                // Header Section
+                const SizedBox(height: 40),
+                
+                // App Title
+                Text(
+                  'Sea Smart',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade700,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                
+                const SizedBox(height: 8),
+                
+                // Powered by text
+                Text(
+                  'Powered by StriveHigh',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.blue.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                
+                const SizedBox(height: 60),
+                
+                // Main Title
+                Text(
+                  'Choose your companion',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+                
+                const SizedBox(height: 100),
+                
+                // Avatar Selection Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: AvatarService.availableAvatars.map((avatar) {
+                    return GestureDetector(
+                      onTapDown: (TapDownDetails details) {
+                        final Offset tapPosition = details.globalPosition;
+
+                        Navigator.of(context).push(
+                          CircularRevealRoute(
+                            page: AvatarDetailScreen(
+                              imagePath: avatar['image']!,
+                              name: avatar['name']!,
+                              isChangingAvatar: widget.isChangingAvatar,
+                              userEmail: widget.userEmail,
+                            ),
+                            centerAlignment: tapPosition,
+                            startRadius: 80.0,
+                            revealColor: Colors.teal.shade300,
+                          ),
+                        );
+                      },
+                      child: Column(
+                        children: [
+                          // Avatar Circle - Large size
+                          Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.lightBlue.shade100,
+                              border: Border.all(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w300,
+                                width: 4,
                               ),
-                              children: [
-                                TextSpan(
-                                  text: 'Avatar',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Avatar selection with glassmorphism - Responsive layout
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: AvatarService.availableAvatars.map((avatar) {
-                          return Flexible(
-                            child: GestureDetector(
-                              onTapDown: (TapDownDetails details) {
-                                final Offset tapPosition =
-                                    details.globalPosition;
-
-                                Navigator.of(context).push(
-                                  CircularRevealRoute(
-                                    page: AvatarDetailScreen(
-                                      imagePath: avatar['image']!,
-                                      name: avatar['name']!,
-                                      isChangingAvatar: widget.isChangingAvatar,
-                                    ),
-                                    centerAlignment: tapPosition,
-                                    startRadius: 80.0,
-                                    revealColor: Colors.teal.shade300,
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                ),
-                                child: Column(
-                                  children: [
-                                    // Glassmorphism avatar container - Responsive size
-                                    Container(
-                                      width: 160,
-                                      height: 160,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.4,
-                                          ),
-                                          width: 2,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.1,
-                                            ),
-                                            blurRadius: 20,
-                                            offset: const Offset(0, 10),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(80),
-                                        child: BackdropFilter(
-                                          filter: ImageFilter.blur(
-                                            sigmaX: 10,
-                                            sigmaY: 10,
-                                          ),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: Colors.white.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(
-                                                8.0,
-                                              ),
-                                              child: ClipOval(
-                                                child: Image.asset(
-                                                  avatar['image']!,
-                                                  fit: BoxFit.cover,
-                                                  alignment:
-                                                      Alignment.topCenter,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    // Glassmorphism name container
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 8,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(15),
-                                        color: Colors.white.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(15),
-                                        child: BackdropFilter(
-                                          filter: ImageFilter.blur(
-                                            sigmaX: 10,
-                                            sigmaY: 10,
-                                          ),
-                                          child: Text(
-                                            avatar['name']!,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            child: ClipOval(
+                              child: Image.asset(
+                                avatar['image']!,
+                                fit: BoxFit.cover,
+                                alignment: Alignment.topCenter,
                               ),
                             ),
-                          );
-                        }).toList(),
+                          ),
+                          
+                          const SizedBox(height: 20),
+                          
+                          // Avatar Name
+                          Text(
+                            avatar['name']!,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                    );
+                  }).toList(),
                 ),
-              ),
+                
+                const SizedBox(height: 100),
+                
+                // Description Text
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Text(
+                    "Pick the buddy who'll sail alongside you on this journey. Each one is here to guide, support, and grow with you.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                      height: 1.5,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+                
+                const Spacer(),
+                
+                // Bottom indicator (optional)
+                
+                const SizedBox(height: 40),
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

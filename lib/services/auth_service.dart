@@ -1,20 +1,18 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'user_profile_service.dart';
 
 class AuthService {
-  static const String _lanIp = "192.168.1.28"; // your PC IP
-  static const String _port = "8000";
-
   static String get baseUrl {
-  if (kIsWeb) {
-    // ✅ For Chrome
-    return "http://127.0.0.1:8000/api/";
-  } else {
-    // ✅ For Android/iOS devices
-    return "http://192.168.1.28:8000/api/";
+    if (kIsWeb) {
+      // ✅ For Chrome
+      return "https://strivehigh.thirdvizion.com/api/";
+    } else {
+      // ✅ For Android/iOS devices
+      return "https://strivehigh.thirdvizion.com/api/";
+    }
   }
-}
 
   /// Signup
   static Future<Map<String, dynamic>> signup(String email, String password) async {
@@ -65,6 +63,9 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove("auth_token");
     await prefs.remove("user_email");
+    
+    // Also clear user profile data on logout
+    await UserProfileService.clearUserData();
   }
 
   static Future<String?> getToken() async {

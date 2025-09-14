@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'screens/avatar_selection_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/grow_screen.dart';
 import 'screens/journal_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/daily_checkin_screen.dart';
@@ -11,6 +12,7 @@ import 'providers/journal_entries_provider.dart';
 import 'services/backend_pdf_service.dart';
 import 'services/notification_service.dart';
 import 'services/user_profile_service.dart';
+import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,6 +51,7 @@ class App extends StatelessWidget {
           '/avatar-selection': (context) => const AvatarSelectionScreen(),
           '/daily-checkin': (context) => const DailyCheckinScreen(),
           '/dashboard': (context) => const DashboardScreen(),
+          '/home': (context) => const GrowScreen(),
           '/chat': (context) => const ChatScreen(),
           '/journal': (context) => const JournalScreen(),
         },
@@ -73,35 +76,54 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _navigateAfterSplash() async {
     // Wait for splash screen duration
-    await Future.delayed(const Duration(seconds: 3)); // Reduced splash time
+    await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
 
-    // Check if user is logged in
-    final isLoggedIn = await AuthService.isLoggedIn();
+    try {
+      // Check if user is logged in
+      final isLoggedIn = await AuthService.isLoggedIn();
 
-    if (!isLoggedIn) {
-      // User not logged in - go to login screen
-      Navigator.pushReplacementNamed(context, '/login');
-      return;
-    }
+      if (!mounted) return;
 
-    // User is logged in - check if this is their first time
-    final isFirstTime = await UserProfileService.isFirstTime();
+      if (!isLoggedIn) {
+        // User not logged in - go to login screen
+        Navigator.pushReplacementNamed(context, '/login');
+        return;
+      }
 
-    if (isFirstTime) {
-      // First time user - go to onboarding
-      Navigator.pushReplacementNamed(context, '/onboarding');
-    } else {
-      // Returning user - check if they need daily check-in
-      final needsDailyCheckin = await UserProfileService.needsDailyCheckin();
+      // User is logged in - check if this is their first time
+      final isFirstTime = await UserProfileService.isFirstTime();
 
-      if (needsDailyCheckin) {
-        // User needs to do daily check-in
-        Navigator.pushReplacementNamed(context, '/daily-checkin');
+      if (!mounted) return;
+
+      if (isFirstTime) {
+        // First time user - go to onboarding
+        final userEmail = await AuthService.getToken(); // Get user email from auth
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OnboardingScreen(userEmail: userEmail ?? ''),
+          ),
+        );
       } else {
-        // User already did daily check-in - go to dashboard
-        Navigator.pushReplacementNamed(context, '/dashboard');
+        // Returning user - check if they need daily check-in
+        final needsDailyCheckin = await UserProfileService.needsDailyCheckin();
+
+        if (!mounted) return;
+
+        if (needsDailyCheckin) {
+          // User needs to do daily check-in
+          Navigator.pushReplacementNamed(context, '/daily-checkin');
+        } else {
+          // User already did daily check-in - go to home (grow screen)
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      }
+    } catch (e) {
+      // If any error occurs, go to login screen
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/login');
       }
     }
   }
@@ -133,7 +155,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Your Mental Health Assistant',
+                  'Your Mental Health Buddy',
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
               ],
@@ -145,12 +167,4 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }
 
-class AuthService {
-  // Existing methods and properties
 
-  static Future<bool> isLoggedIn() async {
-    // TODO: Implement actual login check logic
-    // For now, return false or true as placeholder
-    return false;
-  }
-}

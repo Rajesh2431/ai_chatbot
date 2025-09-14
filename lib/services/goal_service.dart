@@ -27,7 +27,7 @@ class GoalService {
       
       print('Sending createGoal request with data: email=$email, terms=$terms, goals=$goals, notes=$notes');
       final response = await dio.post(
-        'http://127.0.0.1:8000/api/setgoal/',
+        'https://strivehigh.thirdvizion.com/api/setgoal/',
         data: {
           'email': email,
           'terms': terms,
@@ -91,7 +91,7 @@ class GoalService {
       
       print('Sending getUserGoals request for email: $email');
       final response = await dio.get(
-        'http://127.0.0.1:8000/api/setgoal/',
+        'https://strivehigh.thirdvizion.com/api/setgoal/',
       );
       print('Received response: status=${response.statusCode}, data=${response.data}');
 

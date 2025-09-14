@@ -2,25 +2,26 @@ import 'package:flutter/material.dart';
 import '../routes/circular_reveal_route.dart';
 import '../services/avatar_service.dart';
 import '../services/mood_service.dart';
-import 'dashboard_screen.dart';
-import 'daily_checkin_screen.dart';
+import 'soar_card.dart';
 
 class AvatarDetailScreen extends StatelessWidget {
   final String imagePath;
   final String name;
   final bool isChangingAvatar;
+  final String userEmail;
 
   const AvatarDetailScreen({
     super.key,
     required this.imagePath,
     required this.name,
     this.isChangingAvatar = false,
+    this.userEmail = '',
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE3F2FD), // Light blue background
+      backgroundColor: const Color.fromARGB(255,220, 239, 248), // Light blue background
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40.0),
@@ -30,22 +31,24 @@ class AvatarDetailScreen extends StatelessWidget {
 
               // Welcome to SeaSmart title
               const Text(
-                'Welcome to',
+                'Sea Smart',
                 style: TextStyle(
-                  fontSize: 42,
+                  fontSize: 60,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF1565C0), // Dark blue
+                  color: Color.fromARGB(255, 124, 178, 239), // Dark blue
                   height: 1.2,
                 ),
                 textAlign: TextAlign.center,
               ),
 
+              const SizedBox(height: 20),
+
               const Text(
-                'SeaSmart',
+                'Powered by StriveHigh',
                 style: TextStyle(
-                  fontSize: 42,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1565C0), // Dark blue
+                  color: Color.fromARGB(255, 114, 114, 114), // Dark blue
                   height: 1.2,
                 ),
                 textAlign: TextAlign.center,
@@ -120,33 +123,18 @@ class AvatarDetailScreen extends StatelessWidget {
                     final size = MediaQuery.of(context).size;
                     final center = Offset(size.width / 2, size.height / 2);
 
-                    if (needsCheckin) {
-                      // Navigate to daily check-in first
-                      Navigator.of(context).pushReplacement(
-                        CircularRevealRoute(
-                          page: DailyCheckinScreen(
-                            avatarName: name,
-                            avatarImage: imagePath,
-                          ),
-                          centerAlignment: center,
-                          startRadius: 0,
-                          revealColor: const Color(0xFF1976D2),
-                        ),
-                      );
-                    } else {
-                      // Go directly to dashboard
-                      Navigator.of(context).pushReplacement(
-                        CircularRevealRoute(
-                          page: const DashboardScreen(),
-                          centerAlignment: center,
-                          startRadius: 0,
-                          revealColor: const Color(0xFF1976D2),
-                        ),
-                      );
-                    }
+                    // Navigate to SOAR Card
+                    Navigator.of(context).pushReplacement(
+                      CircularRevealRoute(
+                        page: QuizPage(userEmail: userEmail),
+                        centerAlignment: center,
+                        startRadius: 0,
+                        revealColor: const Color(0xFF1976D2),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1976D2), // Blue button
+                    backgroundColor: const Color.fromARGB(255,26, 148, 197), // Blue button
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     shape: RoundedRectangleBorder(
@@ -156,7 +144,10 @@ class AvatarDetailScreen extends StatelessWidget {
                   ),
                   child: Text(
                     isChangingAvatar ? 'Select Avatar' : 'Get Started',
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

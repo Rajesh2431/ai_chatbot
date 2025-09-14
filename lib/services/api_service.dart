@@ -34,7 +34,7 @@ class OpenRouterAPI {
       headers: {
         'Authorization': 'Bearer $_apiKey',
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'http://thirdvizion.com',
+        'HTTP-Referer': 'http://strivehigh.thirdvizion.com',
         'X-Title': 'SeaSmart AI Assistant',
       },
       body: jsonEncode({
