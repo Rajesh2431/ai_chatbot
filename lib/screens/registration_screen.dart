@@ -504,7 +504,7 @@ void _userErrorDialog() {
                           child: Text(
                             'Log In',
                             style: TextStyle(
-                              color: Colors.blue.shade300,
+                              color: const Color.fromARGB(255, 22, 145, 246),
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               decoration: TextDecoration.underline,
@@ -890,7 +890,7 @@ void _userErrorDialog() {
                                               TextButton(
                                                 onPressed: () async {
                                                   // Replace with your actual website URL
-                                                  const url = 'https://strivehigh.thirdvizion.com/';
+                                                  const url = 'https://strivehigh.thirdvizion.com/aifeed/';
                                                   try {
                                                     if (await canLaunch(url)) {
                                                       await launch(url);

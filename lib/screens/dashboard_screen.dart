@@ -28,12 +28,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final List<Widget> _pages = [
-    const _HomeContent(),
-    const JournalScreen(),
-    const GrowScreen(),
-    const SettingsScreen(),
-  ];
+  // final List<Widget> _pages = [
+  //   const _HomeContent(),
+  //   const JournalScreen(),
+  //   const GrowScreen(),
+  //   const SettingsScreen(),
+  // ];
 
   void _onMenuTap(int index) {
     setState(() {
@@ -51,7 +51,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       drawer: const AIDrawer(),
       body: Padding(
         padding: EdgeInsets.only(top: statusBarHeight),
-        child: _pages[_selectedIndex],
+        //child: _pages[_selectedIndex],
       ),
       bottomNavigationBar: CurvedNavigationBar(
         index: _selectedIndex,
@@ -522,10 +522,10 @@ class _HomeContentState extends State<_HomeContent> {
           const SizedBox(height: 20),
           GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const MoodAnalyticsScreen()),
-              );
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(builder: (_) => const MoodAnalyticsScreen()),
+              // );
             },
             child: Container(
               width: double.infinity,

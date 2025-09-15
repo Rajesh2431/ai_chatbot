@@ -17,6 +17,8 @@ import 'goal_settings.dart';
 import 'chat_screen.dart';
 import 'setting_screen.dart';
 import 'academy.dart';
+import 'certificate_screen.dart';
+import 'soar_card_analysis.dart';
 
 class GrowScreen extends StatefulWidget {
   const GrowScreen({super.key});
@@ -43,6 +45,35 @@ class _MoodIndicator extends StatelessWidget {
     );
   }
 }
+
+class JournalPage extends StatelessWidget {
+  const JournalPage({super.key});
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: Text("journal")));
+}
+
+class CertificatePage extends StatelessWidget {
+  const CertificatePage({super.key});
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: Text("certificates screen")));
+}
+
+class MoodPage extends StatelessWidget {
+  const MoodPage({super.key});
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: Text("mood analytics screen")));
+}
+
+class ReportPage extends StatelessWidget {
+  const ReportPage({super.key});
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: Text("Progress Report screen")));
+}
+
 
 class HorizontalCalendar extends StatelessWidget {
   const HorizontalCalendar({super.key});
@@ -202,102 +233,102 @@ class _GrowScreenState extends State<GrowScreen>
       body: _selectedBottomIndex == 0
           ? _buildGrowScreenContent() // Show grow screen content for home
           : _getPageForIndex(_selectedBottomIndex), // Show other pages
-      bottomNavigationBar: CurvedNavigationBar(
-        index: _selectedBottomIndex,
-        height: 50,
-        backgroundColor: const Color(0xFFF8F9FA),
-        color: const Color(0xFF5DC1F3),
-        buttonBackgroundColor: const Color(0xFF4A90E2),
-        animationDuration: const Duration(milliseconds: 300),
-        animationCurve: Curves.easeInOut,
-        items: [
-          // Home (Grow Screen)
-          _selectedBottomIndex == 0
-              ? const Icon(Icons.home, size: 32, color: Colors.white)
-              : const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.home, size: 24, color: Colors.white),
-                    SizedBox(height: 2),
-                    Text(
-                      'Home',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-          // Journal
-          _selectedBottomIndex == 1
-              ? const Icon(Icons.book_rounded, size: 32, color: Colors.white)
-              : const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.book_rounded, size: 24, color: Colors.white),
-                    SizedBox(height: 2),
-                    Text(
-                      'Journal',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-          // Chat
-          _selectedBottomIndex == 2
-              ? const Icon(
-                  Icons.chat_bubble_rounded,
-                  size: 32,
-                  color: Colors.white,
-                )
-              : const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_rounded,
-                      size: 24,
-                      color: Colors.white,
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Chat',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-          // Settings
-          _selectedBottomIndex == 3
-              ? const Icon(Icons.settings, size: 32, color: Colors.white)
-              : const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.settings, size: 24, color: Colors.white),
-                    SizedBox(height: 2),
-                    Text(
-                      'Settings',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-        ],
-        onTap: _onBottomNavTap,
-      ),
+      // bottomNavigationBar: CurvedNavigationBar(
+      //   index: _selectedBottomIndex,
+      //   height: 50,
+      //   backgroundColor: const Color(0xFFF8F9FA),
+      //   color: const Color(0xFF5DC1F3),
+      //   buttonBackgroundColor: const Color(0xFF4A90E2),
+      //   animationDuration: const Duration(milliseconds: 300),
+      //   animationCurve: Curves.easeInOut,
+      //   items: [
+      //     // Home (Grow Screen)
+      //     _selectedBottomIndex == 0
+      //         ? const Icon(Icons.home, size: 32, color: Colors.white)
+      //         : const Column(
+      //             mainAxisAlignment: MainAxisAlignment.center,
+      //             mainAxisSize: MainAxisSize.min,
+      //             children: [
+      //               Icon(Icons.home, size: 24, color: Colors.white),
+      //               SizedBox(height: 2),
+      //               Text(
+      //                 'Home',
+      //                 style: TextStyle(
+      //                   color: Colors.white,
+      //                   fontSize: 12,
+      //                   fontWeight: FontWeight.w500,
+      //                 ),
+      //               ),
+      //             ],
+      //           ),
+      //     // Journal
+      //     _selectedBottomIndex == 1
+      //         ? const Icon(Icons.book_rounded, size: 32, color: Colors.white)
+      //         : const Column(
+      //             mainAxisAlignment: MainAxisAlignment.center,
+      //             mainAxisSize: MainAxisSize.min,
+      //             children: [
+      //               Icon(Icons.book_rounded, size: 24, color: Colors.white),
+      //               SizedBox(height: 2),
+      //               Text(
+      //                 'Journal',
+      //                 style: TextStyle(
+      //                   color: Colors.white,
+      //                   fontSize: 12,
+      //                   fontWeight: FontWeight.w500,
+      //                 ),
+      //               ),
+      //             ],
+      //           ),
+      //     // Chat
+      //     _selectedBottomIndex == 2
+      //         ? const Icon(
+      //             Icons.chat_bubble_rounded,
+      //             size: 32,
+      //             color: Colors.white,
+      //           )
+      //         : const Column(
+      //             mainAxisAlignment: MainAxisAlignment.center,
+      //             mainAxisSize: MainAxisSize.min,
+      //             children: [
+      //               Icon(
+      //                 Icons.chat_bubble_rounded,
+      //                 size: 24,
+      //                 color: Colors.white,
+      //               ),
+      //               SizedBox(height: 2),
+      //               Text(
+      //                 'Chat',
+      //                 style: TextStyle(
+      //                   color: Colors.white,
+      //                   fontSize: 12,
+      //                   fontWeight: FontWeight.w500,
+      //                 ),
+      //               ),
+      //             ],
+      //           ),
+      //     // Settings
+      //     _selectedBottomIndex == 3
+      //         ? const Icon(Icons.settings, size: 32, color: Colors.white)
+      //         : const Column(
+      //             mainAxisAlignment: MainAxisAlignment.center,
+      //             mainAxisSize: MainAxisSize.min,
+      //             children: [
+      //               Icon(Icons.settings, size: 24, color: Colors.white),
+      //               SizedBox(height: 2),
+      //               Text(
+      //                 'Settings',
+      //                 style: TextStyle(
+      //                   color: Colors.white,
+      //                   fontSize: 12,
+      //                   fontWeight: FontWeight.w500,
+      //                 ),
+      //               ),
+      //             ],
+      //           ),
+      //   ],
+      //   onTap: _onBottomNavTap,
+      // ),
     );
   }
 
@@ -888,27 +919,185 @@ class _GrowScreenState extends State<GrowScreen>
 
 
   Widget _buildShowContent() {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Your Progress',
+  return SingleChildScrollView(
+    child: Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 🔹 Title
+          const Text(
+            'Your Progress',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2C3E50),
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+
+          // 🔹 Progress Feature Cards (Grid Style)
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 1,
+            childAspectRatio: 2.0,
+            mainAxisSpacing: 12,
+
+           children: [
+                _buildFeatureCard("Journal", "lib/assets/images/resolu.png", '/journal'),
+                _buildFeatureCard("Certificates", "lib/assets/images/certi.png", '/certificates'),
+                _buildFeatureCard("Mood Analysis", "lib/assets/images/prog.png", '/mood-analytics'),
+                _buildFeatureCard("Progress Report", "lib/assets/images/aly.png", '/report'),
+              ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // 🔹 Wellness Tips Section
+        const Text(
+              'Wellness Tips',
+              textAlign: TextAlign.center, // ✅ move here
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF2C3E50),
               ),
             ),
-            const SizedBox(height: 16),
-            _buildProgressCards(),
+
+          const SizedBox(height: 12),
+
+          Column(
+            children: [
+              _buildTipCard(
+                title: "Find Your Space",
+                description: "Choose a quiet spot on deck or in your cabin where you won’t disturbed",
+                bgColor: Colors.green.shade50,
+                textColor: Colors.green.shade800,
+              ),
+              _buildTipCard(
+                title: "Steady Yourself",
+                description: "Sit with your back against something stable to maintain balance with ship movement",
+                bgColor: Colors.purple.shade50,
+                textColor: Colors.purple,
+              ),
+              _buildTipCard(
+                title: "Use Natural Sounds",
+                description: "Let the sound of waves and wind become part of your meditation practice",
+                bgColor: Colors.blue.shade50,
+                textColor: Colors.blue,
+              ),
+              _buildTipCard(
+                title: "Regular Practice",
+                description: "Even 5 minutes daily can significantly reduce stress and improve focus.",
+                bgColor: Colors.orange.shade50,
+                textColor: Colors.orange,
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+
+
+/// 🔹 Feature Card
+Widget _buildFeatureCard(String title, String imagePath, String routeName) {
+  return GestureDetector(
+    onTap: () {
+      Navigator.pushNamed(context, routeName);
+    },
+    child: Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        image: DecorationImage(
+          image: AssetImage(imagePath),
+          fit: BoxFit.cover,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color.fromARGB(255, 8, 121, 183).withOpacity(0.9),
+                    const Color.fromARGB(0, 1, 1, 29),
+                  ],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
+/// 🔹 Wellness Tip Card
+Widget _buildTipCard({
+  required String title,
+  required String description,
+  required Color bgColor,
+  required Color textColor,
+}) {
+  return Container(
+    width: double.infinity,
+    margin: const EdgeInsets.symmetric(vertical: 8),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.grey.shade300),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: textColor,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          description,
+          style: const TextStyle(fontSize: 14, color: Colors.black87),
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildSoarCardTile() {
     return GestureDetector(
@@ -919,7 +1108,7 @@ class _GrowScreenState extends State<GrowScreen>
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => QuizPage(userEmail: userEmail),
+              builder: (context) => SoarDashboardPage(userEmail: userEmail),
             ),
           ).then((_) {
             // Refresh SOAR data when returning

@@ -348,7 +348,7 @@ class _QuizPageState extends State<QuizPage> {
           ),
           SizedBox(height: 4),
           Text(
-            "Strength, Opportunities, Aspirations & Result",
+            "Strength, Opportunities, Aspirations & Recommendations",
             style: TextStyle(fontSize: 12, color: Colors.white70),
             textAlign: TextAlign.center,
           ),
@@ -364,6 +364,7 @@ class _QuizPageState extends State<QuizPage> {
         elevation: 4,
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        color: Color.fromARGB(255, 218, 240, 255),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
