@@ -1,6 +1,6 @@
 import 'package:SeaSmart/screens/certificate_screen.dart' show CertificateScreen;
+import 'package:SeaSmart/screens/feedback_screen.dart';
 import 'package:SeaSmart/screens/mood_analytics_screen.dart' show MoodAnalyticsScreen;
-import 'package:SeaSmart/screens/soar_card_analysis.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/avatar_selection_screen.dart';
@@ -12,11 +12,11 @@ import 'screens/onboarding_screen.dart';
 import 'screens/daily_checkin_screen.dart';
 import 'screens/login_screen.dart';
 import 'providers/journal_entries_provider.dart';
+import 'screens/tutorial_onboarding_screen.dart';
 import 'services/backend_pdf_service.dart';
 import 'services/notification_service.dart';
 import 'services/user_profile_service.dart';
 import 'services/auth_service.dart';
-import 'screens/soar_card_analysis.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,7 +60,9 @@ class App extends StatelessWidget {
           '/journal': (context) => const JournalScreen(),
           '/mood-analytics': (context) => const MoodAnalyticsScreen(),
           '/certificates': (context) => const CertificateScreen(),
-          '/report': (context) => const SoarDashboardPage(userEmail: '',),
+          '/report': (context) => const FeedbackScreen(),
+          '/tutorial': (context) => TutorialOnboardingScreen(userEmail: ''),
+
         },
       ),
     );

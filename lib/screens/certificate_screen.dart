@@ -1,4 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/services.dart' as services;
+import 'package:open_file/open_file.dart';
+import '../services/soar_card_service.dart';
+import '../models/soar_card_answer.dart';
 
 class CertificateScreen extends StatefulWidget {
   const CertificateScreen({super.key});
@@ -21,6 +29,47 @@ class _CertificateScreenState extends State<CertificateScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _downloadSoarCardPDF() async {
+    try {
+      // Load the static SOAR card PDF from assets
+      final ByteData data = await services.rootBundle.load('lib/assets/doc/SoarCardscore.pdf');
+      final List<int> bytes = data.buffer.asUint8List();
+
+      // Get the directory to save the file (prefer external storage Download, fallback to documents)
+      Directory? directory = await getExternalStorageDirectory();
+      String filePath;
+      if (directory != null) {
+        final downloadDir = Directory('${directory.path}/Download');
+        if (!await downloadDir.exists()) {
+          await downloadDir.create(recursive: true);
+        }
+        filePath = '${downloadDir.path}/SoarCardscore.pdf';
+      } else {
+        directory = await getApplicationDocumentsDirectory();
+        filePath = '${directory.path}/SoarCardscore.pdf';
+      }
+
+      // Write the file
+      final file = File(filePath);
+      await file.writeAsBytes(bytes, flush: true);
+
+      // Show success message and open the PDF file
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('SOAR Card PDF successfully saved. Opening now...')),
+        );
+        // Open the PDF file
+        await OpenFile.open(filePath);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save PDF: $e')),
+        );
+      }
+    }
   }
 
   Widget _buildHeader() {
@@ -81,6 +130,7 @@ class _CertificateScreenState extends State<CertificateScreen> {
             description: 'Completed the Strength, Opportunities, Aspirations & Result assessment.',
             date: '2023-10-01',
             imagePath: 'lib/assets/images/certi.png',
+            onTap: _downloadSoarCardPDF,
           ),
           const SizedBox(height: 16),
           _buildCertificateCard(
@@ -106,72 +156,76 @@ class _CertificateScreenState extends State<CertificateScreen> {
     required String description,
     required String date,
     required String imagePath,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              image: DecorationImage(
-                image: AssetImage(imagePath),
-                fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                image: DecorationImage(
+                  image: AssetImage(imagePath),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2C3E50),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2C3E50),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Earned on: $date',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF3498DB),
-                    fontWeight: FontWeight.w500,
+                  const SizedBox(height: 8),
+                  Text(
+                    'Earned on: $date',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF3498DB),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.grey[400],
-            size: 16,
-          ),
-        ],
+            Icon(
+              onTap != null ? Icons.download : Icons.arrow_forward_ios,
+              color: Colors.grey[400],
+              size: 16,
+            ),
+          ],
+        ),
       ),
     );
   }

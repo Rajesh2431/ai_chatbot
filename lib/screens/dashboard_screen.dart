@@ -2,15 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'chat_screen.dart';
-import 'journal_screen.dart';
-import 'setting_screen.dart';
 import 'tap_the_calm_game.dart';
 //import 'quiz_screen.dart';
 import 'breathing_timer.dart';
 import 'memory_game.dart';
-import 'mood_analytics_screen.dart';
 import 'user_profile_screen.dart';
-import 'grow_screen.dart';
 
 import '../widgets/ai_drawer.dart';
 import '../services/mood_service.dart';

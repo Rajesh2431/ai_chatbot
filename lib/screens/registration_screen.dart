@@ -1,4 +1,3 @@
-import 'package:SeaSmart/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_service.dart';
@@ -23,6 +22,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool _obscurePassword = true;
   //String _selectedCountryCode = '+1';
   bool _termsAndCondition = false;
+  bool _privacyPolicy = false;
+
 
   // final List<String> _countryCodes = [
   //   '+1', '+44', '+33', '+49', '+81', '+86', '+91', '+61', '+55', '+52'
@@ -855,14 +856,162 @@ void _userErrorDialog() {
                                   const SizedBox(height: 5),
 
                                   Row(
+                                    children: [
+                                      Transform.scale(
+                                        scale: 0.9,
+                                        child: Checkbox(
+                                          value: _termsAndCondition,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _termsAndCondition = value ?? false;
+                                            });
+                                          },
+                                          activeColor: Colors.blue,
+                                          checkColor: Colors.white,
+                                          side: BorderSide(
+                                            color: Color.fromARGB(255, 150, 150, 150),
+                                            width: 1.5,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              'Terms and Conditions applied*',
+                                              style: TextStyle(
+                                                color: const Color.fromARGB(255, 150, 150, 150),
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            TextButton(
+                                              onPressed: () {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (BuildContext context) {
+                                                    return AlertDialog(
+                                                      title: Text('Terms and Conditions'),
+                                                      content: SingleChildScrollView(
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            Text(
+                                                              'Terms and Conditions',
+                                                              style: TextStyle(
+                                                                fontSize: 16,
+                                                                fontWeight: FontWeight.bold,
+                                                              ),
+                                                            ),
+                                                            SizedBox(height: 16),
+                                                            Text(
+                                                              'By using this mental health tracking application, you agree to the following terms:\n\n'
+                                                              '1. Medical Disclaimer\n'
+                                                              'This app is for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. Always consult qualified healthcare professionals.\n\n'
+                                                              '2. Data Privacy & Security\n'
+                                                              'Your mental health data is encrypted and stored securely. We never share personal information with third parties without consent.\n\n'
+                                                              '3. User Responsibility\n'
+                                                              'You are responsible for the accuracy of information entered and for seeking professional help when needed.\n\n'
+                                                              '4. Emergency Situations\n'
+                                                              'This app is not for crisis intervention. If experiencing suicidal thoughts or emergency, contact emergency services immediately.\n\n'
+                                                              '5. Data Usage\n'
+                                                              'Anonymized data may be used to improve app functionality. Personal identifiable information remains private.\n\n'
+                                                              '6. Age Requirements\n'
+                                                              'Users must be 13+ years old. Users under 18 require parental consent.\n\n'
+                                                              'For complete terms and crisis resources, visit our website.',
+                                                              style: TextStyle(fontSize: 14),
+                                                            ),
+                                                            SizedBox(height: 16),
+                                                            Row(
+                                                              children: [
+                                                                Text(
+                                                                  'Visit full terms: ',
+                                                                  style: TextStyle(fontSize: 12),
+                                                                ),
+                                                                GestureDetector(
+                                                                  onTap: () async {
+                                                                    const url = 'https://strivehigh.thirdvizion.com/terms/';
+                                                                    try {
+                                                                      if (await canLaunch(url)) {
+                                                                        await launch(url);
+                                                                      }
+                                                                    } catch (e) {
+                                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                                        const SnackBar(
+                                                                          content: Text('Could not open website'),
+                                                                        ),
+                                                                      );
+                                                                    }
+                                                                  },
+                                                                  child: Text(
+                                                                    'strivehigh.thirdvizion.com',
+                                                                    style: TextStyle(
+                                                                      color: Colors.blue,
+                                                                      fontSize: 12,
+                                                                      decoration: TextDecoration.underline,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            Navigator.of(context).pop();
+                                                          },
+                                                          child: Text('Close'),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            setState(() {
+                                                              _termsAndCondition = true;
+                                                            });
+                                                            Navigator.of(context).pop();
+                                                          },
+                                                          child: Text('Accept'),
+                                                        ),
+                                                      ],
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                              style: TextButton.styleFrom(
+                                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                                minimumSize: Size.zero,
+                                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                              ),
+                                              child: Text(
+                                                'learn more',
+                                                style: TextStyle(
+                                                  color: Colors.blue.shade300,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  decoration: TextDecoration.underline,
+                                                  decorationColor: Colors.blue.shade300,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                    Row(
                                       children: [
                                         Transform.scale(
                                           scale: 0.9,
                                           child: Checkbox(
-                                            value: _termsAndCondition,
+                                            value: _privacyPolicy,
                                             onChanged: (value) {
                                               setState(() {
-                                                _termsAndCondition = value ?? false;
+                                                _privacyPolicy = value ?? false;
                                               });
                                             },
                                             activeColor: Colors.blue,
@@ -880,7 +1029,7 @@ void _userErrorDialog() {
                                           child: Row(
                                             children: [
                                               Text(
-                                                'Terms and Conditions applied*',
+                                                'Privacy Policy applied*',
                                                 style: TextStyle(
                                                   color: const Color.fromARGB(255, 150, 150, 150),
                                                   fontSize: 12,
@@ -888,26 +1037,105 @@ void _userErrorDialog() {
                                               ),
                                               const SizedBox(width: 4),
                                               TextButton(
-                                                onPressed: () async {
-                                                  // Replace with your actual website URL
-                                                  const url = 'https://strivehigh.thirdvizion.com/aifeed/';
-                                                  try {
-                                                    if (await canLaunch(url)) {
-                                                      await launch(url);
-                                                    } else {
-                                                      ScaffoldMessenger.of(context).showSnackBar(
-                                                        const SnackBar(
-                                                          content: Text('Could not open website'),
+                                                onPressed: () {
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (BuildContext context) {
+                                                      return AlertDialog(
+                                                        title: Text('Privacy Policy'),
+                                                        content: SingleChildScrollView(
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              Text(
+                                                                'Privacy Policy',
+                                                                style: TextStyle(
+                                                                  fontSize: 16,
+                                                                  fontWeight: FontWeight.bold,
+                                                                ),
+                                                              ),
+                                                              SizedBox(height: 16),
+                                                              Text(
+                                                                'Your privacy is our top priority. This policy explains how we handle your mental health information:\n\n'
+                                                                '1. Information We Collect\n'
+                                                                '• Mood entries, journal notes, and wellness tracking data\n'
+                                                                '• Usage patterns and app interactions\n'
+                                                                '• Device information (anonymized)\n\n'
+                                                                '2. Data Protection\n'
+                                                                '• All personal data is encrypted using industry-standard AES-256 encryption\n'
+                                                                '• Data stored on secure, HIPAA-compliant servers\n'
+                                                                '• No data shared with advertisers or third parties\n\n'
+                                                                '3. Data Usage\n'
+                                                                '• Personal data used only to provide app services\n'
+                                                                '• Anonymized insights may improve app features\n'
+                                                                '• No personal identification in research or analytics\n\n'
+                                                                '4. Your Rights\n'
+                                                                '• Access, export, or delete your data anytime\n'
+                                                                '• Opt-out of data collection features\n'
+                                                                '• Request data portability\n\n'
+                                                                '5. Data Retention\n'
+                                                                '• Personal data kept only as long as account is active\n'
+                                                                '• 90-day grace period after account deletion\n\n'
+                                                                'Last updated: [Date]. For complete privacy policy, visit our website.',
+                                                                style: TextStyle(fontSize: 14),
+                                                              ),
+                                                              SizedBox(height: 16),
+                                                              Row(
+                                                                children: [
+                                                                  Text(
+                                                                    'Visit full privacy policy: ',
+                                                                    style: TextStyle(fontSize: 12),
+                                                                  ),
+                                                                  GestureDetector(
+                                                                    onTap: () async {
+                                                                      const url = 'https://strivehigh.thirdvizion.com/privacy/';
+                                                                      try {
+                                                                        if (await canLaunch(url)) {
+                                                                          await launch(url);
+                                                                        }
+                                                                      } catch (e) {
+                                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                                          const SnackBar(
+                                                                            content: Text('Could not open website'),
+                                                                          ),
+                                                                        );
+                                                                      }
+                                                                    },
+                                                                    child: Text(
+                                                                      'strivehigh.thirdvizion.com',
+                                                                      style: TextStyle(
+                                                                        color: Colors.blue,
+                                                                        fontSize: 12,
+                                                                        decoration: TextDecoration.underline,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ],
+                                                          ),
                                                         ),
+                                                        actions: [
+                                                          TextButton(
+                                                            onPressed: () {
+                                                              Navigator.of(context).pop();
+                                                            },
+                                                            child: Text('Close'),
+                                                          ),
+                                                          TextButton(
+                                                            onPressed: () {
+                                                              setState(() {
+                                                                _privacyPolicy = true;
+                                                              });
+                                                              Navigator.of(context).pop();
+                                                            },
+                                                            child: Text('Accept'),
+                                                          ),
+                                                        ],
                                                       );
-                                                    }
-                                                  } catch (e) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      const SnackBar(
-                                                        content: Text('Could not open website'),
-                                                      ),
-                                                    );
-                                                  }
+                                                    },
+                                                  );
                                                 },
                                                 style: TextButton.styleFrom(
                                                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -957,6 +1185,10 @@ void _userErrorDialog() {
                                       onPressed: _isLoading ? null : () {
                                         if (!_termsAndCondition) {
                                           _showErrorSnackBar('You must agree to the terms and conditions');
+                                          return;
+                                        }
+                                        if (!_privacyPolicy) {
+                                          _showErrorSnackBar('You must agree to the privacy policy');
                                           return;
                                         }
                                         

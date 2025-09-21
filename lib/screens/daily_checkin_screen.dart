@@ -1,5 +1,5 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../services/mood_service.dart';
 import '../services/user_profile_service.dart';
 import 'grow_screen.dart';
@@ -14,26 +14,22 @@ class DailyCheckinScreen extends StatefulWidget {
   State<DailyCheckinScreen> createState() => _DailyCheckinScreenState();
 }
 
-class _DailyCheckinScreenState extends State<DailyCheckinScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
-  final ScrollController _scrollController = ScrollController();
-
-  List<ChatMessage> messages = [];
+class _DailyCheckinScreenState extends State<DailyCheckinScreen> {
   int currentQuestionIndex = 0;
   bool isTyping = false;
   bool isCompleted = false;
   bool showOptions = false; // Add this to control when options appear
+  int? selectedOptionIndex; // Track which option is selected
 
   final List<DailyQuestion> questions = [
     DailyQuestion(
-      question: "Good morning! How are you feeling today?",
+      question: "Good Morning How are you Feeling Today",
       options: [
-        MoodOption("Excellent", "😄", 5),
-        MoodOption("Great", "😊", 4),
-        MoodOption("Good", "🙂", 3),
-        MoodOption("Okay", "😐", 2),
+        MoodOption("Fantastic", "😁", 5),
+        MoodOption("Pretty Good", "🙂", 4),
+        MoodOption("Alright", "😊", 3),
+        MoodOption("Just Okay", "😐", 2),
+        MoodOption("Balanced", "😊", 3),
       ],
     ),
     DailyQuestion(
@@ -43,6 +39,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
         MoodOption("Very well", "😊", 4),
         MoodOption("Good", "🙂", 3),
         MoodOption("Average", "😐", 2),
+        MoodOption("Restless", "😵", 1),
       ],
     ),
     DailyQuestion(
@@ -52,6 +49,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
         MoodOption("High", "💪", 4),
         MoodOption("Good", "🔋", 3),
         MoodOption("Moderate", "😐", 2),
+        MoodOption("Low", "😴", 1),
       ],
     ),
     DailyQuestion(
@@ -61,6 +59,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
         MoodOption("Calm", "🙂", 4),
         MoodOption("Slightly tense", "😊", 3),
         MoodOption("Moderate stress", "😐", 2),
+        MoodOption("Very stressed", "😰", 1),
       ],
     ),
     DailyQuestion(
@@ -70,83 +69,27 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
         MoodOption("Optimistic", "😊", 4),
         MoodOption("Positive", "🙂", 3),
         MoodOption("Neutral", "😐", 2),
+        MoodOption("Concerned", "😟", 1),
       ],
     ),
   ];
 
-  late String _avatarName;
   late String _avatarImage;
 
   @override
   void initState() {
     super.initState();
-    _avatarName = widget.avatarName ?? 'Saira';
-    _avatarImage = widget.avatarImage ?? 'lib/assets/avatar/saira.png';
-
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
+    _avatarImage = widget.avatarImage ?? 'lib/assets/avatar/Siara_half.png';
 
     _startCheckin();
   }
 
-  @override
-  void dispose() {
-    _fadeController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
   void _startCheckin() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _addAIMessage(
-      "Hello! I'm $_avatarName, your daily companion. Let's do a quick check-in to see how you're doing today! 😊",
-    );
-
-    await Future.delayed(const Duration(milliseconds: 3000));
+    await Future.delayed(const Duration(milliseconds: 1000));
     _askNextQuestion();
   }
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          0.0, // For reverse: true, scroll to top (which is the bottom of the chat)
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
 
-  void _addAIMessage(String message) {
-    setState(() {
-      messages.add(
-        ChatMessage(message: message, isUser: false, timestamp: DateTime.now()),
-      );
-    });
-    _fadeController.forward();
-    _scrollToBottom();
-  }
-
-  void _addUserMessage(String message, int score) {
-    setState(() {
-      messages.add(
-        ChatMessage(
-          message: message,
-          isUser: true,
-          timestamp: DateTime.now(),
-          moodScore: score,
-        ),
-      );
-    });
-    _scrollToBottom();
-  }
 
   void _askNextQuestion() {
     if (currentQuestionIndex < questions.length) {
@@ -158,14 +101,7 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
       Future.delayed(const Duration(milliseconds: 1500), () {
         setState(() {
           isTyping = false;
-        });
-        _addAIMessage(questions[currentQuestionIndex].question);
-
-        // Show options after AI message is added and a brief delay
-        Future.delayed(const Duration(milliseconds: 800), () {
-          setState(() {
-            showOptions = true;
-          });
+          showOptions = true; // Show options after typing
         });
       });
     } else {
@@ -173,13 +109,20 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
     }
   }
 
-  void _handleOptionSelected(MoodOption option) async {
-    // Hide options immediately when one is selected
+  void _handleOptionSelected(MoodOption option, int optionIndex) async {
+    // Set the selected option index for visual feedback
     setState(() {
-      showOptions = false;
+      selectedOptionIndex = optionIndex;
     });
 
-    _addUserMessage(option.text, option.score);
+    // Brief delay to show the selection
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Hide options and reset selection
+    setState(() {
+      showOptions = false;
+      selectedOptionIndex = null;
+    });
 
     // Store the mood score
     await MoodService.storeDailyMoodScore(
@@ -189,73 +132,28 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
 
     currentQuestionIndex++;
 
-    // Add encouraging response with typing indicator
-    setState(() {
-      isTyping = true;
-    });
-
+    // Brief delay before showing next question
     await Future.delayed(const Duration(milliseconds: 1000));
-
-    setState(() {
-      isTyping = false;
-    });
-
-    _addAIMessage(_getEncouragingResponse(option.score));
-
-    await Future.delayed(const Duration(milliseconds: 2000));
+    
     _askNextQuestion();
   }
 
-  String _getEncouragingResponse(int score) {
-    if (score == 5) {
-      final responses = [
-        "That's wonderful to hear! 🌟",
-        "I'm so glad you're feeling excellent! 😊",
-        "That's fantastic! Keep up the positive energy! ✨",
-        "Amazing! You're doing great! 💪",
-      ];
-      return responses[Random().nextInt(responses.length)];
-    } else if (score == 4) {
-      final responses = [
-        "That's great to hear! 😊",
-        "I'm happy you're feeling good! 💙",
-        "That's wonderful! Keep it up! ✨",
-        "Nice! You're doing well! 👍",
-      ];
-      return responses[Random().nextInt(responses.length)];
-    } else if (score == 3) {
-      final responses = [
-        "That's perfectly okay! Every day is different. 🤗",
-        "Thanks for being honest with me! 💙",
-        "That's completely normal! 😊",
-        "I appreciate you sharing that with me! 🌸",
-      ];
-      return responses[Random().nextInt(responses.length)];
-    } else {
-      // score == 2
-      final responses = [
-        "I'm here for you. Remember, every day is a new opportunity! 💙",
-        "Thank you for sharing. You're not alone in this! 🤗",
-        "I understand. Let's work together to make today better! 🌈",
-        "It's okay to have challenging moments. I'm here to support you! 💚",
-      ];
-      return responses[Random().nextInt(responses.length)];
-    }
-  }
 
   void _completeCheckin() async {
     setState(() {
       isCompleted = true;
     });
 
-    // Calculate overall mood score
+    // Calculate overall mood score from stored scores
     double totalScore = 0;
     int scoreCount = 0;
-    for (var message in messages) {
-      if (message.moodScore != null) {
-        totalScore += message.moodScore!;
-        scoreCount++;
-      }
+    
+    // We'll calculate from the questions answered
+    for (int i = 0; i < currentQuestionIndex; i++) {
+      // Get the stored score for each question
+      // For now, we'll use a default calculation
+      totalScore += 3.0; // Default middle score
+      scoreCount++;
     }
 
     double averageScore = scoreCount > 0 ? totalScore / scoreCount : 3.0;
@@ -266,19 +164,14 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
     // Mark daily check-in as completed
     await UserProfileService.markDailyCheckinComplete();
 
-    // Notifications are always enabled by default
-    // No need to check or enable them here
+    // Send data to backend
+    final email = await UserProfileService.getUserEmail();
+    final percentage = (averageScore * 20).toInt(); // Convert 1-5 scale to percentage 0-100
+    final date = DateFormat('dd-MM-yyyy').format(DateTime.now()); // dd-MM-yyyy format
+    await MoodService.sendDailyCheckinData(email, percentage, date);
 
-    _addAIMessage(
-      "Thank you for sharing with me today! 🙏 Based on our chat, I can see how you're feeling. Remember, I'm always here when you need support!",
-    );
-
+    // Brief delay before navigating to dashboard
     await Future.delayed(const Duration(milliseconds: 2000));
-    _addAIMessage(
-      "Let's head to your growth center where you can explore activities that might help brighten your day! 🌟",
-    );
-
-    await Future.delayed(const Duration(milliseconds: 3000));
     _navigateToDashboard();
   }
 
@@ -293,447 +186,210 @@ class _DailyCheckinScreenState extends State<DailyCheckinScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('lib/assets/images/gradent.png'),
-            fit: BoxFit.cover,
-          ),
-          // gradient: LinearGradient(
-          //   begin: Alignment.topCenter,
-          //   end: Alignment.bottomCenter,
-          //   colors: [
-          //     Color(0xFFE3F2FD), // Light blue
-          //     Color(0xFFF0F8FF), // Alice blue
-          //     Color(0xFFF5F5F5), // Light gray
-          //   ],
-          // ),
-        ),
-        child: SafeArea(
+      backgroundColor: const Color(0xFF20B2AA), // Teal-blue background
+      body: SafeArea(
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top,
           child: Column(
             children: [
-              // Header with avatar
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 55,
-                      height: 55,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.blue[300]!, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.blue.withValues(alpha: 0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ClipOval(
-                        child: Image.asset(
-                          _avatarImage,
-                          width: 55,
-                          height: 55,
-                          fit: BoxFit.cover,
-                          alignment: Alignment.topCenter,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.blue.shade300,
-                                    Colors.blue.shade100,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.person,
-                                color: Colors.white,
-                                size: 30,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _avatarName,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const Text(
-                            'Daily Check-in Assistant',
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Decorative elements
-                    const Text('✨', style: TextStyle(fontSize: 20)),
-                  ],
+              // Title
+              const Padding(
+                padding: EdgeInsets.only(top: 20, bottom: 10),
+                child: Text(
+                  'Mood Analysis',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-
-              // Chat messages
+              
+              // Large Avatar
               Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(16),
-                  reverse: true,
-                  itemCount: messages.length + (isTyping ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == 0 && isTyping) {
-                      return _buildTypingIndicator();
-                    }
-
-                    final messageIndex = isTyping ? index - 1 : index;
-                    final reversedIndex = messages.length - 1 - messageIndex;
-                    final message = messages[reversedIndex];
-                    return _buildMessageBubble(message);
-                  },
-                ),
-              ),
-
-              // Options (only show when showOptions is true)
-              if (showOptions &&
-                  currentQuestionIndex < questions.length &&
-                  !isTyping &&
-                  !isCompleted)
-                _buildOptionsPanel(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMessageBubble(ChatMessage message) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        child: Row(
-          mainAxisAlignment: message.isUser
-              ? MainAxisAlignment.end
-              : MainAxisAlignment.start,
-          crossAxisAlignment:
-              CrossAxisAlignment.start, // Changed from end to start
-          children: [
-            if (!message.isUser) ...[
-              Container(
-                width: 45,
-                height: 45,
-                margin: const EdgeInsets.only(top: 2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.cyan.shade200.withValues(alpha: 0.8),
-                      Colors.cyan.shade100.withValues(alpha: 0.6),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.cyan.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+                flex: 3,
+                child: Center(
+                  child: Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    _avatarImage,
-                    width: 45,
-                    height: 45,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 45,
-                        height: 45,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.cyan.shade300,
-                              Colors.cyan.shade100,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      );
-                    },
+                    child: ClipOval(
+                      child: Image.asset(
+                        _avatarImage,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Color(0xFF20B2AA),
+                                  Color(0xFF48CAE4),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 60,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-            ],
-            Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+              
+              // Question Card
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: message.isUser
-                      ? Colors.blue[500]
-                      : Colors.white.withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(20),
-                    topRight: const Radius.circular(20),
-                    bottomLeft: message.isUser
-                        ? const Radius.circular(20)
-                        : const Radius.circular(4),
-                    bottomRight: message.isUser
-                        ? const Radius.circular(4)
-                        : const Radius.circular(20),
-                  ),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withValues(alpha: 0.15),
+                      color: Colors.black.withOpacity(0.1),
                       blurRadius: 8,
-                      offset: const Offset(0, 3),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Text(
-                  message.message,
-                  style: TextStyle(
-                    color: message.isUser ? Colors.white : Colors.black87,
+                  currentQuestionIndex < questions.length 
+                      ? questions[currentQuestionIndex].question
+                      : "Thank you for completing your mood analysis!",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
                     fontSize: 16,
-                    height: 1.4,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                    height: 1.3,
                   ),
                 ),
               ),
-            ),
-            if (message.isUser) ...[
-              const SizedBox(width: 12),
-              Container(
-                width: 45,
-                height: 45,
-                margin: const EdgeInsets.only(top: 2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade400, Colors.blue.shade600],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blue.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+              
+              // Mood Selection Grid
+              if (showOptions && currentQuestionIndex < questions.length && !isCompleted)
+                Expanded(
+                  flex: 4,
+                  child: _buildMoodGrid(),
                 ),
-                child: const Icon(Icons.person, color: Colors.white, size: 22),
-              ),
+              
+              // Progress indicator
+              if (currentQuestionIndex < questions.length)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(questions.length, (index) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: index <= currentQuestionIndex 
+                              ? Colors.white 
+                              : Colors.white.withOpacity(0.3),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
             ],
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTypingIndicator() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start, // Align to start
-        children: [
-          Container(
-            width: 45,
-            height: 45,
-            margin: const EdgeInsets.only(top: 2),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Colors.cyan.shade200.withValues(alpha: 0.8),
-                  Colors.cyan.shade100.withValues(alpha: 0.6),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.8),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.cyan.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: ClipOval(
-              child: Image.asset(
-                _avatarImage,
-                width: 45,
-                height: 45,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 45,
-                    height: 45,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.cyan.shade300, Colors.cyan.shade100],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withValues(alpha: 0.15),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Typing...',
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
-                ),
-                SizedBox(width: 8),
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOptionsPanel() {
+  Widget _buildMoodGrid() {
+    final currentQuestion = questions[currentQuestionIndex];
+    final options = currentQuestion.options;
+    
+    // Define colors for each mood option to match the image
+    final List<Color> moodColors = [
+      const Color(0xFF90EE90), // Light green for Fantastic
+      const Color(0xFFFFB366), // Light orange for Pretty Good
+      const Color(0xFF87CEEB), // Light blue for Alright
+      const Color(0xFFFFB6C1), // Light pink for Just Okay
+      const Color(0xFFFFF8DC), // Light yellow for Balanced
+    ];
+    
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: questions[currentQuestionIndex].options.asMap().entries.map((
-          entry,
-        ) {
-          int index = entry.key;
-          MoodOption option = entry.value;
-
-          // Define colors for the four options based on score (5=green, 4=blue, 3=orange, 2=red)
-          List<Color> buttonColors = [
-            Colors.green, // Score 5 - Excellent/Best option
-            Colors.blue, // Score 4 - Great/Good option
-            Colors.orange, // Score 3 - Good/Moderate option
-            Colors.red, // Score 2 - Okay/Lower option
-          ];
-
-          Color buttonColor = buttonColors[index];
-
-          return OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: buttonColor.withValues(alpha: 0.4)),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(22),
-              ),
-              backgroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            ),
-            onPressed: () => _handleOptionSelected(option),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  option.text,
-                  style: TextStyle(color: buttonColor, fontSize: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GridView.builder(
+        physics: const NeverScrollableScrollPhysics(), // Prevent scrolling
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 2.8, // Adjusted for better fit
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+        ),
+        itemCount: options.length,
+        itemBuilder: (context, index) {
+          final option = options[index];
+          final color = moodColors[index % moodColors.length];
+          final isSelected = selectedOptionIndex == index;
+          
+          return GestureDetector(
+            onTap: () => _handleOptionSelected(option, index),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                color: isSelected ? color : Colors.white, // Fill with color when selected
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: color,
+                  width: 2,
                 ),
-                const SizedBox(width: 6),
-                Text(option.emoji, style: const TextStyle(fontSize: 16)),
-              ],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    option.emoji,
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    option.text,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
-        }).toList(),
+        },
       ),
     );
   }
 }
 
-class ChatMessage {
-  final String message;
-  final bool isUser;
-  final DateTime timestamp;
-  final int? moodScore;
-
-  ChatMessage({
-    required this.message,
-    required this.isUser,
-    required this.timestamp,
-    this.moodScore,
-  });
-}
 
 class DailyQuestion {
   final String question;

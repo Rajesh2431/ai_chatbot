@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 import 'notification_service.dart';
 
 class MoodService {
@@ -193,5 +194,34 @@ class MoodService {
       body: 'Daily check-in reminders are now enabled. We\'ll remind you at 9:00 AM each day.',
       payload: 'welcome',
     );
+  }
+
+  // Send daily check-in data to backend
+  static Future<void> sendDailyCheckinData(String email, int percentage, String date) async {
+    const String backendUrl = 'https://strivehigh.thirdvizion.com/api/dailycheckinsave/'; // Updated backend URL
+
+    final Map<String, dynamic> payload = {
+      'email': email,
+      'percentage': percentage,
+      'date': date,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(backendUrl),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('Daily check-in data sent successfully');
+      } else {
+        print('Failed to send daily check-in data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error sending daily check-in data: $e');
+    }
   }
 }

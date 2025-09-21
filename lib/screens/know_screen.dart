@@ -80,7 +80,7 @@ class _KnowScreenState extends State<KnowScreen> {
                     DateTime.tryParse(goal['date_created'] ?? '') ??
                     DateTime.now(),
                 progress:
-                    0.0, // Progress would need to be calculated separately
+                    0.0, id: '', category: '', period: GoalPeriod.midterm, // Progress would need to be calculated separately
               ),
             )
             .toList();
@@ -110,7 +110,7 @@ class _KnowScreenState extends State<KnowScreen> {
             goal: parts[0],
             type: parts.length > 1 ? parts[1] : '',
             notes: parts.length > 2 ? parts[2] : '',
-            createdAt: DateTime.now(),
+            createdAt: DateTime.now(), id: '', category: '', period: GoalPeriod.midterm,
           );
         }).toList();
 

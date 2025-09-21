@@ -4,7 +4,7 @@ import 'onboarding_screen.dart';
 class WelcomeScreen extends StatelessWidget {
   final String userEmail;
 
-  const WelcomeScreen({Key? key, required this.userEmail}) : super(key: key);
+  const WelcomeScreen({super.key, required this.userEmail});
 
   @override
   Widget build(BuildContext context) {

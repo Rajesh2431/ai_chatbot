@@ -1,4 +1,3 @@
-import 'package:SeaSmart/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -8,12 +7,12 @@ import 'registration_screen.dart';
 import 'onboarding_screen.dart';
 import 'goal_settings.dart';
 import 'daily_checkin_screen.dart';
-import 'dashboard_screen.dart';
 import 'soar_card_analysis.dart';
-import 'soar_card.Dart';
 import 'dart:ui';
 
 import 'package:dio/dio.dart';
+
+import 'tutorial_onboarding_screen.dart';
 
 Future<void> testBackend() async {
   try {
@@ -108,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => WelcomeScreen(userEmail: email),
+              builder: (context) => TutorialOnboardingScreen(userEmail: email),
             ),
           );
           return;
@@ -370,41 +369,41 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Please enter your email';
-    }
+  // String? _validateEmail(String? value) {
+  //   if (value == null || value.trim().isEmpty) {
+  //     return 'Please enter your email';
+  //   }
 
-    // Basic email format validation
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-      return 'Please enter a valid email address';
-    }
+  //   // Basic email format validation
+  //   if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+  //     return 'Please enter a valid email address';
+  //   }
 
-    // Check for common email domains
-    final commonDomains = [
-      '@gmail.com',
-      '@outlook.com',
-      '@hotmail.com',
-      '@yahoo.com',
-      '@icloud.com',
-      '@protonmail.com',
-      '@aol.com',
-      '@live.com',
-      '@msn.com',
-      '@yandex.com',
-      '@mail.com',
-      '@zoho.com',
-    ];
+  //   // Check for common email domains
+  //   final commonDomains = [
+  //     '@gmail.com',
+  //     '@outlook.com',
+  //     '@hotmail.com',
+  //     '@yahoo.com',
+  //     '@icloud.com',
+  //     '@protonmail.com',
+  //     '@aol.com',
+  //     '@live.com',
+  //     '@msn.com',
+  //     '@yandex.com',
+  //     '@mail.com',
+  //     '@zoho.com',
+  //   ];
 
-    final email = value.toLowerCase();
-    bool hasValidDomain = commonDomains.any((domain) => email.endsWith(domain));
+  //   final email = value.toLowerCase();
+  //   bool hasValidDomain = commonDomains.any((domain) => email.endsWith(domain));
 
-    if (!hasValidDomain) {
-      return 'Please use a common email provider';
-    }
+  //   if (!hasValidDomain) {
+  //     return 'Please use a common email provider';
+  //   }
 
-    return null;
-  }
+  //   return null;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -597,7 +596,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     child: TextFormField(
                                       controller: _emailController,
                                       keyboardType: TextInputType.emailAddress,
-                                      validator: _validateEmail,
+                                      //validator: _validateEmail,
                                       style: const TextStyle(
                                         color: Colors.black87,
                                         fontSize: 16,

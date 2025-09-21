@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'avatar_detail_screen.dart';
 import '../routes/circular_reveal_route.dart';

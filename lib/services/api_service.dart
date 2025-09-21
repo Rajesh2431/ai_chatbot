@@ -140,4 +140,65 @@ CRITICAL INSTRUCTIONS:
     final data = jsonDecode(response.body);
     return data['choices'][0]['message']['content'].trim();
   }
+
+  /// Get emotional SOAR feedback using AI
+  static Future<String> getSOARFeedback({
+    required String category,
+    required int score,
+    required String originalFeedback,
+  }) async {
+    final prompt = '''
+Please rephrase this SOAR assessment feedback to be more emotional, warm, and supportive for a maritime professional:
+
+Category: $category
+Score: $score/20
+Original feedback: "$originalFeedback"
+
+Requirements:
+- Use empathetic and encouraging language
+- Acknowledge the unique challenges of seafaring life
+- Be warm and supportive while maintaining the core message
+- Keep it concise (under 100 words)
+- Use "you" to make it personal
+- Include emotional support and encouragement
+- Make it specific to the category (e.g., teamwork, communication, leadership, etc.)
+
+Rephrase the feedback:''';
+
+    try {
+      final response = await http.post(
+        Uri.parse(_url),
+        headers: {
+          'Authorization': 'Bearer $_apiKey',
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'http://strivehigh.thirdvizion.com',
+          'X-Title': 'SeaSmart AI Assistant',
+        },
+        body: jsonEncode({
+          'model': 'mistralai/mistral-small-3.1-24b-instruct:free',
+          'max_tokens': 150,
+          'temperature': 0.7,
+          'messages': [
+            {
+              'role': 'system',
+              'content': 'You are a compassionate mental health coach specializing in maritime professionals. Your role is to rephrase assessment feedback in a warm, encouraging, and emotionally supportive way while maintaining the core message. Use empathetic language that acknowledges the challenges of seafaring life.',
+            },
+            {
+              'role': 'user',
+              'content': prompt,
+            }
+          ],
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['choices'][0]['message']['content'].trim();
+      } else {
+        return originalFeedback;
+      }
+    } catch (e) {
+      return originalFeedback;
+    }
+  }
 }

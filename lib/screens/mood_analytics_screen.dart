@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/mood_service.dart';
+import '../services/user_avatar_service.dart';
 
 class MoodAnalyticsScreen extends StatefulWidget {
   const MoodAnalyticsScreen({super.key});
@@ -11,11 +12,14 @@ class MoodAnalyticsScreen extends StatefulWidget {
 class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
   Map<String, dynamic> moodHistory = {};
   bool isLoading = true;
+  String? avatarImagePath;
+  String? currentMoodReply;
 
   @override
   void initState() {
     super.initState();
     _loadMoodHistory();
+    _loadAvatarInfo();
   }
 
   Future<void> _loadMoodHistory() async {
@@ -23,6 +27,17 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
     setState(() {
       moodHistory = history;
       isLoading = false;
+    });
+  }
+
+  Future<void> _loadAvatarInfo() async {
+    final avatarPath = await UserAvatarService.getHalfAvatarImage();
+    final todayScore = await MoodService.getTodaysMoodScore();
+    final moodText = _getMoodText(todayScore);
+    
+    setState(() {
+      avatarImagePath = avatarPath;
+      currentMoodReply = UserAvatarService.getMoodResponse(moodText, todayScore.round());
     });
   }
 
@@ -107,6 +122,59 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
             ],
           ),
           const SizedBox(height: 16),
+          // Avatar and mood reply section
+          if (avatarImagePath != null && currentMoodReply != null) ...[
+            Row(
+              children: [
+                // Avatar image
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: Image.asset(
+                      avatarImagePath!,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Mood reply
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      currentMoodReply!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
           FutureBuilder<double>(
             future: MoodService.getTodaysMoodScore(),
             builder: (context, snapshot) {

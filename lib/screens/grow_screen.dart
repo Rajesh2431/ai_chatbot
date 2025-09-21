@@ -75,52 +75,100 @@ class ReportPage extends StatelessWidget {
 }
 
 
-class HorizontalCalendar extends StatelessWidget {
+class HorizontalCalendar extends StatefulWidget {
   const HorizontalCalendar({super.key});
+
+  @override
+  State<HorizontalCalendar> createState() => _HorizontalCalendarState();
+}
+
+class _HorizontalCalendarState extends State<HorizontalCalendar> {
+  int selectedDay = 1;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 70, // ✅ fixes overflow by limiting calendar height
+      height: 76, // Reduced height to prevent overflow
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: 10, // number of days
+        itemCount: 8, // number of days
         itemBuilder: (context, index) {
-          return Container(
-            width: 70,
-            margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-            decoration: BoxDecoration(
-              color: index == 0 ? const Color(0xFF3498DB) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '${index + 1}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: index == 0 ? Colors.white : Colors.black87,
+          final dayNumber = index + 1;
+          final isSelected = selectedDay == dayNumber;
+          
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                selectedDay = dayNumber;
+              });
+            },
+            child: Container(
+              width: 48, // Optimized width for exact spacing
+              margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Precise margins
+              decoration: BoxDecoration(
+                gradient: isSelected 
+                    ? LinearGradient(
+                        colors: [
+                          const Color(0xFF3B82F6), // Medium blue
+                          const Color(0xFF06B6D4), // Turquoise blue
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      )
+                    : null,
+                color: isSelected ? null : Colors.white,
+                borderRadius: BorderRadius.circular(20), // Perfect pill shape
+                border: isSelected 
+                    ? null 
+                    : Border.all(color: Colors.grey.shade300, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Day',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: index == 0 ? Colors.white : Colors.black54,
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Number badge
+                  Container(
+                    width: 30, // Perfect size for the badge
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: isSelected 
+                          ? Colors.white 
+                          : const Color(0xFFE0F2FE), // Light blue
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$dayNumber',
+                        style: TextStyle(
+                          fontSize: 15, // Optimal font size
+                          fontWeight: FontWeight.bold,
+                          color: isSelected 
+                              ? const Color(0xFF3B82F6) // Blue text on white
+                              : const Color(0xFF0EA5E9), // Light blue text
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 5), // Perfect spacing
+                  // Day text
+                  Text(
+                    'Day',
+                    style: TextStyle(
+                      fontSize: 12, // Optimal font size
+                      fontWeight: FontWeight.w500,
+                      color: isSelected 
+                          ? Colors.white 
+                          : const Color(0xFF0EA5E9), // Light blue
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -137,9 +185,9 @@ class _GrowScreenState extends State<GrowScreen>
   int _selectedBottomIndex = 0; // Bottom navigation index
   String _userName = 'Name';
   String? _userAvatarPath;
-  int _dayAtSea = 32;
-  String _destination = 'USA';
-  int _estimatedArrival = 4;
+  final int _dayAtSea = 32;
+  final String _destination = 'USA';
+  final int _estimatedArrival = 4;
   double _wellnessScore = 30.0;
   List<SoarCardAnswer> _soarAnswers = [];
   List<dynamic> _userGoals = [];
@@ -1033,7 +1081,7 @@ Widget _buildFeatureCard(String title, String imagePath, String routeName) {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color.fromARGB(255, 8, 121, 183).withOpacity(0.9),
+                    const Color.fromARGB(106, 8, 122, 183),
                     const Color.fromARGB(0, 1, 1, 29),
                   ],
                   begin: Alignment.bottomCenter,

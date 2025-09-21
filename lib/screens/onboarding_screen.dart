@@ -433,7 +433,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     FocusScope.of(context).unfocus();
                   },
                   children: [
-                    _buildJourneyPage(),
+                    _buildJourneyPage(context, widget.userEmail),
                     _buildBasicInfoPage(),
                     _buildContactInfoPage(),
                     _buildPersonalInfoPage(),
@@ -774,7 +774,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       ],
                     ),
                     child: DropdownButtonFormField<String>(
-                      value: _rankController.text.isNotEmpty ? _rankController.text : null,
+                      initialValue: _rankController.text.isNotEmpty ? _rankController.text : null,
                       items: const [
                         DropdownMenuItem(value: 'Captain', child: Text('Captain')),
                         DropdownMenuItem(value: 'Chief Officer', child: Text('Chief Officer')),
@@ -975,226 +975,186 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 }
 
 // Journey Page - Keyboard Friendly
-Widget _buildJourneyPage() {
-  return SingleChildScrollView(
-    padding: const EdgeInsets.all(24),
-    child: FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            // Header
-            const Text(
-              'Your Journey with',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2C3E50),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            RichText(
-              textAlign: TextAlign.center,
-              text: const TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Sea',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF3498DB),
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'Smart',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Powered by StriveHigh',
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF7F8C8D),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 40),
-            
-            // Know Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3E0),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFFFF9800).withValues(alpha: 0.3),
-                  width: 1.5,
+Widget _buildJourneyPage(BuildContext context, String userEmail) {
+  return Scaffold(
+    resizeToAvoidBottomInset: false,
+    body: Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage("lib/assets/images/wel.png"),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 3),
+
+              // Welcome text
+              const Text(
+                'Welcome to',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black87,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFF9800).withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Know',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFE65100),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Start by understanding your strengths, habits, and needs. Quick reflections and guided check-ins help us personalize your journey.',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF2C3E50),
-                      height: 1.5,
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Know Yourself',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFE65100),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Grow Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE3F2FD),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFF2196F3).withValues(alpha: 0.3),
-                  width: 1.5,
+
+              const SizedBox(height: 3),
+
+              // App name
+              const Text(
+                'Sea Smart',
+                style: TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 0, 136, 190),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2196F3).withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Grow',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1565C0),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Explore interactive lessons and calming practices designed to strengthen both your mind and professional skills at sea.',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF2C3E50),
-                      height: 1.5,
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Grow Your Skills',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1565C0),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Show Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              margin: const EdgeInsets.only(bottom: 30),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E8),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
-                  width: 1.5,
+
+              const SizedBox(height: 1),
+
+              // Powered by text
+              Text(
+                '',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey.shade600,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Show',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2E7D32),
-                    ),
+
+              const SizedBox(height: 40),
+
+              // Blue container with tagline
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 0, 136, 190).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color.fromARGB(255, 0, 136, 190).withOpacity(0.2),
+                    width: 1,
                   ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Celebrate milestones, track your wellbeing, and share achievements that keep you motivated throughout your voyage.',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF2C3E50),
-                      height: 1.5,
-                    ),
+                ),
+                child: const Text(
+                  'Your safe harbor for\nlearning, support, & peace of mind',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color.fromARGB(255, 0, 136, 190),
+                    height: 1.4,
                   ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Show Your Progress',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2E7D32),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 100), // Extra space for navigation button
-          ],
+
+              const SizedBox(height: 32),
+
+              // Description text
+              Text(
+                'Sea Smart is your buddy at sea, helping you stay calm, connected, and continuously growing through every voyage.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey.shade700,
+                  height: 1.5,
+                ),
+              ),
+
+              const Spacer(),
+
+              // Illustration/Icon placeholder
+              Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100.withAlpha(0),
+                  borderRadius: BorderRadius.circular(100),
+                  border: Border.all(
+                    color: const Color.fromARGB(255, 0, 136, 190).withOpacity(0),
+                    width: 2,
+                  ),
+                ),
+              ),
+
+              const Spacer(),
+
+              // Bottom text
+              Text(
+                'Before we set sail, let\'s ask a few quick questions. This helps us chart the best course for your wellness and support. ⚓',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                  height: 1.4,
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Continue button
+              // Container(
+              //   width: double.infinity,
+              //   height: 54,
+              //   decoration: BoxDecoration(
+              //     gradient: const LinearGradient(
+              //       colors: [
+              //         Color.fromARGB(255, 0, 136, 190),
+              //         Color.fromARGB(255, 0, 120, 170),
+              //       ],
+              //     ),
+              //     borderRadius: BorderRadius.circular(27),
+              //     boxShadow: [
+              //       BoxShadow(
+              //         color: const Color.fromARGB(255, 0, 136, 190).withOpacity(0.3),
+              //         blurRadius: 12,
+              //         offset: const Offset(0, 4),
+              //       ),
+              //     ],
+              //   ),
+              //   child: ElevatedButton(
+              //     onPressed: () {
+              //       Navigator.pushReplacement(
+              //         context,
+              //         MaterialPageRoute(
+              //           builder: (context) =>
+              //               OnboardingScreen(userEmail: userEmail),
+              //         ),
+              //       );
+              //     },
+              //     style: ElevatedButton.styleFrom(
+              //       backgroundColor: Colors.transparent,
+              //       foregroundColor: Colors.white,
+              //       shadowColor: Colors.transparent,
+              //       shape: RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.circular(27),
+              //       ),
+              //       elevation: 0,
+              //     ),
+              //     child: const Text(
+              //       'Sail with Calm',
+              //       style: TextStyle(
+              //         fontSize: 18,
+              //         fontWeight: FontWeight.w600,
+              //       ),
+              //     ),
+              //   ),
+              // ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     ),
   );
 }
+
 
   Widget _buildContactInfoPage() {
   return SingleChildScrollView(

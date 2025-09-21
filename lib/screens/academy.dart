@@ -44,7 +44,7 @@ class Academy extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         title: const Text(
           "StriveHigh",
           style: TextStyle(
@@ -70,7 +70,7 @@ class Academy extends StatelessWidget {
             ),
             // Horizontal scroll - StriveHigh Courses
             SizedBox(
-              height: 160,
+              height: 200,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: striveCourses.length,
@@ -93,7 +93,7 @@ class Academy extends StatelessWidget {
             ),
             // Horizontal scroll - Professional Skills
             SizedBox(
-              height: 160,
+              height: 200,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: professionalSkills.length,
@@ -106,7 +106,7 @@ class Academy extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(height: 250),
+            const SizedBox(height: 150),
             // Bottom Banner
             Container(
               margin: const EdgeInsets.all(12),
@@ -206,24 +206,16 @@ class CourseCard extends StatelessWidget {
       onTap: _launchURL,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 140,
+        width: 200,
+        height: 100,
         margin: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 5)],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(image, height: 80, fit: BoxFit.contain),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-          ],
+          image: DecorationImage(
+            image: AssetImage(image),
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );

@@ -38,6 +38,9 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   dio: ^5.9.0
   fl_chart: ^0.66.1
+  open_file: ^3.3.2
+  pdf: ^3.10.4
+  share_plus: ^7.2.1
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
@@ -61,5 +64,6 @@ flutter:
     - lib/assets/images/
     - lib/assets/images/login_background.png
     - lib/assets/images/login_background1.png
+    - lib/assets/doc/
 # Change App Icon Command
 # flutter pub run flutter_launcher_icons:main
