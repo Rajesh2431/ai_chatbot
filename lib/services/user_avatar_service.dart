@@ -28,14 +28,11 @@ class UserAvatarService {
         final data = jsonDecode(response.body);
         final avatarName = data['avatar_name'] as String?;
         final avatarImage = data['avatar_image'] as String?;
-        
+
         // Cache the avatar information locally
         await _cacheAvatarInfo(avatarName, avatarImage);
-        
-        return {
-          'name': avatarName,
-          'image': avatarImage,
-        };
+
+        return {'name': avatarName, 'image': avatarImage};
       } else {
         print('Failed to fetch user avatar: ${response.statusCode}');
         return {'name': null, 'image': null};
@@ -51,11 +48,9 @@ class UserAvatarService {
     // First try to get from cache
     final prefs = await SharedPreferences.getInstance();
     String? cachedName = prefs.getString(_avatarNameKey);
-    
-    if (cachedName != null) {
-      return cachedName;
-    }
-    
+
+    return cachedName;
+
     // If not in cache, fetch from backend
     final avatarInfo = await fetchUserAvatarFromBackend();
     return avatarInfo['name'];
@@ -66,11 +61,9 @@ class UserAvatarService {
     // First try to get from cache
     final prefs = await SharedPreferences.getInstance();
     String? cachedImage = prefs.getString(_avatarImageKey);
-    
-    if (cachedImage != null) {
-      return cachedImage;
-    }
-    
+
+    return cachedImage;
+
     // If not in cache, fetch from backend
     final avatarInfo = await fetchUserAvatarFromBackend();
     return avatarInfo['image'];
@@ -79,7 +72,7 @@ class UserAvatarService {
   /// Get the appropriate half avatar image based on avatar name
   static Future<String> getHalfAvatarImage() async {
     final avatarName = await getUserAvatarName();
-    
+
     if (avatarName != null) {
       switch (avatarName.toLowerCase()) {
         case 'kael':
@@ -92,7 +85,7 @@ class UserAvatarService {
           return 'lib/assets/avatar/Siara_half.png';
       }
     }
-    
+
     // Default to Saira if no avatar name
     return 'lib/assets/avatar/Siara_half.png';
   }
@@ -100,11 +93,11 @@ class UserAvatarService {
   /// Cache avatar information locally
   static Future<void> _cacheAvatarInfo(String? name, String? image) async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     if (name != null) {
       await prefs.setString(_avatarNameKey, name);
     }
-    
+
     if (image != null) {
       await prefs.setString(_avatarImageKey, image);
     }
