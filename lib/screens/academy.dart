@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'innercourse.dart';
+import '../services/user_profile_service.dart';
 
 class Academy extends StatelessWidget {
   const Academy({super.key});
@@ -8,17 +10,20 @@ class Academy extends StatelessWidget {
     {
       "title": "Wellness",
       "image": "lib/assets/images/lonely.png",
-      "url": "https://course.strive-high.com/topics/understanding-and-managing-loneliness-onboard/"
+      "url":
+          "https://course.strive-high.com/topics/understanding-and-managing-loneliness-onboard/",
     },
     {
       "title": "Stress Management",
       "image": "lib/assets/images/stress.png",
-      "url": "https://course.strive-high.com/topics/understanding-and-managing-loneliness-onboard/"
+      "url":
+          "https://course.strive-high.com/topics/understanding-and-managing-loneliness-onboard/",
     },
     {
       "title": "Loneliness",
       "image": "lib/assets/images/loneliness.png",
-      "url": "https://course.strive-high.com/topics/understanding-and-managing-loneliness-onboard/"
+      "url":
+          "https://course.strive-high.com/topics/understanding-and-managing-loneliness-onboard/",
     },
   ];
 
@@ -26,17 +31,20 @@ class Academy extends StatelessWidget {
     {
       "title": "Management",
       "image": "lib/assets/images/management.png",
-      "url": "https://course.strive-high.com/topics/understanding-and-managing-loneliness-onboard/"
+      "url":
+          "https://course.strive-high.com/topics/understanding-and-managing-loneliness-onboard/",
     },
     {
       "title": "Leadership",
       "image": "lib/assets/images/leadership.png",
-      "url": "https://course.strive-high.com/topics/understanding-and-managing-loneliness-onboard/"
+      "url":
+          "https://course.strive-high.com/topics/understanding-and-managing-loneliness-onboard/",
     },
     {
       "title": "Decision Making",
       "image": "lib/assets/images/dec.png",
-      "url": "https://course.strive-high.com/topics/understanding-and-managing-loneliness-onboard/"
+      "url":
+          "https://course.strive-high.com/topics/understanding-and-managing-loneliness-onboard/",
     },
   ];
 
@@ -149,7 +157,10 @@ class Academy extends StatelessWidget {
                           );
                         },
                         icon: const Icon(Icons.call, color: Colors.white),
-                        label: const Text("Call", style: TextStyle(color: Colors.white)),
+                        label: const Text(
+                          "Call",
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
@@ -165,10 +176,13 @@ class Academy extends StatelessWidget {
                           );
                         },
                         icon: const Icon(Icons.chat, color: Colors.white),
-                        label: const Text("Chat", style: TextStyle(color: Colors.white)),
+                        label: const Text(
+                          "Chat",
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
@@ -191,19 +205,39 @@ class CourseCard extends StatelessWidget {
     required this.url,
   });
 
-  Future<void> _launchURL() async {
-    final Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      throw "Commander, can't launch $url";
+  void _navigateToCourse(BuildContext context) async {
+    // Get user email from UserProfileService
+    final userEmail = await UserProfileService.getUserEmail();
+
+    // Debug: Print the user email being passed
+    print('DEBUG: Academy - User email from UserProfileService: "$userEmail"');
+    print('DEBUG: Academy - Course title: $title');
+
+    // Check if email is empty and show error if needed
+    if (userEmail.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in first to access courses'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
     }
+
+    // Navigate to inner course page with the course title and user email
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            InnerCourse(courseTitle: title, userEmail: userEmail),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: _launchURL,
+      onTap: () => _navigateToCourse(context),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: 200,
@@ -212,10 +246,7 @@ class CourseCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 5)],
-          image: DecorationImage(
-            image: AssetImage(image),
-            fit: BoxFit.cover,
-          ),
+          image: DecorationImage(image: AssetImage(image), fit: BoxFit.cover),
         ),
       ),
     );

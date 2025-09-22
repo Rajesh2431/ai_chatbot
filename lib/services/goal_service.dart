@@ -14,38 +14,38 @@ class GoalService {
     try {
       // Get user email from UserProfileService
       final email = await UserProfileService.getUserEmail();
-      
+
       if (email.isEmpty) {
         return {
           'success': false,
-          'message': 'User email not found. Please complete your profile first.'
+          'message':
+              'User email not found. Please complete your profile first.',
         };
       }
 
       // Get authenticated Dio instance
       final dio = await AuthService.authedDio();
-      
-      print('Sending createGoal request with data: email=$email, terms=$terms, goals=$goals, notes=$notes');
+
+      print(
+        'Sending createGoal request with data: email=$email, terms=$terms, goals=$goals, notes=$notes',
+      );
       final response = await dio.post(
         'https://strivehigh.thirdvizion.com/api/setgoal/',
-        data: {
-          'email': email,
-          'terms': terms,
-          'goals': goals,
-          'notes': notes,
-        },
+        data: {'email': email, 'terms': terms, 'goals': goals, 'notes': notes},
       );
-      print('Received response: status=${response.statusCode}, data=${response.data}');
+      print(
+        'Received response: status=${response.statusCode}, data=${response.data}',
+      );
 
       if (response.statusCode == 201) {
         return {
           'success': true,
-          'message': response.data['message'] ?? 'Goal created successfully'
+          'message': response.data['message'] ?? 'Goal created successfully',
         };
       } else {
         return {
           'success': false,
-          'message': response.data['error'] ?? 'Failed to create goal'
+          'message': response.data['error'] ?? 'Failed to create goal',
         };
       }
     } on DioException catch (e) {
@@ -55,20 +55,14 @@ class GoalService {
       if (e.response != null) {
         return {
           'success': false,
-          'message': e.response?.data['error'] ?? 'Network error occurred'
+          'message': e.response?.data['error'] ?? 'Network error occurred',
         };
       } else {
-        return {
-          'success': false,
-          'message': 'Network error: ${e.message}'
-        };
+        return {'success': false, 'message': 'Network error: ${e.message}'};
       }
     } catch (e) {
       print('Unexpected error in createGoal: $e');
-      return {
-        'success': false,
-        'message': 'Unexpected error: $e'
-      };
+      return {'success': false, 'message': 'Unexpected error: $e'};
     }
   }
 
@@ -77,35 +71,52 @@ class GoalService {
     try {
       // Get user email from UserProfileService
       final email = await UserProfileService.getUserEmail();
-      
+
       if (email.isEmpty) {
         return {
           'success': false,
           'message': 'User email not found',
-          'goals': []
+          'goals': [],
         };
       }
 
       // Get authenticated Dio instance
       final dio = await AuthService.authedDio();
-      
+
       print('Sending getUserGoals request for email: $email');
       final response = await dio.get(
-        'https://strivehigh.thirdvizion.com/api/setgoal/',
+        'https://strivehigh.thirdvizion.com/api/getgoals/$email/',
       );
-      print('Received response: status=${response.statusCode}, data=${response.data}');
+      print(
+        'Received response: status=${response.statusCode}, data=${response.data}',
+      );
 
       if (response.statusCode == 200) {
+        // Handle the response data structure
+        final responseData = response.data;
+        List<dynamic> goals = [];
+
+        if (responseData is List) {
+          // If response is a list of goals
+          goals = responseData;
+        } else if (responseData is Map && responseData['goals'] != null) {
+          // If response has a 'goals' key
+          goals = responseData['goals'];
+        } else if (responseData is Map) {
+          // If response is a single goal object, wrap it in a list
+          goals = [responseData];
+        }
+
         return {
           'success': true,
-          'goals': response.data['goals'] ?? [],
-          'message': 'Goals retrieved successfully'
+          'goals': goals,
+          'message': 'Goals retrieved successfully',
         };
       } else {
         return {
           'success': false,
           'message': response.data['error'] ?? 'Failed to retrieve goals',
-          'goals': []
+          'goals': [],
         };
       }
     } on DioException catch (e) {
@@ -116,22 +127,18 @@ class GoalService {
         return {
           'success': false,
           'message': e.response?.data['error'] ?? 'Network error occurred',
-          'goals': []
+          'goals': [],
         };
       } else {
         return {
           'success': false,
           'message': 'Network error: ${e.message}',
-          'goals': []
+          'goals': [],
         };
       }
     } catch (e) {
       print('Unexpected error in getUserGoals: $e');
-      return {
-        'success': false,
-        'message': 'Unexpected error: $e',
-        'goals': []
-      };
+      return {'success': false, 'message': 'Unexpected error: $e', 'goals': []};
     }
   }
 }

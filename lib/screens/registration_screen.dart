@@ -24,7 +24,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool _termsAndCondition = false;
   bool _privacyPolicy = false;
 
-
   // final List<String> _countryCodes = [
   //   '+1', '+44', '+33', '+49', '+81', '+86', '+91', '+61', '+55', '+52'
   // ];
@@ -52,12 +51,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     setState(() => _isLoading = false);
 
-  if (result['success'] == true) {
-  _showVerificationDialog();
-} else {
-  throw Exception(result['message'] ?? 'Registration failed');
-}
-
+    if (result['success'] == true) {
+      _showVerificationDialog();
+    } else {
+      throw Exception(result['message'] ?? 'Registration failed');
+    }
   }
 
   Future<void> _handleGoogleSignUp() async {
@@ -68,15 +66,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 6570)), // 18 years ago
+      initialDate: DateTime.now().subtract(
+        const Duration(days: 6570),
+      ), // 18 years ago
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF4A90E2),
-            ),
+            colorScheme: const ColorScheme.light(primary: Color(0xFF4A90E2)),
           ),
           child: child!,
         );
@@ -85,288 +83,276 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     if (picked != null) {
       setState(() {
-        _dobController.text = '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+        _dobController.text =
+            '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
       });
     }
   }
 
   void _showVerificationDialog() {
-  showDialog(
-    context: context,
-    barrierDismissible: false, // User cannot dismiss by tapping outside
-    builder: (BuildContext context) {
-      return Dialog(
-        backgroundColor: Colors.transparent,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white,
-                    Colors.white,
-                  ],
+    showDialog(
+      context: context,
+      barrierDismissible: false, // User cannot dismiss by tapping outside
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Colors.white, Colors.white],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white, width: 1.5),
+                  // boxShadow: [
+                  //   BoxShadow(
+                  //     color: Colors.black.withOpacity(0.1),
+                  //     blurRadius: 20,
+                  //     offset: const Offset(0, 10),
+                  //   ),
+                  // ],
                 ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.white,
-                  width: 1.5,
-                ),
-                // boxShadow: [
-                //   BoxShadow(
-                //     color: Colors.black.withOpacity(0.1),
-                //     blurRadius: 20,
-                //     offset: const Offset(0, 10),
-                //   ),
-                // ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Verification title with checkmark
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Verification',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Color.fromARGB(255, 0, 136, 190),
-                              Color.fromARGB(255, 0, 120, 170),
-                            ],
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Verification title with checkmark
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Verification',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
                           ),
-                          borderRadius: BorderRadius.circular(12),
-                          // boxShadow: [
-                          //   BoxShadow(
-                          //     color: Color.fromARGB(255, 0, 136, 190).withOpacity(0.3),
-                          //     blurRadius: 8,
-                          //     offset: const Offset(0, 2),
-                          //   ),
-                          // ],
                         ),
-                        child: const Icon(
-                          Icons.check,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Message
-                  const Text(
-                    'Almost there! Open your email and click the link to verify your account.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                      height: 1.4,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // OK Button with glassmorphism
-                  Container(
-                    width: 150,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color.fromARGB(255, 0, 136, 190),
-                          Color.fromARGB(255, 0, 136, 190),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      // boxShadow: [
-                      //   BoxShadow(
-                      //     color: Color.fromARGB(255, 0, 136, 190).withOpacity(0.3),
-                      //     blurRadius: 12,
-                      //     offset: const Offset(0, 4),
-                      //   ),
-                      // ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Close dialog
-                            Navigator.pushReplacementNamed(context, '/login');
-                            // Optional: Navigate back to login screen
-                            // Navigator.of(context).pop();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color.fromARGB(255, 0, 136, 190),
+                                Color.fromARGB(255, 0, 120, 170),
+                              ],
                             ),
-                            elevation: 0,
+                            borderRadius: BorderRadius.circular(12),
+                            // boxShadow: [
+                            //   BoxShadow(
+                            //     color: Color.fromARGB(255, 0, 136, 190).withOpacity(0.3),
+                            //     blurRadius: 8,
+                            //     offset: const Offset(0, 2),
+                            //   ),
+                            // ],
                           ),
-                          child: const Text(
-                            'Ok',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          child: const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 16,
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    },
-  );
-}
 
-void _userErrorDialog() {
-  showDialog(
-    context: context,
-    barrierDismissible: false, // User cannot dismiss by tapping outside
-    builder: (BuildContext context) {
-      return Dialog(
-        backgroundColor: Colors.transparent,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white,
-                    Colors.white,
+                    const SizedBox(height: 20),
+
+                    // Message
+                    const Text(
+                      'Almost there! Open your email and click the link to verify your account.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                        height: 1.4,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // OK Button with glassmorphism
+                    Container(
+                      width: 150,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color.fromARGB(255, 0, 136, 190),
+                            Color.fromARGB(255, 0, 136, 190),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        // boxShadow: [
+                        //   BoxShadow(
+                        //     color: Color.fromARGB(255, 0, 136, 190).withOpacity(0.3),
+                        //     blurRadius: 12,
+                        //     offset: const Offset(0, 4),
+                        //   ),
+                        // ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(); // Close dialog
+                              Navigator.pushReplacementNamed(context, '/login');
+                              // Optional: Navigate back to login screen
+                              // Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: const Text(
+                              'Ok',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.white,
-                  width: 1.5,
-                ),
-                // boxShadow: [
-                //   BoxShadow(
-                //     color: Colors.black.withOpacity(0.1),
-                //     blurRadius: 20,
-                //     offset: const Offset(0, 10),
-                //   ),
-                // ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Verification title with checkmark
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Registration Failed',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Message
-                  const Text(
-                    'User already exists or invalid details provided. Please try again.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                      height: 1.4,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // OK Button with glassmorphism
-                  Container(
-                    width: 150,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color.fromARGB(255, 0, 136, 190),
-                          Color.fromARGB(255, 0, 136, 190),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Close dialog
-                            Navigator.pushReplacementNamed(context, '/login');
-                            // Optional: Navigate back to login screen
-                            // Navigator.of(context).pop();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text(
-                            'Ok',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
           ),
-        ),
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
+
+  void _userErrorDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // User cannot dismiss by tapping outside
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Colors.white, Colors.white],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white, width: 1.5),
+                  // boxShadow: [
+                  //   BoxShadow(
+                  //     color: Colors.black.withOpacity(0.1),
+                  //     blurRadius: 20,
+                  //     offset: const Offset(0, 10),
+                  //   ),
+                  // ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Verification title with checkmark
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Registration Failed',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Message
+                    const Text(
+                      'User already exists or invalid details provided. Please try again.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                        height: 1.4,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // OK Button with glassmorphism
+                    Container(
+                      width: 150,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color.fromARGB(255, 0, 136, 190),
+                            Color.fromARGB(255, 0, 136, 190),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(); // Close dialog
+                              Navigator.pushReplacementNamed(context, '/login');
+                              // Optional: Navigate back to login screen
+                              // Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: const Text(
+                              'Ok',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -421,7 +407,9 @@ void _userErrorDialog() {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('lib/assets/images/login_background1.png'), // Your background image
+            image: AssetImage(
+              'lib/assets/images/login_background1.png',
+            ), // Your background image
             fit: BoxFit.cover,
           ),
         ),
@@ -431,7 +419,7 @@ void _userErrorDialog() {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                
+
                 // Top section with back button and title
                 Row(
                   children: [
@@ -462,9 +450,9 @@ void _userErrorDialog() {
                     const Spacer(),
                   ],
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 // Title Section
                 Column(
                   children: [
@@ -517,9 +505,9 @@ void _userErrorDialog() {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 Expanded(
                   child: ClipRRect(
                     borderRadius: const BorderRadius.only(
@@ -563,14 +551,23 @@ void _userErrorDialog() {
                                         child: Container(
                                           decoration: BoxDecoration(
                                             color: Colors.white,
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                             border: Border.all(
-                                              color: Color.fromARGB(255, 0, 136, 190),
+                                              color: Color.fromARGB(
+                                                255,
+                                                0,
+                                                136,
+                                                190,
+                                              ),
                                               width: 1,
                                             ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(0.05),
+                                                color: Colors.black.withOpacity(
+                                                  0.05,
+                                                ),
                                                 blurRadius: 8,
                                                 offset: const Offset(0, 2),
                                               ),
@@ -579,7 +576,8 @@ void _userErrorDialog() {
                                           child: TextFormField(
                                             controller: _firstNameController,
                                             validator: (value) {
-                                              if (value == null || value.trim().isEmpty) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
                                                 return 'Required';
                                               }
                                               return null;
@@ -591,23 +589,28 @@ void _userErrorDialog() {
                                             decoration: InputDecoration(
                                               hintText: 'First Name',
                                               hintStyle: TextStyle(
-                                                color: Colors.black.withOpacity(0.5),
+                                                color: Colors.black.withOpacity(
+                                                  0.5,
+                                                ),
                                                 fontSize: 16,
                                               ),
                                               filled: false,
                                               border: InputBorder.none,
                                               enabledBorder: InputBorder.none,
                                               focusedBorder: OutlineInputBorder(
-                                                borderRadius: BorderRadius.circular(12),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                                 borderSide: BorderSide(
-                                                  color: Colors.blue.withOpacity(0.5),
+                                                  color: Colors.blue
+                                                      .withOpacity(0.5),
                                                   width: 2,
                                                 ),
                                               ),
-                                              contentPadding: const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 16,
-                                              ),
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 16,
+                                                    vertical: 16,
+                                                  ),
                                             ),
                                           ),
                                         ),
@@ -616,15 +619,26 @@ void _userErrorDialog() {
                                       Expanded(
                                         child: Container(
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.8),
-                                            borderRadius: BorderRadius.circular(12),
+                                            color: Colors.white.withOpacity(
+                                              0.8,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                             border: Border.all(
-                                              color: Color.fromARGB(255, 0, 136, 190),
+                                              color: Color.fromARGB(
+                                                255,
+                                                0,
+                                                136,
+                                                190,
+                                              ),
                                               width: 1,
                                             ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(0.05),
+                                                color: Colors.black.withOpacity(
+                                                  0.05,
+                                                ),
                                                 blurRadius: 8,
                                                 offset: const Offset(0, 2),
                                               ),
@@ -633,7 +647,8 @@ void _userErrorDialog() {
                                           child: TextFormField(
                                             controller: _lastNameController,
                                             validator: (value) {
-                                              if (value == null || value.trim().isEmpty) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
                                                 return 'Required';
                                               }
                                               return null;
@@ -645,23 +660,28 @@ void _userErrorDialog() {
                                             decoration: InputDecoration(
                                               hintText: 'Last Name',
                                               hintStyle: TextStyle(
-                                                color: Colors.black.withOpacity(0.5),
+                                                color: Colors.black.withOpacity(
+                                                  0.5,
+                                                ),
                                                 fontSize: 16,
                                               ),
                                               filled: false,
                                               border: InputBorder.none,
                                               enabledBorder: InputBorder.none,
                                               focusedBorder: OutlineInputBorder(
-                                                borderRadius: BorderRadius.circular(12),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                                 borderSide: BorderSide(
-                                                  color: Colors.blue.withOpacity(0.5),
+                                                  color: Colors.blue
+                                                      .withOpacity(0.5),
                                                   width: 2,
                                                 ),
                                               ),
-                                              contentPadding: const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 16,
-                                              ),
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 16,
+                                                    vertical: 16,
+                                                  ),
                                             ),
                                           ),
                                         ),
@@ -677,9 +697,9 @@ void _userErrorDialog() {
                                       color: Colors.white.withOpacity(0.8),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                              color: Color.fromARGB(255, 0, 136, 190),
-                                              width: 1,
-                                            ),
+                                        color: Color.fromARGB(255, 0, 136, 190),
+                                        width: 1,
+                                      ),
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black.withOpacity(0.05),
@@ -706,16 +726,19 @@ void _userErrorDialog() {
                                         border: InputBorder.none,
                                         enabledBorder: InputBorder.none,
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                           borderSide: BorderSide(
                                             color: Colors.blue.withOpacity(0.5),
                                             width: 2,
                                           ),
                                         ),
-                                        contentPadding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 16,
-                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 16,
+                                            ),
                                       ),
                                     ),
                                   ),
@@ -728,9 +751,9 @@ void _userErrorDialog() {
                                       color: Colors.white.withOpacity(0.8),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                              color: Color.fromARGB(255, 0, 136, 190),
-                                              width: 1,
-                                            ),
+                                        color: Color.fromARGB(255, 0, 136, 190),
+                                        width: 1,
+                                      ),
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black.withOpacity(0.05),
@@ -744,7 +767,8 @@ void _userErrorDialog() {
                                       readOnly: true,
                                       onTap: _selectDate,
                                       validator: (value) {
-                                        if (value == null || value.trim().isEmpty) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
                                           return 'Please select your date of birth';
                                         }
                                         return null;
@@ -763,7 +787,9 @@ void _userErrorDialog() {
                                         border: InputBorder.none,
                                         enabledBorder: InputBorder.none,
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                           borderSide: BorderSide(
                                             color: Colors.blue.withOpacity(0.5),
                                             width: 2,
@@ -774,10 +800,11 @@ void _userErrorDialog() {
                                           color: Colors.black.withOpacity(0.5),
                                           size: 20,
                                         ),
-                                        contentPadding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 16,
-                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 16,
+                                            ),
                                       ),
                                     ),
                                   ),
@@ -790,9 +817,9 @@ void _userErrorDialog() {
                                       color: Colors.white.withOpacity(0.8),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                              color: Color.fromARGB(255, 0, 136, 190),
-                                              width: 1,
-                                            ),
+                                        color: Color.fromARGB(255, 0, 136, 190),
+                                        width: 1,
+                                      ),
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black.withOpacity(0.05),
@@ -827,7 +854,9 @@ void _userErrorDialog() {
                                         border: InputBorder.none,
                                         enabledBorder: InputBorder.none,
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                           borderSide: BorderSide(
                                             color: Colors.blue.withOpacity(0.5),
                                             width: 2,
@@ -835,20 +864,26 @@ void _userErrorDialog() {
                                         ),
                                         suffixIcon: IconButton(
                                           icon: Icon(
-                                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                            color: Colors.black.withOpacity(0.5),
+                                            _obscurePassword
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
+                                            color: Colors.black.withOpacity(
+                                              0.5,
+                                            ),
                                             size: 20,
                                           ),
                                           onPressed: () {
                                             setState(() {
-                                              _obscurePassword = !_obscurePassword;
+                                              _obscurePassword =
+                                                  !_obscurePassword;
                                             });
                                           },
                                         ),
-                                        contentPadding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 16,
-                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 16,
+                                            ),
                                       ),
                                     ),
                                   ),
@@ -863,17 +898,25 @@ void _userErrorDialog() {
                                           value: _termsAndCondition,
                                           onChanged: (value) {
                                             setState(() {
-                                              _termsAndCondition = value ?? false;
+                                              _termsAndCondition =
+                                                  value ?? false;
                                             });
                                           },
                                           activeColor: Colors.blue,
                                           checkColor: Colors.white,
                                           side: BorderSide(
-                                            color: Color.fromARGB(255, 150, 150, 150),
+                                            color: Color.fromARGB(
+                                              255,
+                                              150,
+                                              150,
+                                              150,
+                                            ),
                                             width: 1.5,
                                           ),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(4),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -883,7 +926,12 @@ void _userErrorDialog() {
                                             Text(
                                               'Terms and Conditions applied*',
                                               style: TextStyle(
-                                                color: const Color.fromARGB(255, 150, 150, 150),
+                                                color: const Color.fromARGB(
+                                                  255,
+                                                  150,
+                                                  150,
+                                                  150,
+                                                ),
                                                 fontSize: 12,
                                               ),
                                             ),
@@ -894,20 +942,31 @@ void _userErrorDialog() {
                                                   context: context,
                                                   builder: (BuildContext context) {
                                                     return AlertDialog(
-                                                      title: Text('Terms and Conditions'),
+                                                      backgroundColor:
+                                                          Colors.white,
+                                                      title: Text(
+                                                        'Terms and Conditions',
+                                                      ),
                                                       content: SingleChildScrollView(
                                                         child: Column(
-                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                          mainAxisSize: MainAxisSize.min,
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
                                                           children: [
                                                             Text(
                                                               'Terms and Conditions',
                                                               style: TextStyle(
                                                                 fontSize: 16,
-                                                                fontWeight: FontWeight.bold,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
                                                               ),
                                                             ),
-                                                            SizedBox(height: 16),
+                                                            SizedBox(
+                                                              height: 16,
+                                                            ),
                                                             Text(
                                                               'By using this mental health tracking application, you agree to the following terms:\n\n'
                                                               '1. Medical Disclaimer\n'
@@ -923,26 +982,45 @@ void _userErrorDialog() {
                                                               '6. Age Requirements\n'
                                                               'Users must be 13+ years old. Users under 18 require parental consent.\n\n'
                                                               'For complete terms and crisis resources, visit our website.',
-                                                              style: TextStyle(fontSize: 14),
+                                                              style: TextStyle(
+                                                                fontSize: 14,
+                                                              ),
                                                             ),
-                                                            SizedBox(height: 16),
+                                                            SizedBox(
+                                                              height: 16,
+                                                            ),
                                                             Row(
                                                               children: [
                                                                 Text(
                                                                   'Visit full terms: ',
-                                                                  style: TextStyle(fontSize: 12),
+                                                                  style:
+                                                                      TextStyle(
+                                                                        fontSize:
+                                                                            12,
+                                                                      ),
                                                                 ),
                                                                 GestureDetector(
                                                                   onTap: () async {
-                                                                    const url = 'https://strivehigh.thirdvizion.com/terms/';
+                                                                    const url =
+                                                                        'https://strivehigh.thirdvizion.com/terms/';
                                                                     try {
-                                                                      if (await canLaunch(url)) {
-                                                                        await launch(url);
+                                                                      if (await canLaunch(
+                                                                        url,
+                                                                      )) {
+                                                                        await launch(
+                                                                          url,
+                                                                        );
                                                                       }
-                                                                    } catch (e) {
-                                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                                    } catch (
+                                                                      e
+                                                                    ) {
+                                                                      ScaffoldMessenger.of(
+                                                                        context,
+                                                                      ).showSnackBar(
                                                                         const SnackBar(
-                                                                          content: Text('Could not open website'),
+                                                                          content: Text(
+                                                                            'Could not open website',
+                                                                          ),
                                                                         ),
                                                                       );
                                                                     }
@@ -950,9 +1028,13 @@ void _userErrorDialog() {
                                                                   child: Text(
                                                                     'strivehigh.thirdvizion.com',
                                                                     style: TextStyle(
-                                                                      color: Colors.blue,
-                                                                      fontSize: 12,
-                                                                      decoration: TextDecoration.underline,
+                                                                      color: Colors
+                                                                          .blue,
+                                                                      fontSize:
+                                                                          12,
+                                                                      decoration:
+                                                                          TextDecoration
+                                                                              .underline,
                                                                     ),
                                                                   ),
                                                                 ),
@@ -964,16 +1046,21 @@ void _userErrorDialog() {
                                                       actions: [
                                                         TextButton(
                                                           onPressed: () {
-                                                            Navigator.of(context).pop();
+                                                            Navigator.of(
+                                                              context,
+                                                            ).pop();
                                                           },
                                                           child: Text('Close'),
                                                         ),
                                                         TextButton(
                                                           onPressed: () {
                                                             setState(() {
-                                                              _termsAndCondition = true;
+                                                              _termsAndCondition =
+                                                                  true;
                                                             });
-                                                            Navigator.of(context).pop();
+                                                            Navigator.of(
+                                                              context,
+                                                            ).pop();
                                                           },
                                                           child: Text('Accept'),
                                                         ),
@@ -983,9 +1070,15 @@ void _userErrorDialog() {
                                                 );
                                               },
                                               style: TextButton.styleFrom(
-                                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 4,
+                                                      vertical: 2,
+                                                    ),
                                                 minimumSize: Size.zero,
-                                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                tapTargetSize:
+                                                    MaterialTapTargetSize
+                                                        .shrinkWrap,
                                               ),
                                               child: Text(
                                                 'learn more',
@@ -993,8 +1086,10 @@ void _userErrorDialog() {
                                                   color: Colors.blue.shade300,
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w500,
-                                                  decoration: TextDecoration.underline,
-                                                  decorationColor: Colors.blue.shade300,
+                                                  decoration:
+                                                      TextDecoration.underline,
+                                                  decorationColor:
+                                                      Colors.blue.shade300,
                                                 ),
                                               ),
                                             ),
@@ -1003,161 +1098,220 @@ void _userErrorDialog() {
                                       ),
                                     ],
                                   ),
-                                    Row(
-                                      children: [
-                                        Transform.scale(
-                                          scale: 0.9,
-                                          child: Checkbox(
-                                            value: _privacyPolicy,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                _privacyPolicy = value ?? false;
-                                              });
-                                            },
-                                            activeColor: Colors.blue,
-                                            checkColor: Colors.white,
-                                            side: BorderSide(
-                                              color: Color.fromARGB(255, 150, 150, 150),
-                                              width: 1.5,
+                                  Row(
+                                    children: [
+                                      Transform.scale(
+                                        scale: 0.9,
+                                        child: Checkbox(
+                                          value: _privacyPolicy,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _privacyPolicy = value ?? false;
+                                            });
+                                          },
+                                          activeColor: Colors.blue,
+                                          checkColor: Colors.white,
+                                          side: BorderSide(
+                                            color: Color.fromARGB(
+                                              255,
+                                              150,
+                                              150,
+                                              150,
                                             ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(4),
+                                            width: 1.5,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              4,
                                             ),
                                           ),
                                         ),
-                                        Expanded(
-                                          child: Row(
-                                            children: [
-                                              Text(
-                                                'Privacy Policy applied*',
-                                                style: TextStyle(
-                                                  color: const Color.fromARGB(255, 150, 150, 150),
-                                                  fontSize: 12,
+                                      ),
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              'Privacy Policy applied*',
+                                              style: TextStyle(
+                                                color: const Color.fromARGB(
+                                                  255,
+                                                  150,
+                                                  150,
+                                                  150,
                                                 ),
+                                                fontSize: 12,
                                               ),
-                                              const SizedBox(width: 4),
-                                              TextButton(
-                                                onPressed: () {
-                                                  showDialog(
-                                                    context: context,
-                                                    builder: (BuildContext context) {
-                                                      return AlertDialog(
-                                                        title: Text('Privacy Policy'),
-                                                        content: SingleChildScrollView(
-                                                          child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            mainAxisSize: MainAxisSize.min,
-                                                            children: [
-                                                              Text(
-                                                                'Privacy Policy',
-                                                                style: TextStyle(
-                                                                  fontSize: 16,
-                                                                  fontWeight: FontWeight.bold,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            TextButton(
+                                              onPressed: () {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (BuildContext context) {
+                                                    return AlertDialog(
+                                                      backgroundColor:
+                                                          Colors.white,
+                                                      title: Text(
+                                                        'Privacy Policy',
+                                                      ),
+                                                      content: SingleChildScrollView(
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            Text(
+                                                              'Privacy Policy',
+                                                              style: TextStyle(
+                                                                fontSize: 16,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                            SizedBox(
+                                                              height: 16,
+                                                            ),
+                                                            Text(
+                                                              'Your privacy is our top priority. This policy explains how we handle your mental health information:\n\n'
+                                                              '1. Information We Collect\n'
+                                                              '• Mood entries, journal notes, and wellness tracking data\n'
+                                                              '• Usage patterns and app interactions\n'
+                                                              '• Device information (anonymized)\n\n'
+                                                              '2. Data Protection\n'
+                                                              '• All personal data is encrypted using industry-standard AES-256 encryption\n'
+                                                              '• Data stored on secure, HIPAA-compliant servers\n'
+                                                              '• No data shared with advertisers or third parties\n\n'
+                                                              '3. Data Usage\n'
+                                                              '• Personal data used only to provide app services\n'
+                                                              '• Anonymized insights may improve app features\n'
+                                                              '• No personal identification in research or analytics\n\n'
+                                                              '4. Your Rights\n'
+                                                              '• Access, export, or delete your data anytime\n'
+                                                              '• Opt-out of data collection features\n'
+                                                              '• Request data portability\n\n'
+                                                              '5. Data Retention\n'
+                                                              '• Personal data kept only as long as account is active\n'
+                                                              '• 90-day grace period after account deletion\n\n'
+                                                              'Last updated: [Date]. For complete privacy policy, visit our website.',
+                                                              style: TextStyle(
+                                                                fontSize: 14,
+                                                              ),
+                                                            ),
+                                                            SizedBox(
+                                                              height: 16,
+                                                            ),
+                                                            Row(
+                                                              children: [
+                                                                Text(
+                                                                  'Visit full privacy policy: ',
+                                                                  style:
+                                                                      TextStyle(
+                                                                        fontSize:
+                                                                            12,
+                                                                      ),
                                                                 ),
-                                                              ),
-                                                              SizedBox(height: 16),
-                                                              Text(
-                                                                'Your privacy is our top priority. This policy explains how we handle your mental health information:\n\n'
-                                                                '1. Information We Collect\n'
-                                                                '• Mood entries, journal notes, and wellness tracking data\n'
-                                                                '• Usage patterns and app interactions\n'
-                                                                '• Device information (anonymized)\n\n'
-                                                                '2. Data Protection\n'
-                                                                '• All personal data is encrypted using industry-standard AES-256 encryption\n'
-                                                                '• Data stored on secure, HIPAA-compliant servers\n'
-                                                                '• No data shared with advertisers or third parties\n\n'
-                                                                '3. Data Usage\n'
-                                                                '• Personal data used only to provide app services\n'
-                                                                '• Anonymized insights may improve app features\n'
-                                                                '• No personal identification in research or analytics\n\n'
-                                                                '4. Your Rights\n'
-                                                                '• Access, export, or delete your data anytime\n'
-                                                                '• Opt-out of data collection features\n'
-                                                                '• Request data portability\n\n'
-                                                                '5. Data Retention\n'
-                                                                '• Personal data kept only as long as account is active\n'
-                                                                '• 90-day grace period after account deletion\n\n'
-                                                                'Last updated: [Date]. For complete privacy policy, visit our website.',
-                                                                style: TextStyle(fontSize: 14),
-                                                              ),
-                                                              SizedBox(height: 16),
-                                                              Row(
-                                                                children: [
-                                                                  Text(
-                                                                    'Visit full privacy policy: ',
-                                                                    style: TextStyle(fontSize: 12),
-                                                                  ),
-                                                                  GestureDetector(
-                                                                    onTap: () async {
-                                                                      const url = 'https://strivehigh.thirdvizion.com/privacy/';
-                                                                      try {
-                                                                        if (await canLaunch(url)) {
-                                                                          await launch(url);
-                                                                        }
-                                                                      } catch (e) {
-                                                                        ScaffoldMessenger.of(context).showSnackBar(
-                                                                          const SnackBar(
-                                                                            content: Text('Could not open website'),
-                                                                          ),
+                                                                GestureDetector(
+                                                                  onTap: () async {
+                                                                    const url =
+                                                                        'https://strivehigh.thirdvizion.com/privacy/';
+                                                                    try {
+                                                                      if (await canLaunch(
+                                                                        url,
+                                                                      )) {
+                                                                        await launch(
+                                                                          url,
                                                                         );
                                                                       }
-                                                                    },
-                                                                    child: Text(
-                                                                      'strivehigh.thirdvizion.com',
-                                                                      style: TextStyle(
-                                                                        color: Colors.blue,
-                                                                        fontSize: 12,
-                                                                        decoration: TextDecoration.underline,
-                                                                      ),
+                                                                    } catch (
+                                                                      e
+                                                                    ) {
+                                                                      ScaffoldMessenger.of(
+                                                                        context,
+                                                                      ).showSnackBar(
+                                                                        const SnackBar(
+                                                                          content: Text(
+                                                                            'Could not open website',
+                                                                          ),
+                                                                        ),
+                                                                      );
+                                                                    }
+                                                                  },
+                                                                  child: Text(
+                                                                    'strivehigh.thirdvizion.com',
+                                                                    style: TextStyle(
+                                                                      color: Colors
+                                                                          .blue,
+                                                                      fontSize:
+                                                                          12,
+                                                                      decoration:
+                                                                          TextDecoration
+                                                                              .underline,
                                                                     ),
                                                                   ),
-                                                                ],
-                                                              ),
-                                                            ],
-                                                          ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ],
                                                         ),
-                                                        actions: [
-                                                          TextButton(
-                                                            onPressed: () {
-                                                              Navigator.of(context).pop();
-                                                            },
-                                                            child: Text('Close'),
-                                                          ),
-                                                          TextButton(
-                                                            onPressed: () {
-                                                              setState(() {
-                                                                _privacyPolicy = true;
-                                                              });
-                                                              Navigator.of(context).pop();
-                                                            },
-                                                            child: Text('Accept'),
-                                                          ),
-                                                        ],
-                                                      );
-                                                    },
-                                                  );
-                                                },
-                                                style: TextButton.styleFrom(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                                  minimumSize: Size.zero,
-                                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                                ),
-                                                child: Text(
-                                                  'learn more',
-                                                  style: TextStyle(
-                                                    color: Colors.blue.shade300,
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w500,
-                                                    decoration: TextDecoration.underline,
-                                                    decorationColor: Colors.blue.shade300,
-                                                  ),
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            Navigator.of(
+                                                              context,
+                                                            ).pop();
+                                                          },
+                                                          child: Text('Close'),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            setState(() {
+                                                              _privacyPolicy =
+                                                                  true;
+                                                            });
+                                                            Navigator.of(
+                                                              context,
+                                                            ).pop();
+                                                          },
+                                                          child: Text('Accept'),
+                                                        ),
+                                                      ],
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                              style: TextButton.styleFrom(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 4,
+                                                      vertical: 2,
+                                                    ),
+                                                minimumSize: Size.zero,
+                                                tapTargetSize:
+                                                    MaterialTapTargetSize
+                                                        .shrinkWrap,
+                                              ),
+                                              child: Text(
+                                                'learn more',
+                                                style: TextStyle(
+                                                  color: Colors.blue.shade300,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  decoration:
+                                                      TextDecoration.underline,
+                                                  decorationColor:
+                                                      Colors.blue.shade300,
                                                 ),
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
+                                  ),
 
                                   const SizedBox(height: 30),
 
@@ -1182,27 +1336,37 @@ void _userErrorDialog() {
                                       // ],
                                     ),
                                     child: ElevatedButton(
-                                      onPressed: _isLoading ? null : () {
-                                        if (!_termsAndCondition) {
-                                          _showErrorSnackBar('You must agree to the terms and conditions');
-                                          return;
-                                        }
-                                        if (!_privacyPolicy) {
-                                          _showErrorSnackBar('You must agree to the privacy policy');
-                                          return;
-                                        }
-                                        
-                                        _handleRegistration().catchError((error) {
-                                          // Registration failed - show error dialog
-                                          _userErrorDialog();
-                                        });
-                                      },
+                                      onPressed: _isLoading
+                                          ? null
+                                          : () {
+                                              if (!_termsAndCondition) {
+                                                _showErrorSnackBar(
+                                                  'You must agree to the terms and conditions',
+                                                );
+                                                return;
+                                              }
+                                              if (!_privacyPolicy) {
+                                                _showErrorSnackBar(
+                                                  'You must agree to the privacy policy',
+                                                );
+                                                return;
+                                              }
+
+                                              _handleRegistration().catchError((
+                                                error,
+                                              ) {
+                                                // Registration failed - show error dialog
+                                                _userErrorDialog();
+                                              });
+                                            },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.transparent,
                                         foregroundColor: Colors.white,
                                         shadowColor: Colors.transparent,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         elevation: 0,
                                       ),
@@ -1212,7 +1376,10 @@ void _userErrorDialog() {
                                               height: 20,
                                               child: CircularProgressIndicator(
                                                 strokeWidth: 2,
-                                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                      Color
+                                                    >(Colors.white),
                                               ),
                                             )
                                           : const Text(
@@ -1230,7 +1397,12 @@ void _userErrorDialog() {
                                   Text(
                                     'Or',
                                     style: TextStyle(
-                                      color: Color.fromARGB(255,150,150,150).withOpacity(0.7),
+                                      color: Color.fromARGB(
+                                        255,
+                                        150,
+                                        150,
+                                        150,
+                                      ).withOpacity(0.7),
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -1264,7 +1436,9 @@ void _userErrorDialog() {
                                           height: 20,
                                           decoration: BoxDecoration(
                                             color: Colors.red,
-                                            borderRadius: BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                           ),
                                           child: const Center(
                                             child: Text(
@@ -1290,7 +1464,9 @@ void _userErrorDialog() {
                                         backgroundColor: Colors.transparent,
                                         side: BorderSide.none,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                       ),
                                     ),

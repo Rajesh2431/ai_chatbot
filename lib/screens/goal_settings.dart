@@ -15,7 +15,8 @@ class GoalPage extends StatefulWidget {
   State<GoalPage> createState() => _GoalPageState();
 }
 
-class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin {
+class _GoalPageState extends State<GoalPage>
+    with SingleTickerProviderStateMixin {
   String? selectedGoal;
   String? selectedCategory;
   GoalPeriod? selectedPeriod;
@@ -33,34 +34,54 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
 
   // Goal categories with icons
   final List<Map<String, dynamic>> goalCategories = [
-    {"name": "Fitness & Health", "icon": Icons.fitness_center, "color": Colors.red},
+    {
+      "name": "Fitness & Health",
+      "icon": Icons.fitness_center,
+      "color": Colors.red,
+    },
     {"name": "Learning & Study", "icon": Icons.school, "color": Colors.blue},
-    {"name": "Career & Professional", "icon": Icons.work, "color": Colors.green},
-    {"name": "Finance & Money", "icon": Icons.account_balance_wallet, "color": Colors.orange},
+    {
+      "name": "Career & Professional",
+      "icon": Icons.work,
+      "color": Colors.green,
+    },
+    {
+      "name": "Finance & Money",
+      "icon": Icons.account_balance_wallet,
+      "color": Colors.orange,
+    },
     {"name": "Relationships", "icon": Icons.people, "color": Colors.purple},
     {"name": "Personal Growth", "icon": Icons.psychology, "color": Colors.teal},
     {"name": "Hobbies & Skills", "icon": Icons.palette, "color": Colors.pink},
-    {"name": "Mental Health", "icon": Icons.self_improvement, "color": Colors.indigo},
+    {
+      "name": "Mental Health",
+      "icon": Icons.self_improvement,
+      "color": Colors.indigo,
+    },
   ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this, animationDuration: Duration(milliseconds: 500));
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      animationDuration: Duration(milliseconds: 500),
+    );
     _loadUserGoals();
     _loadRecommendedGoals();
   }
 
   Future<void> _loadRecommendedGoals() async {
     setState(() => isLoadingRecommendedGoals = true);
-    
+
     try {
       // Load SOAR assessment results to generate recommendations
       final soarAnswers = await SoarCardService.loadSoarCardAnswers();
-      
+
       // Generate recommended goals based on SOAR results
       final recommendations = _generateRecommendedGoals(soarAnswers);
-      
+
       setState(() {
         recommendedGoals.clear();
         recommendedGoals.addAll(recommendations);
@@ -76,41 +97,50 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
     // This is a simplified recommendation system
     // In a real app, you'd analyze SOAR results more thoroughly
     final recommendations = <GoalData>[];
-    
+
     // Default recommendations based on common SOAR categories
     recommendations.addAll([
       GoalData(
         id: 'rec_1',
         goal: 'Improve Teamwork Skills',
         category: 'Personal Growth',
-        notes: 'Focus on collaborative communication and building stronger team relationships',
+        notes:
+            'Focus on collaborative communication and building stronger team relationships',
         period: GoalPeriod.midterm,
         createdAt: DateTime.now(),
         isRecommended: true,
-        recommendationReason: 'Based on your SOAR assessment, teamwork is an area for growth', type: '',
+        recommendationReason:
+            'Based on your SOAR assessment, teamwork is an area for growth',
+        type: '',
       ),
       GoalData(
         id: 'rec_2',
         goal: 'Develop Stress Management Techniques',
         category: 'Mental Health',
-        notes: 'Learn and practice daily stress reduction methods like meditation or breathing exercises',
+        notes:
+            'Learn and practice daily stress reduction methods like meditation or breathing exercises',
         period: GoalPeriod.midterm,
         createdAt: DateTime.now(),
         isRecommended: true,
-        recommendationReason: 'Your assessment suggests focusing on stress management', type: '',
+        recommendationReason:
+            'Your assessment suggests focusing on stress management',
+        type: '',
       ),
       GoalData(
         id: 'rec_3',
         goal: 'Enhance Decision Making Skills',
         category: 'Career & Professional',
-        notes: 'Practice making decisions under pressure and improve analytical thinking',
+        notes:
+            'Practice making decisions under pressure and improve analytical thinking',
         period: GoalPeriod.longterm,
         createdAt: DateTime.now(),
         isRecommended: true,
-        recommendationReason: 'Decision making is a key leadership skill to develop', type: '',
+        recommendationReason:
+            'Decision making is a key leadership skill to develop',
+        type: '',
       ),
     ]);
-    
+
     return recommendations;
   }
 
@@ -121,11 +151,24 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
         userGoals.clear();
         final apiGoals = result['goals'] as List<dynamic>? ?? [];
         for (var goal in apiGoals) {
+          // Handle different possible field names from the API
           userGoals.add({
-            'goal': goal['goals'] ?? 'Unknown Goal',
-            'duration': goal['terms'] ?? 'Unknown Duration',
-            'progress': 0.0,
-            'created': _formatDate(goal['date_created']),
+            'goal':
+                goal['goals'] ??
+                goal['goal'] ??
+                goal['goal_text'] ??
+                'Unknown Goal',
+            'duration':
+                goal['terms'] ??
+                goal['duration'] ??
+                goal['period'] ??
+                'Unknown Duration',
+            'progress': goal['progress'] ?? 0.0,
+            'created': _formatDate(
+              goal['date_created'] ?? goal['created_at'] ?? goal['created'],
+            ),
+            'notes': goal['notes'] ?? '',
+            'category': goal['category'] ?? 'Personal Growth',
           });
         }
       });
@@ -162,7 +205,7 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
           // Modern Header
           Container(
             decoration: BoxDecoration(
-          gradient: LinearGradient(
+              gradient: LinearGradient(
                 colors: [primaryBlue, secondaryBlue],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -179,12 +222,15 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
-          children: [
+                  children: [
                     Row(
-              children: [
+                      children: [
                         IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
+                          onPressed: () => Navigator.pop(context),
                         ),
                         const Spacer(),
                         const Text(
@@ -197,7 +243,10 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
                         ),
                         const Spacer(),
                         IconButton(
-                          icon: const Icon(Icons.help_outline, color: Colors.white),
+                          icon: const Icon(
+                            Icons.help_outline,
+                            color: Colors.white,
+                          ),
                           onPressed: () => _showHelpDialog(),
                         ),
                       ],
@@ -218,45 +267,49 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
           ),
 
           // Modern Tab Bar
-               Container(
+          Container(
             margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
+            decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
+              boxShadow: [
+                BoxShadow(
                   color: Colors.black.withOpacity(0.04),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    indicator: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [primaryBlue, secondaryBlue],
                 ),
+              ],
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                gradient: LinearGradient(colors: [primaryBlue, secondaryBlue]),
                 borderRadius: BorderRadius.circular(10),
               ),
               indicatorPadding: const EdgeInsets.all(4),
-                    labelColor: Colors.white,
+              labelColor: Colors.white,
               unselectedLabelColor: Colors.grey.shade600,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-                    tabs: const [
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+              tabs: const [
                 Tab(text: "Recommended"),
                 Tab(text: "Create New"),
                 Tab(text: "My Goals"),
-                    ],
-                  ),
-),
+              ],
+            ),
+          ),
 
           // Tab Content
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
                 _buildRecommendedGoalsTab(),
                 _buildCreateGoalTab(),
                 _buildMyGoalsTab(),
@@ -271,16 +324,14 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
   // Modern Tab Builders
   Widget _buildRecommendedGoalsTab() {
     if (isLoadingRecommendedGoals) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (recommendedGoals.isEmpty) {
       return Center(
-                        child: Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
+          children: [
             Icon(
               Icons.lightbulb_outline,
               size: 64,
@@ -298,10 +349,7 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
             const SizedBox(height: 8),
             Text(
               'Complete your SOAR assessment to get personalized goal recommendations',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade500,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
               textAlign: TextAlign.center,
             ),
           ],
@@ -312,7 +360,8 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       itemCount: recommendedGoals.length,
-      itemBuilder: (context, index) => _buildRecommendedGoalCard(recommendedGoals[index]),
+      itemBuilder: (context, index) =>
+          _buildRecommendedGoalCard(recommendedGoals[index]),
     );
   }
 
@@ -342,9 +391,9 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Colors.grey.shade800,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
+            ),
+          ),
+          const SizedBox(height: 12),
           _buildModernInputCard(
             child: TextField(
               onChanged: (value) => setState(() => selectedGoal = value),
@@ -378,27 +427,31 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
               fontWeight: FontWeight.w600,
               color: Colors.grey.shade800,
             ),
-                            ),
-                            const SizedBox(height: 12),
+          ),
+          const SizedBox(height: 12),
           _buildModernInputCard(
-                              child: TextField(
-                                controller: notesController,
+            child: TextField(
+              controller: notesController,
               maxLines: 4,
-                                decoration: const InputDecoration(
-                hintText: "Add any specific details, milestones, or thoughts...",
-                                  border: InputBorder.none,
-                                ),
-                              ),
-                            ),
+              decoration: const InputDecoration(
+                hintText:
+                    "Add any specific details, milestones, or thoughts...",
+                border: InputBorder.none,
+              ),
+            ),
+          ),
           const SizedBox(height: 32),
 
           // Create Button
-                            SizedBox(
-                              width: double.infinity,
+          SizedBox(
+            width: double.infinity,
             child: _buildModernButton(
               text: 'Create Goal',
               onPressed: _createGoal,
-              isEnabled: selectedGoal != null && selectedCategory != null && selectedPeriod != null,
+              isEnabled:
+                  selectedGoal != null &&
+                  selectedCategory != null &&
+                  selectedPeriod != null,
             ),
           ),
         ],
@@ -412,11 +465,7 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.flag_outlined,
-              size: 64,
-              color: Colors.grey.shade400,
-            ),
+            Icon(Icons.flag_outlined, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               'No goals yet',
@@ -429,10 +478,7 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
             const SizedBox(height: 8),
             Text(
               'Create your first goal to start tracking your progress',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade500,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -441,9 +487,9 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
               onPressed: () => _tabController.animateTo(1),
             ),
           ],
-                                      ),
-                                    );
-                                  }
+        ),
+      );
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -464,9 +510,9 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
             color: Colors.black.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
+          ),
+        ],
+      ),
       child: child,
     );
   }
@@ -486,17 +532,21 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
       itemBuilder: (context, index) {
         final category = goalCategories[index];
         final isSelected = selectedCategory == category['name'];
-        
+
         return GestureDetector(
           onTap: () => setState(() => selectedCategory = category['name']),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isSelected ? (category['color'] as Color).withOpacity(0.1) : Colors.white,
+              color: isSelected
+                  ? (category['color'] as Color).withOpacity(0.1)
+                  : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected ? category['color'] as Color : Colors.grey.shade200,
+                color: isSelected
+                    ? category['color'] as Color
+                    : Colors.grey.shade200,
                 width: isSelected ? 2 : 1,
               ),
               boxShadow: [
@@ -511,7 +561,9 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
               children: [
                 Icon(
                   category['icon'] as IconData,
-                  color: isSelected ? category['color'] as Color : Colors.grey.shade600,
+                  color: isSelected
+                      ? category['color'] as Color
+                      : Colors.grey.shade600,
                   size: 18,
                 ),
                 const SizedBox(width: 8),
@@ -521,7 +573,9 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? category['color'] as Color : Colors.grey.shade700,
+                      color: isSelected
+                          ? category['color'] as Color
+                          : Colors.grey.shade700,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -566,13 +620,13 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
     required IconData icon,
   }) {
     final isSelected = selectedPeriod == period;
-    
+
     return GestureDetector(
       onTap: () => setState(() => selectedPeriod = period),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
+        decoration: BoxDecoration(
           color: isSelected ? primaryBlue.withOpacity(0.1) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -608,7 +662,9 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
               subtitle,
               style: TextStyle(
                 fontSize: 11,
-                color: isSelected ? primaryBlue.withOpacity(0.7) : Colors.grey.shade500,
+                color: isSelected
+                    ? primaryBlue.withOpacity(0.7)
+                    : Colors.grey.shade500,
               ),
             ),
           ],
@@ -739,7 +795,10 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
                       backgroundColor: primaryBlue,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 0,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -756,7 +815,7 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
               ],
             ),
           ),
-          
+
           // Content
           Padding(
             padding: const EdgeInsets.all(16),
@@ -783,22 +842,25 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
                 ),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: goal.period == GoalPeriod.midterm 
-                        ? Colors.blue.shade50 
+                    color: goal.period == GoalPeriod.midterm
+                        ? Colors.blue.shade50
                         : Colors.purple.shade50,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    goal.period == GoalPeriod.midterm 
-                        ? 'Mid-term (3-12 months)' 
+                    goal.period == GoalPeriod.midterm
+                        ? 'Mid-term (3-12 months)'
                         : 'Long-term (1+ years)',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: goal.period == GoalPeriod.midterm 
-                          ? Colors.blue.shade700 
+                      color: goal.period == GoalPeriod.midterm
+                          ? Colors.blue.shade700
                           : Colors.purple.shade700,
                     ),
                   ),
@@ -844,7 +906,10 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
               ),
               const SizedBox(width: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: primaryBlue.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -882,10 +947,7 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
               const Spacer(),
               Text(
                 "Created ${goal['created']}",
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey.shade500,
-                ),
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
               ),
             ],
           ),
@@ -916,7 +978,9 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
   }
 
   Future<void> _createGoal() async {
-    if (selectedGoal == null || selectedCategory == null || selectedPeriod == null) {
+    if (selectedGoal == null ||
+        selectedCategory == null ||
+        selectedPeriod == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in all required fields'),
@@ -927,8 +991,8 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
     }
 
     final result = await GoalService.createGoal(
-      terms: selectedPeriod == GoalPeriod.midterm 
-          ? 'Mid-term (3-12 months)' 
+      terms: selectedPeriod == GoalPeriod.midterm
+          ? 'Mid-term (3-12 months)'
           : 'Long-term (1+ years)',
       goals: selectedGoal!,
       notes: notesController.text,
@@ -953,18 +1017,15 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message']),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(result['message']), backgroundColor: Colors.red),
       );
     }
   }
 
   Future<void> _addRecommendedGoal(GoalData goal) async {
     final result = await GoalService.createGoal(
-      terms: goal.period == GoalPeriod.midterm 
-          ? 'Mid-term (3-12 months)' 
+      terms: goal.period == GoalPeriod.midterm
+          ? 'Mid-term (3-12 months)'
           : 'Long-term (1+ years)',
       goals: goal.goal,
       notes: goal.notes,
@@ -983,10 +1044,7 @@ class _GoalPageState extends State<GoalPage> with SingleTickerProviderStateMixin
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message']),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(result['message']), backgroundColor: Colors.red),
       );
     }
   }

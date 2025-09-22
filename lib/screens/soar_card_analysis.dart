@@ -21,35 +21,38 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
   List<double> overallAvg = [];
   List<Map<String, dynamic>> categoryWise = [];
 
-  
-
   // Score ranges and feedback content from the document
   final Map<String, Map<String, String>> scoreRanges = {
     "17-20": {
       "title": "Very Strong Resilience",
-      "feedback": "You have shown remarkable strength in managing stress, staying composed, and using your personal abilities effectively at sea. This level of resilience suggests you can handle unexpected challenges with confidence, which benefits both you and your crew. I encourage you to keep reinforcing these healthy coping strategies, as they are protective factors against burnout and isolation."
+      "feedback":
+          "You have shown remarkable strength in managing stress, staying composed, and using your personal abilities effectively at sea. This level of resilience suggests you can handle unexpected challenges with confidence, which benefits both you and your crew. I encourage you to keep reinforcing these healthy coping strategies, as they are protective factors against burnout and isolation.",
     },
     "13-16": {
-      "title": "Strong Resilience", 
-      "feedback": "You demonstrate solid resilience skills that serve you well in challenging maritime environments. Your ability to manage stress and maintain composure shows strong personal capabilities. Continue building on these strengths while exploring additional coping strategies to further enhance your resilience."
+      "title": "Strong Resilience",
+      "feedback":
+          "You demonstrate solid resilience skills that serve you well in challenging maritime environments. Your ability to manage stress and maintain composure shows strong personal capabilities. Continue building on these strengths while exploring additional coping strategies to further enhance your resilience.",
     },
     "9-12": {
       "title": "Moderate Resilience",
-      "feedback": "You have a good foundation of resilience skills with room for growth. Your current coping strategies are working, but there's potential to develop even stronger stress management and emotional regulation abilities. Focus on building additional tools and techniques to enhance your resilience further."
+      "feedback":
+          "You have a good foundation of resilience skills with room for growth. Your current coping strategies are working, but there's potential to develop even stronger stress management and emotional regulation abilities. Focus on building additional tools and techniques to enhance your resilience further.",
     },
     "5-8": {
       "title": "Developing Resilience",
-      "feedback": "You're in the early stages of developing resilience skills. This is a great starting point, and with focused effort and practice, you can quickly build confidence and stronger coping abilities. Consider exploring new stress management techniques and building a support network to accelerate your growth."
+      "feedback":
+          "You're in the early stages of developing resilience skills. This is a great starting point, and with focused effort and practice, you can quickly build confidence and stronger coping abilities. Consider exploring new stress management techniques and building a support network to accelerate your growth.",
     },
     "1-4": {
       "title": "Building Resilience",
-      "feedback": "This area is at an early stage of development. With focus and practice, you can quickly build confidence and skill here. Every journey begins with awareness, and you're taking the important first steps toward developing stronger resilience capabilities."
-    }
+      "feedback":
+          "This area is at an early stage of development. With focus and practice, you can quickly build confidence and skill here. Every journey begins with awareness, and you're taking the important first steps toward developing stronger resilience capabilities.",
+    },
   };
 
   // Track expanded state for each category
   final Map<String, bool> _expandedCategories = {};
-  
+
   // Cache AI responses to prevent unnecessary refreshes
   final Map<String, String> _aiResponseCache = {};
 
@@ -87,18 +90,22 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
         try {
           debugPrint("Trying API endpoint: $url");
           response = await http.get(Uri.parse(url));
-          
+
           // Check if response is valid JSON
           if (response.statusCode == 200) {
             try {
               final jsonData = json.decode(response.body);
               usedUrl = url;
               debugPrint("Successfully connected to: $url");
-              debugPrint("Response contains ${jsonData.keys.length} keys: ${jsonData.keys.toList()}");
+              debugPrint(
+                "Response contains ${jsonData.keys.length} keys: ${jsonData.keys.toList()}",
+              );
               break;
             } catch (jsonError) {
               debugPrint("Invalid JSON response from $url: $jsonError");
-              debugPrint("Response body preview: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}");
+              debugPrint(
+                "Response body preview: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}",
+              );
               continue;
             }
           } else {
@@ -143,13 +150,15 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
         // Process overall averages from the quiz answers - take first 12
         if (data['overall_avg'] != null) {
           List<dynamic> rawOverallAvg = data['overall_avg'] as List<dynamic>;
-          
+
           // Take only the first 12 entries
           if (rawOverallAvg.length > 12) {
             rawOverallAvg = rawOverallAvg.take(12).toList();
-            debugPrint("Limited overall averages to first 12 entries (from ${data['overall_avg'].length} total)");
+            debugPrint(
+              "Limited overall averages to first 12 entries (from ${data['overall_avg'].length} total)",
+            );
           }
-          
+
           overallAvg = rawOverallAvg
               .map((e) => double.tryParse(e.toString()) ?? 0.0)
               .toList();
@@ -159,19 +168,24 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
 
         // Process category-wise averages from the quiz answers - take first 12
         if (data['category_wise_avgs'] != null) {
-          List<dynamic> rawCategoryWise = data['category_wise_avgs'] as List<dynamic>;
-          
+          List<dynamic> rawCategoryWise =
+              data['category_wise_avgs'] as List<dynamic>;
+
           // Take only the first 12 entries
           if (rawCategoryWise.length > 12) {
             rawCategoryWise = rawCategoryWise.take(12).toList();
-            debugPrint("Limited category-wise averages to first 12 entries (from ${data['category_wise_avgs'].length} total)");
+            debugPrint(
+              "Limited category-wise averages to first 12 entries (from ${data['category_wise_avgs'].length} total)",
+            );
           }
-          
+
           categoryWise = rawCategoryWise
-              .map((e) => {
-                    "category": e['category'].toString(),
-                    "avg": double.tryParse(e['avg'].toString()) ?? 0.0
-                  })
+              .map(
+                (e) => {
+                  "category": e['category'].toString(),
+                  "avg": double.tryParse(e['avg'].toString()) ?? 0.0,
+                },
+              )
               .where((e) => e["category"].toString().isNotEmpty)
               .toList();
         } else {
@@ -180,8 +194,10 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
 
         _isLoading = false;
       });
-      
-      debugPrint("Successfully loaded ${overallAvg.length} overall averages and ${categoryWise.length} category averages from first 12 quiz answers for user: ${widget.userEmail} using: $usedUrl");
+
+      debugPrint(
+        "Successfully loaded ${overallAvg.length} overall averages and ${categoryWise.length} category averages from first 12 quiz answers for user: ${widget.userEmail} using: $usedUrl",
+      );
     } catch (e) {
       setState(() {
         _error = "Error fetching SOAR data: $e";
@@ -206,7 +222,44 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
           bottomRight: Radius.circular(20),
         ),
       ),
-      child: const SizedBox(height: 120),
+
+      child: Column(
+        children: const [
+          SizedBox(height: 20),
+          Text(
+            "Know",
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            "SOAR CARD",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 2),
+          Text(
+            "Result",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            "Strength, Opportunities, Aspirations & Result",
+            style: TextStyle(fontSize: 12, color: Colors.white70),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
@@ -217,9 +270,13 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
     }
 
     // Use category-wise data instead of overall average
-    final maxValue = categoryWise.map((e) => e["avg"] as double).reduce((a, b) => a > b ? a : b);
-    final avgScore = categoryWise.map((e) => e["avg"] as double).reduce((a, b) => a + b) / categoryWise.length;
-    
+    final maxValue = categoryWise
+        .map((e) => e["avg"] as double)
+        .reduce((a, b) => a > b ? a : b);
+    final avgScore =
+        categoryWise.map((e) => e["avg"] as double).reduce((a, b) => a + b) /
+        categoryWise.length;
+
     return Container(
       margin: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -272,9 +329,9 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _error != null 
-                          ? "Sample data (API unavailable) • ${_getOverallInsight(avgScore)}"
-                          : _getOverallInsight(avgScore),
+                        _error != null
+                            ? "Sample data (API unavailable) • ${_getOverallInsight(avgScore)}"
+                            : _getOverallInsight(avgScore),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,
@@ -286,7 +343,7 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // Score summary
             _buildScoreSummary(avgScore, maxValue),
           ],
@@ -323,10 +380,7 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
           const SizedBox(height: 8),
           Text(
             'Complete your SOAR assessment to see your results here',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade500,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
             textAlign: TextAlign.center,
           ),
         ],
@@ -337,7 +391,7 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
   Widget _buildScoreSummary(double avgScore, double maxValue) {
     final percentage = (avgScore / maxValue * 100).round();
     final level = _getPerformanceLevel(percentage);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -351,9 +405,7 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: level['colors'] as List<Color>,
-              ),
+              gradient: LinearGradient(colors: level['colors'] as List<Color>),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -383,10 +435,7 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
                 const SizedBox(height: 4),
                 Text(
                   level['description'] as String,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -407,8 +456,6 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
       return "Great start! Every journey begins with the first step.";
     }
   }
-
-
 
   Map<String, dynamic> _getPerformanceLevel(int percentage) {
     if (percentage >= 80) {
@@ -459,7 +506,7 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
     final score = item["avg"] as double;
     final percentage = score.round();
     final isExpanded = _expandedCategories[category] ?? false;
-    
+
     // Get score range and original feedback
     final scoreRange = _getScoreRange(percentage);
     final originalFeedback = scoreRanges[scoreRange] ?? scoreRanges["1-4"]!;
@@ -477,8 +524,8 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
           ),
         ],
       ),
-        child: Column(
-          children: [
+      child: Column(
+        children: [
           // Main card content
           GestureDetector(
             onTap: () {
@@ -488,24 +535,24 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
             },
             child: Container(
               padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   // Category name
                   Text(
                     category,
                     style: const TextStyle(
                       fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Progress bar and percentage
-                        Row(
-                          children: [
-                            Expanded(
+                  Row(
+                    children: [
+                      Expanded(
                         child: Container(
                           height: 8,
                           decoration: BoxDecoration(
@@ -520,9 +567,9 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
                                 color: _getProgressBarColor(percentage),
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                                ),
-                              ),
                             ),
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Text(
@@ -531,16 +578,16 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
-                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 12),
-                  
+
                   // Dynamic feedback text with info icon
                   Row(
-      children: [
-          Container(
+                    children: [
+                      Container(
                         width: 20,
                         height: 20,
                         decoration: BoxDecoration(
@@ -558,30 +605,32 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
                         _getFeedbackText(percentage),
                         style: const TextStyle(
                           fontSize: 14,
-                          color: Color(0xFF2D3748), // Darker color for better readability
+                          color: Color(
+                            0xFF2D3748,
+                          ), // Darker color for better readability
                         ),
                       ),
                     ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
-          ),
-          
+
           // Expandable content
           if (isExpanded)
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
                   color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 child: _buildAIResponse(category, percentage, originalFeedback),
-        ),
-      ),
+              ),
+            ),
         ],
       ),
     );
@@ -612,9 +661,13 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
     return "Requires development";
   }
 
-  Widget _buildAIResponse(String category, int percentage, Map<String, String> originalFeedback) {
+  Widget _buildAIResponse(
+    String category,
+    int percentage,
+    Map<String, String> originalFeedback,
+  ) {
     final cacheKey = '${category}_$percentage';
-    
+
     // Check if we have a cached response
     if (_aiResponseCache.containsKey(cacheKey)) {
       return Column(
@@ -640,7 +693,7 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
         ],
       );
     }
-    
+
     // Generate new AI response if not cached
     return FutureBuilder<String>(
       future: OpenRouterAPI.getSOARFeedback(
@@ -660,20 +713,18 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
               SizedBox(width: 8),
               Text(
                 "Generating personalized feedback...",
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey),
               ),
             ],
           );
         }
-        
-        final emotionalFeedback = snapshot.data ?? originalFeedback["feedback"]!;
-        
+
+        final emotionalFeedback =
+            snapshot.data ?? originalFeedback["feedback"]!;
+
         // Cache the response
         _aiResponseCache[cacheKey] = emotionalFeedback;
-        
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -701,153 +752,158 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
   }
 
   Widget _buildPdfDownloadButton() {
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-    child: Row(
-      children: [
-        Expanded(
-          child: ElevatedButton.icon(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: categoryWise.isEmpty
+                  ? null
+                  : () async {
+                      // Show loading dialog
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) => AlertDialog(
+                          content: Row(
+                            children: [
+                              const CircularProgressIndicator(),
+                              const SizedBox(width: 16),
+                              const Text('Generating PDF...'),
+                            ],
+                          ),
+                        ),
+                      );
+
+                      try {
+                        await SoarPdfGenerator.generateAndDownloadPdf(
+                          userEmail: widget.userEmail,
+                          categoryWise: categoryWise,
+                          overallAvg: overallAvg,
+                          context: context,
+                        );
+                      } finally {
+                        // Close loading dialog
+                        Navigator.of(context).pop();
+                      }
+                    },
+              icon: const Icon(Icons.download_rounded, size: 20),
+              label: const Text('Download PDF Report'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Optional: Add a preview button
+          ElevatedButton(
             onPressed: categoryWise.isEmpty
                 ? null
-                : () async {
-                    // Show loading dialog
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (context) => AlertDialog(
-                        content: Row(
-                          children: [
-                            const CircularProgressIndicator(),
-                            const SizedBox(width: 16),
-                            const Text('Generating PDF...'),
-                          ],
-                        ),
-                      ),
-                    );
-
-                    try {
-                      await SoarPdfGenerator.generateAndDownloadPdf(
-                        userEmail: widget.userEmail,
-                        categoryWise: categoryWise,
-                        overallAvg: overallAvg,
-                        context: context,
-                      );
-                    } finally {
-                      // Close loading dialog
-                      Navigator.of(context).pop();
-                    }
+                : () {
+                    _showPdfPreviewDialog();
                   },
-            icon: const Icon(Icons.download_rounded, size: 20),
-            label: const Text('Download PDF Report'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green.shade600,
+              backgroundColor: Colors.blue.shade600,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.all(16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               elevation: 2,
             ),
+            child: const Icon(Icons.preview_rounded, size: 20),
           ),
-        ),
-        const SizedBox(width: 12),
-        // Optional: Add a preview button
-        ElevatedButton(
-          onPressed: categoryWise.isEmpty
-              ? null
-              : () {
-                  _showPdfPreviewDialog();
-                },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue.shade600,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 2,
-          ),
-          child: const Icon(Icons.preview_rounded, size: 20),
-        ),
-      ],
-    ),
-  );
-}
-
-void _showPdfPreviewDialog() {
-  final avgScore = categoryWise.isNotEmpty
-      ? categoryWise.map((e) => e["avg"] as double).reduce((a, b) => a + b) / categoryWise.length
-      : 0.0;
-  final maxValue = categoryWise.isNotEmpty
-      ? categoryWise.map((e) => e["avg"] as double).reduce((a, b) => a > b ? a : b)
-      : 0.0;
-  final percentage = maxValue > 0 ? (avgScore / maxValue * 100).round() : 0;
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('PDF Report Preview'),
-      content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('User: ${widget.userEmail}'),
-            const SizedBox(height: 8),
-            Text('Overall Score: $percentage%'),
-            const SizedBox(height: 8),
-            Text('Categories: ${categoryWise.length}'),
-            const SizedBox(height: 16),
-            const Text('This PDF will include:'),
-            const SizedBox(height: 8),
-            const Text('• Complete assessment overview'),
-            const Text('• Category-wise performance breakdown'),
-            const Text('• Detailed feedback for each category'),
-            const Text('• Professional formatting and branding'),
-          ],
-        ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            Navigator.of(context).pop();
-            // Show loading dialog
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) => AlertDialog(
-                content: Row(
-                  children: [
-                    const CircularProgressIndicator(),
-                    const SizedBox(width: 16),
-                    const Text('Generating PDF...'),
-                  ],
-                ),
-              ),
-            );
+    );
+  }
 
-            try {
-              await SoarPdfGenerator.generateAndDownloadPdf(
-                userEmail: widget.userEmail,
-                categoryWise: categoryWise,
-                overallAvg: overallAvg,
-                context: context,
-              );
-            } finally {
+  void _showPdfPreviewDialog() {
+    final avgScore = categoryWise.isNotEmpty
+        ? categoryWise.map((e) => e["avg"] as double).reduce((a, b) => a + b) /
+              categoryWise.length
+        : 0.0;
+    final maxValue = categoryWise.isNotEmpty
+        ? categoryWise
+              .map((e) => e["avg"] as double)
+              .reduce((a, b) => a > b ? a : b)
+        : 0.0;
+    final percentage = maxValue > 0 ? (avgScore / maxValue * 100).round() : 0;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('PDF Report Preview'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('User: ${widget.userEmail}'),
+              const SizedBox(height: 8),
+              Text('Overall Score: $percentage%'),
+              const SizedBox(height: 8),
+              Text('Categories: ${categoryWise.length}'),
+              const SizedBox(height: 16),
+              const Text('This PDF will include:'),
+              const SizedBox(height: 8),
+              const Text('• Complete assessment overview'),
+              const Text('• Category-wise performance breakdown'),
+              const Text('• Detailed feedback for each category'),
+              const Text('• Professional formatting and branding'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
               Navigator.of(context).pop();
-            }
-          },
-          child: const Text('Generate PDF'),
-        ),
-      ],
-    ),
-  );
-}
+              // Show loading dialog
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => AlertDialog(
+                  content: Row(
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(width: 16),
+                      const Text('Generating PDF...'),
+                    ],
+                  ),
+                ),
+              );
 
+              try {
+                await SoarPdfGenerator.generateAndDownloadPdf(
+                  userEmail: widget.userEmail,
+                  categoryWise: categoryWise,
+                  overallAvg: overallAvg,
+                  context: context,
+                );
+              } finally {
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text('Generate PDF'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -860,19 +916,19 @@ void _showPdfPreviewDialog() {
             child: _isLoading
                 ? _buildLoadingState()
                 : _error != null
-                    ? _buildErrorState()
-                    : RefreshIndicator(
-                        onRefresh: refreshSoarData,
-                        child: ListView(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          children: [
-                            _buildSoarCard(),
-                            _buildCompetencyCard(),
-                            // Add the PDF download button here
-                            _buildPdfDownloadButton(),
-                          ],
-                        ),
-                      ),
+                ? _buildErrorState()
+                : RefreshIndicator(
+                    onRefresh: refreshSoarData,
+                    child: ListView(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      children: [
+                        _buildSoarCard(),
+                        _buildCompetencyCard(),
+                        // Add the PDF download button here
+                        _buildPdfDownloadButton(),
+                      ],
+                    ),
+                  ),
           ),
           _buildBottomAction(),
         ],
@@ -936,11 +992,7 @@ void _showPdfPreviewDialog() {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: Colors.red.shade400,
-            ),
+            Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
             const SizedBox(height: 16),
             Text(
               'Oops! Something went wrong',
@@ -953,10 +1005,7 @@ void _showPdfPreviewDialog() {
             const SizedBox(height: 8),
             Text(
               _error!,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -971,7 +1020,10 @@ void _showPdfPreviewDialog() {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade500,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -1020,10 +1072,7 @@ void _showPdfPreviewDialog() {
             ),
             child: const Text(
               'Continue to Goal Settings',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
         ),

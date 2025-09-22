@@ -7,29 +7,35 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 class SoarPdfGenerator {
   static const Map<String, Map<String, String>> scoreRanges = {
     "17-20": {
       "title": "Very Strong Resilience",
-      "feedback": "You have shown remarkable strength in managing stress, staying composed, and using your personal abilities effectively at sea. This level of resilience suggests you can handle unexpected challenges with confidence, which benefits both you and your crew. I encourage you to keep reinforcing these healthy coping strategies, as they are protective factors against burnout and isolation."
+      "feedback":
+          "You have shown remarkable strength in managing stress, staying composed, and using your personal abilities effectively at sea. This level of resilience suggests you can handle unexpected challenges with confidence, which benefits both you and your crew. I encourage you to keep reinforcing these healthy coping strategies, as they are protective factors against burnout and isolation.",
     },
     "13-16": {
-      "title": "Strong Resilience", 
-      "feedback": "You demonstrate solid resilience skills that serve you well in challenging maritime environments. Your ability to manage stress and maintain composure shows strong personal capabilities. Continue building on these strengths while exploring additional coping strategies to further enhance your resilience."
+      "title": "Strong Resilience",
+      "feedback":
+          "You demonstrate solid resilience skills that serve you well in challenging maritime environments. Your ability to manage stress and maintain composure shows strong personal capabilities. Continue building on these strengths while exploring additional coping strategies to further enhance your resilience.",
     },
     "9-12": {
       "title": "Moderate Resilience",
-      "feedback": "You have a good foundation of resilience skills with room for growth. Your current coping strategies are working, but there's potential to develop even stronger stress management and emotional regulation abilities. Focus on building additional tools and techniques to enhance your resilience further."
+      "feedback":
+          "You have a good foundation of resilience skills with room for growth. Your current coping strategies are working, but there's potential to develop even stronger stress management and emotional regulation abilities. Focus on building additional tools and techniques to enhance your resilience further.",
     },
     "5-8": {
       "title": "Developing Resilience",
-      "feedback": "You're in the early stages of developing resilience skills. This is a great starting point, and with focused effort and practice, you can quickly build confidence and stronger coping abilities. Consider exploring new stress management techniques and building a support network to accelerate your growth."
+      "feedback":
+          "You're in the early stages of developing resilience skills. This is a great starting point, and with focused effort and practice, you can quickly build confidence and stronger coping abilities. Consider exploring new stress management techniques and building a support network to accelerate your growth.",
     },
     "1-4": {
       "title": "Building Resilience",
-      "feedback": "This area is at an early stage of development. With focus and practice, you can quickly build confidence and skill here. Every journey begins with awareness, and you're taking the important first steps toward developing stronger resilience capabilities."
-    }
+      "feedback":
+          "This area is at an early stage of development. With focus and practice, you can quickly build confidence and skill here. Every journey begins with awareness, and you're taking the important first steps toward developing stronger resilience capabilities.",
+    },
   };
 
   static String _getScoreRange(int percentage) {
@@ -103,25 +109,47 @@ class SoarPdfGenerator {
     required BuildContext context,
   }) async {
     try {
-      // Request storage permission for Android
+      // Handle permissions for Android
       if (Platform.isAndroid) {
-        final permission = await Permission.storage.request();
-        if (permission != PermissionStatus.granted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Storage permission is required to save PDF')),
-          );
-          return;
+        // For Android 13+ (API 33+), we don't need storage permission for app documents
+        // For older versions, request storage permission
+        final androidInfo = await DeviceInfoPlugin().androidInfo;
+        if (androidInfo.version.sdkInt <= 32) {
+          final permission = await Permission.storage.request();
+          if (permission != PermissionStatus.granted) {
+            // Try alternative permissions
+            final manageStorage = await Permission.manageExternalStorage
+                .request();
+            if (manageStorage != PermissionStatus.granted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Storage permission is required to save PDF. Please enable it in app settings.',
+                  ),
+                  duration: Duration(seconds: 5),
+                ),
+              );
+              // Open app settings
+              await openAppSettings();
+              return;
+            }
+          }
         }
       }
 
       final pdf = pw.Document();
-      
+
       // Calculate overall metrics
       final avgScore = categoryWise.isNotEmpty
-          ? categoryWise.map((e) => e["avg"] as double).reduce((a, b) => a + b) / categoryWise.length
+          ? categoryWise
+                    .map((e) => e["avg"] as double)
+                    .reduce((a, b) => a + b) /
+                categoryWise.length
           : 0.0;
       final maxValue = categoryWise.isNotEmpty
-          ? categoryWise.map((e) => e["avg"] as double).reduce((a, b) => a > b ? a : b)
+          ? categoryWise
+                .map((e) => e["avg"] as double)
+                .reduce((a, b) => a > b ? a : b)
           : 0.0;
       final percentage = maxValue > 0 ? (avgScore / maxValue * 100).round() : 0;
       final level = _getPerformanceLevel(percentage);
@@ -135,18 +163,18 @@ class SoarPdfGenerator {
               // Header
               _buildPdfHeader(userEmail),
               pw.SizedBox(height: 30),
-              
+
               // Overall Assessment Summary
               _buildOverallSummary(avgScore, maxValue, percentage, level),
               pw.SizedBox(height: 30),
-              
+
               // Category-wise breakdown
               _buildCategoryBreakdown(categoryWise),
               pw.SizedBox(height: 30),
-              
+
               // Detailed feedback for each category
               ..._buildDetailedFeedback(categoryWise),
-              
+
               // Footer
               pw.SizedBox(height: 40),
               _buildPdfFooter(),
@@ -158,9 +186,9 @@ class SoarPdfGenerator {
       // Save and share PDF
       await _savePdf(pdf, context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error generating PDF: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error generating PDF: $e')));
     }
   }
 
@@ -222,10 +250,10 @@ class SoarPdfGenerator {
   }
 
   static pw.Widget _buildOverallSummary(
-    double avgScore, 
-    double maxValue, 
-    int percentage, 
-    Map<String, dynamic> level
+    double avgScore,
+    double maxValue,
+    int percentage,
+    Map<String, dynamic> level,
   ) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(20),
@@ -290,10 +318,7 @@ class SoarPdfGenerator {
             ),
             child: pw.Text(
               _getOverallInsight(avgScore),
-              style: const pw.TextStyle(
-                fontSize: 14,
-                color: PdfColors.blue800,
-              ),
+              style: const pw.TextStyle(fontSize: 14, color: PdfColors.blue800),
             ),
           ),
         ],
@@ -301,16 +326,15 @@ class SoarPdfGenerator {
     );
   }
 
-  static pw.Widget _buildCategoryBreakdown(List<Map<String, dynamic>> categoryWise) {
+  static pw.Widget _buildCategoryBreakdown(
+    List<Map<String, dynamic>> categoryWise,
+  ) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
           'Category Performance Overview',
-          style: pw.TextStyle(
-            fontSize: 18,
-            fontWeight: pw.FontWeight.bold,
-          ),
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 15),
         pw.Container(
@@ -323,7 +347,7 @@ class SoarPdfGenerator {
               final category = item["category"] as String;
               final score = item["avg"] as double;
               final percentage = score.round();
-              
+
               return pw.Container(
                 padding: const pw.EdgeInsets.all(15),
                 decoration: pw.BoxDecoration(
@@ -383,14 +407,13 @@ class SoarPdfGenerator {
     );
   }
 
-  static List<pw.Widget> _buildDetailedFeedback(List<Map<String, dynamic>> categoryWise) {
+  static List<pw.Widget> _buildDetailedFeedback(
+    List<Map<String, dynamic>> categoryWise,
+  ) {
     List<pw.Widget> widgets = [
       pw.Text(
         'Detailed Assessment Feedback',
-        style: pw.TextStyle(
-          fontSize: 18,
-          fontWeight: pw.FontWeight.bold,
-        ),
+        style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
       ),
       pw.SizedBox(height: 15),
     ];
@@ -489,10 +512,7 @@ class SoarPdfGenerator {
           pw.SizedBox(height: 5),
           pw.Text(
             'This assessment is designed to help you understand your current competency levels and identify areas for growth.',
-            style: const pw.TextStyle(
-              fontSize: 10,
-              color: PdfColors.grey600,
-            ),
+            style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
             textAlign: pw.TextAlign.center,
           ),
         ],
@@ -525,9 +545,9 @@ class SoarPdfGenerator {
         subject: 'SOAR Assessment Report',
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving PDF: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error saving PDF: $e')));
     }
   }
 }
