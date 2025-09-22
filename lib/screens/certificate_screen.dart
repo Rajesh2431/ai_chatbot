@@ -23,9 +23,7 @@ class _CertificateScreenState extends State<CertificateScreen> {
       body: Column(
         children: [
           _buildHeader(),
-          Expanded(
-            child: _buildCertificateContent(),
-          ),
+          Expanded(child: _buildCertificateContent()),
         ],
       ),
     );
@@ -34,22 +32,19 @@ class _CertificateScreenState extends State<CertificateScreen> {
   Future<void> _downloadSoarCardPDF() async {
     try {
       // Load the static SOAR card PDF from assets
-      final ByteData data = await services.rootBundle.load('lib/assets/doc/SoarCardscore.pdf');
+      final ByteData data = await services.rootBundle.load(
+        'lib/assets/doc/SoarCardscore.pdf',
+      );
       final List<int> bytes = data.buffer.asUint8List();
 
       // Get the directory to save the file (prefer external storage Download, fallback to documents)
       Directory? directory = await getExternalStorageDirectory();
       String filePath;
-      if (directory != null) {
-        final downloadDir = Directory('${directory.path}/Download');
-        if (!await downloadDir.exists()) {
-          await downloadDir.create(recursive: true);
-        }
-        filePath = '${downloadDir.path}/SoarCardscore.pdf';
-      } else {
-        directory = await getApplicationDocumentsDirectory();
-        filePath = '${directory.path}/SoarCardscore.pdf';
+      final downloadDir = Directory('${directory?.path}/Download');
+      if (!await downloadDir.exists()) {
+        await downloadDir.create(recursive: true);
       }
+      filePath = '${downloadDir.path}/SoarCardscore.pdf';
 
       // Write the file
       final file = File(filePath);
@@ -58,16 +53,18 @@ class _CertificateScreenState extends State<CertificateScreen> {
       // Show success message and open the PDF file
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('SOAR Card PDF successfully saved. Opening now...')),
+          const SnackBar(
+            content: Text('SOAR Card PDF successfully saved. Opening now...'),
+          ),
         );
         // Open the PDF file
         await OpenFile.open(filePath);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save PDF: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to save PDF: $e')));
       }
     }
   }
@@ -91,12 +88,20 @@ class _CertificateScreenState extends State<CertificateScreen> {
         children: const [
           Text(
             "Certificates",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
           SizedBox(height: 8),
           Text(
             "Your Achievements",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
           SizedBox(height: 4),
           Text(
@@ -127,7 +132,8 @@ class _CertificateScreenState extends State<CertificateScreen> {
           // Example certificates - replace with actual data
           _buildCertificateCard(
             title: 'SOAR Assessment Completion',
-            description: 'Completed the Strength, Opportunities, Aspirations & Result assessment.',
+            description:
+                'Completed the Strength, Opportunities, Aspirations & Result assessment.',
             date: '2023-10-01',
             imagePath: 'lib/assets/images/certi.png',
             onTap: _downloadSoarCardPDF,
@@ -135,7 +141,8 @@ class _CertificateScreenState extends State<CertificateScreen> {
           const SizedBox(height: 16),
           _buildCertificateCard(
             title: 'Goal Setting Mastery',
-            description: 'Successfully set and tracked personal wellness goals.',
+            description:
+                'Successfully set and tracked personal wellness goals.',
             date: '2023-10-15',
             imagePath: 'lib/assets/images/certi.png',
           ),
@@ -202,10 +209,7 @@ class _CertificateScreenState extends State<CertificateScreen> {
                   const SizedBox(height: 4),
                   Text(
                     description,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   const SizedBox(height: 8),
                   Text(
