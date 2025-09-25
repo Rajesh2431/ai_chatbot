@@ -1,6 +1,6 @@
 import 'dart:io';
+import 'package:SeaSmart/screens/goal_set.dart';
 import 'package:flutter/material.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import '../services/user_profile_service.dart';
 import '../services/mood_service.dart';
 import '../services/soar_card_service.dart';
@@ -12,12 +12,9 @@ import 'memory_game.dart';
 import 'journal_screen.dart';
 import 'mood_analytics_screen.dart';
 import 'user_profile_screen.dart';
-import 'soar_card.dart';
-import 'goal_settings.dart';
 import 'chat_screen.dart';
 import 'setting_screen.dart';
 import 'academy.dart';
-import 'certificate_screen.dart';
 import 'soar_card_analysis.dart';
 
 class GrowScreen extends StatefulWidget {
@@ -74,7 +71,6 @@ class ReportPage extends StatelessWidget {
       const Scaffold(body: Center(child: Text("Progress Report screen")));
 }
 
-
 class HorizontalCalendar extends StatefulWidget {
   const HorizontalCalendar({super.key});
 
@@ -95,7 +91,7 @@ class _HorizontalCalendarState extends State<HorizontalCalendar> {
         itemBuilder: (context, index) {
           final dayNumber = index + 1;
           final isSelected = selectedDay == dayNumber;
-          
+
           return GestureDetector(
             onTap: () {
               setState(() {
@@ -104,9 +100,12 @@ class _HorizontalCalendarState extends State<HorizontalCalendar> {
             },
             child: Container(
               width: 48, // Optimized width for exact spacing
-              margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Precise margins
+              margin: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 3,
+              ), // Precise margins
               decoration: BoxDecoration(
-                gradient: isSelected 
+                gradient: isSelected
                     ? LinearGradient(
                         colors: [
                           const Color(0xFF3B82F6), // Medium blue
@@ -118,8 +117,8 @@ class _HorizontalCalendarState extends State<HorizontalCalendar> {
                     : null,
                 color: isSelected ? null : Colors.white,
                 borderRadius: BorderRadius.circular(20), // Perfect pill shape
-                border: isSelected 
-                    ? null 
+                border: isSelected
+                    ? null
                     : Border.all(color: Colors.grey.shade300, width: 1),
                 boxShadow: [
                   BoxShadow(
@@ -137,8 +136,8 @@ class _HorizontalCalendarState extends State<HorizontalCalendar> {
                     width: 30, // Perfect size for the badge
                     height: 30,
                     decoration: BoxDecoration(
-                      color: isSelected 
-                          ? Colors.white 
+                      color: isSelected
+                          ? Colors.white
                           : const Color(0xFFE0F2FE), // Light blue
                       shape: BoxShape.circle,
                     ),
@@ -148,7 +147,7 @@ class _HorizontalCalendarState extends State<HorizontalCalendar> {
                         style: TextStyle(
                           fontSize: 15, // Optimal font size
                           fontWeight: FontWeight.bold,
-                          color: isSelected 
+                          color: isSelected
                               ? const Color(0xFF3B82F6) // Blue text on white
                               : const Color(0xFF0EA5E9), // Light blue text
                         ),
@@ -162,8 +161,8 @@ class _HorizontalCalendarState extends State<HorizontalCalendar> {
                     style: TextStyle(
                       fontSize: 12, // Optimal font size
                       fontWeight: FontWeight.w500,
-                      color: isSelected 
-                          ? Colors.white 
+                      color: isSelected
+                          ? Colors.white
                           : const Color(0xFF0EA5E9), // Light blue
                     ),
                   ),
@@ -176,8 +175,6 @@ class _HorizontalCalendarState extends State<HorizontalCalendar> {
     );
   }
 }
-
-
 
 class _GrowScreenState extends State<GrowScreen>
     with SingleTickerProviderStateMixin {
@@ -509,79 +506,85 @@ class _GrowScreenState extends State<GrowScreen>
 
                   const SizedBox(height: 1),
 
-                  const Text("Sea Smart",
-                  style: TextStyle(fontSize: 25,
-                  fontWeight: FontWeight.w600,
-                  color: Color.fromARGB(255, 53, 154, 255)
-                  ),
+                  const Text(
+                    "Sea Smart",
+                    style: TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.w600,
+                      color: Color.fromARGB(255, 53, 154, 255),
+                    ),
                   ),
 
                   // User Info Card - more compact
-                 
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                        image: const DecorationImage(
-                          image: AssetImage("lib/assets/images/wave_bg.png"), // your PNG file
-                          fit: BoxFit.cover, // make it cover full background
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 4,
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Ready for today's journey, $_userName",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF2C3E50),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Stats Row 
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: _StatCard(
-                                  value: '$_dayAtSea',
-                                  label: 'Day is the Sea',
-                                  color: const Color(0xFF3498DB),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _StatCard(
-                                  value: _destination,
-                                  label: 'Destination',
-                                  color: const Color(0xFF2ECC71),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                      ],
+                      image: const DecorationImage(
+                        image: AssetImage(
+                          "lib/assets/images/wave_bg.png",
+                        ), // your PNG file
+                        fit: BoxFit.cover, // make it cover full background
                       ),
                     ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Ready for today's journey, $_userName",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF2C3E50),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
 
-                    const SizedBox(height: 1),
+                        // Stats Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: _StatCard(
+                                value: '$_dayAtSea',
+                                label: 'Day is the Sea',
+                                color: const Color(0xFF3498DB),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _StatCard(
+                                value: _destination,
+                                label: 'Destination',
+                                color: const Color(0xFF2ECC71),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 1),
 
                   // Horizontal Calendar
-                    const HorizontalCalendar(), 
+                  const HorizontalCalendar(),
                 ],
               ),
             ),
           ),
-  
+
           // Sticky Tab Bar
           SliverPersistentHeader(
             delegate: _StickyTabBarDelegate(
@@ -679,332 +682,356 @@ class _GrowScreenState extends State<GrowScreen>
   }
 
   Widget _buildGrowContent() {
-  return SingleChildScrollView(
-    child: Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-
-          // Chat with Shipmate Section
-          Container(
-            width: double.infinity,
-            height: 125,
-            alignment: Alignment.bottomRight,
-            decoration: BoxDecoration(
-              image: const DecorationImage(
-                image: AssetImage('lib/assets/images/chat.png'),
-                fit: BoxFit.cover,
-                alignment: Alignment.centerRight,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Chat with Shipmate Section
+            Container(
+              width: double.infinity,
+              height: 125,
+              alignment: Alignment.bottomRight,
+              decoration: BoxDecoration(
+                image: const DecorationImage(
+                  image: AssetImage('lib/assets/images/chat.png'),
+                  fit: BoxFit.cover,
+                  alignment: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
               ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Stack(
-              children: [
-                // Wave pattern background
-                Positioned.fill(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+              child: Stack(
+                children: [
+                  // Wave pattern background
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Positioned(
-                  left: 20,
-                  top: 20,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Image.asset(
-                      //   "lib/assets/images/cap.png", // ⚓ your image path
-                      //   height: 50,
-                      //   width: 50,
-                      //   fit: BoxFit.contain,
-                      // ),
-                      const SizedBox(height: 8),
-                      // const Text(
-                      //   'Chat with Your',
-                      //   style: TextStyle(
-                      //     color: Colors.white70,
-                      //     fontSize: 14,
-                      //   ),
-                      // ),
-                      // const Text(
-                      //   'SHIPMATE',
-                      //   style: TextStyle(
-                      //     color: Colors.white,
-                      //     fontSize: 18,
-                      //     fontWeight: FontWeight.bold,
-                      //     letterSpacing: 2,
-                      //   ),
-                      // ),
-                    ],
+                  Positioned(
+                    left: 20,
+                    top: 20,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Image.asset(
+                        //   "lib/assets/images/cap.png", // ⚓ your image path
+                        //   height: 50,
+                        //   width: 50,
+                        //   fit: BoxFit.contain,
+                        // ),
+                        const SizedBox(height: 8),
+                        // const Text(
+                        //   'Chat with Your',
+                        //   style: TextStyle(
+                        //     color: Colors.white70,
+                        //     fontSize: 14,
+                        //   ),
+                        // ),
+                        // const Text(
+                        //   'SHIPMATE',
+                        //   style: TextStyle(
+                        //     color: Colors.white,
+                        //     fontSize: 18,
+                        //     fontWeight: FontWeight.bold,
+                        //     letterSpacing: 2,
+                        //   ),
+                        // ),
+                      ],
+                    ),
                   ),
-                ),
-                Positioned(
-                  right: 10,
-                  bottom: 0,
-                  child: GestureDetector(
+                  Positioned(
+                    right: 10,
+                    bottom: 0,
+                    child: GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ChatScreen(),
+                        ),
+                      ),
+                      child: Container(
+                        height: 100,
+                        width: 400,
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(0, 255, 153, 0),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        // child: ClipRRect(
+                        //   borderRadius: BorderRadius.circular(8), // match container radius
+                        //   child: Image.asset(
+                        //     "lib/assets/images/avat.png", // your PNG path
+                        //     fit: BoxFit.cover, // fills container
+                        //   ),
+                        // ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Activity Section
+            const Text(
+              'Activity',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C3E50),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _ActivityCard(
+                    title: 'Meditation',
+                    imagePath: 'lib/assets/images/med.png',
+                    backgroundColor: Colors.white,
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ChatScreen()),
+                      MaterialPageRoute(builder: (_) => const GridCalmGame()),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _ActivityCard(
+                    title: 'Breathing',
+                    imagePath: 'lib/assets/images/bre.png',
+                    backgroundColor: Colors.white,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const BreathingScreen(),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Academy Section
+            const Text(
+              'Academy',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C3E50),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Consultation Card
+            Container(
+              width: double.infinity,
+              height: 250,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                image: const DecorationImage(
+                  image: AssetImage('lib/assets/images/consult.png'),
+                  fit: BoxFit.cover,
+                  alignment: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
+                  GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const Academy()),
                     ),
                     child: Container(
-                      height: 100,
-                      width: 400,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 20,
+                      ),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(0, 255, 153, 0),
-                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(25),
                       ),
-                      // child: ClipRRect(
-                      //   borderRadius: BorderRadius.circular(8), // match container radius
-                      //   child: Image.asset(
-                      //     "lib/assets/images/avat.png", // your PNG path
-                      //     fit: BoxFit.cover, // fills container
-                      //   ),
-                      // ),
+                      child: const Text(
+                        'CONSULT WITH US!',
+                        style: TextStyle(
+                          color: Color.fromARGB(0, 255, 255, 255),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 50,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Activity Section
-          const Text(
-            'Activity',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          Row(
-            children: [
-              Expanded(
-                child: _ActivityCard(
-                  title: 'Meditation',
-                  imagePath: 'lib/assets/images/med.png',
-                  backgroundColor: Colors.white,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const GridCalmGame()),
-                  ),
-                ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _ActivityCard(
-                  title: 'Breathing',
-                  imagePath: 'lib/assets/images/bre.png',
-                  backgroundColor: Colors.white,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const BreathingScreen()),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // Academy Section
-          const Text(
-            'Academy',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
             ),
-          ),
-          const SizedBox(height: 16),
 
-          // Consultation Card
-          Container(
-            width: double.infinity,
-            height: 250,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              image: const DecorationImage(
-                image: AssetImage('lib/assets/images/consult.png'),
-                fit: BoxFit.cover,
-                alignment: Alignment.centerRight,
+            const SizedBox(height: 24),
+
+            // Games Section
+            const Text(
+              'Games',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C3E50),
               ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
-            child: Column(
+            const SizedBox(height: 16),
+
+            Row(
               children: [
-                const SizedBox(height: 16),
-                GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Academy()),
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(25),
+                Expanded(
+                  child: _EnhancedGameCard(
+                    title: 'Tap To Calm',
+                    subtitle: 'Tap for calmness',
+                    backgroundColor: const Color(0xFF3498DB),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const GridCalmGame()),
                     ),
-                    child: const Text(
-                      'CONSULT WITH US!',
-                      style: TextStyle(
-                        color: Color.fromARGB(0, 255, 255, 255),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 50,
-                      ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _EnhancedGameCard(
+                    title: 'MEMORY',
+                    subtitle: '',
+                    backgroundColor: const Color(0xFF90EE90),
+                    isMemoryGame: true,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => MemoryGame()),
                     ),
                   ),
                 ),
               ],
             ),
-          ),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // Games Section
-          const Text(
-            'Games',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
+            // Wellness Tips Section
+            const Text(
+              'Wellness Tips',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C3E50),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          Row(
-            children: [
-              Expanded(
-                child: _EnhancedGameCard(
-                  title: 'Tap To Calm',
-                  subtitle: 'Tap for calmness',
-                  backgroundColor: const Color(0xFF3498DB),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const GridCalmGame()),
-                  ),
+            Column(
+              children: [
+                _WellnessTipCard(
+                  title: 'Find Your Space',
+                  description:
+                      'Choose a quiet spot on deck or in your cabin where you won\'t be disturbed',
+                  color: const Color(0xFF9B59B6),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _EnhancedGameCard(
-                  title: 'MEMORY',
-                  subtitle: '',
-                  backgroundColor: const Color(0xFF90EE90),
-                  isMemoryGame: true,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => MemoryGame()),
-                  ),
+                const SizedBox(height: 12),
+                _WellnessTipCard(
+                  title: 'Deep Breathing',
+                  description:
+                      'Practice breathing exercises to reduce stress and improve focus',
+                  color: const Color(0xFF3498DB),
                 ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // Wellness Tips Section
-          const Text(
-            'Wellness Tips',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
+                const SizedBox(height: 12),
+                _WellnessTipCard(
+                  title: 'Stay Active',
+                  description:
+                      'Regular movement helps maintain both physical and mental wellness',
+                  color: const Color(0xFF2ECC71),
+                ),
+                const SizedBox(height: 12),
+                _WellnessTipCard(
+                  title: 'Connect with Others',
+                  description:
+                      'Maintain social connections for emotional support and wellbeing',
+                  color: const Color(0xFFE67E22),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
 
-          Column(
-            children: [
-              _WellnessTipCard(
-                title: 'Find Your Space',
-                description: 'Choose a quiet spot on deck or in your cabin where you won\'t be disturbed',
-                color: const Color(0xFF9B59B6),
-              ),
-              const SizedBox(height: 12),
-              _WellnessTipCard(
-                title: 'Deep Breathing',
-                description: 'Practice breathing exercises to reduce stress and improve focus',
-                color: const Color(0xFF3498DB),
-              ),
-              const SizedBox(height: 12),
-              _WellnessTipCard(
-                title: 'Stay Active',
-                description: 'Regular movement helps maintain both physical and mental wellness',
-                color: const Color(0xFF2ECC71),
-              ),
-              const SizedBox(height: 12),
-              _WellnessTipCard(
-                title: 'Connect with Others',
-                description: 'Maintain social connections for emotional support and wellbeing',
-                color: const Color(0xFFE67E22),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 32),
-        ],
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _buildShowContent() {
-  return SingleChildScrollView(
-    child: Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 🔹 Title
-          const Text(
-            'Your Progress',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2C3E50),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 🔹 Title
+            const Text(
+              'Your Progress',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C3E50),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          
+            const SizedBox(height: 16),
 
-          // 🔹 Progress Feature Cards (Grid Style)
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 1,
-            childAspectRatio: 2.0,
-            mainAxisSpacing: 12,
+            // 🔹 Progress Feature Cards (Grid Style)
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 1,
+              childAspectRatio: 2.0,
+              mainAxisSpacing: 12,
 
-           children: [
-                _buildFeatureCard("Journal", "lib/assets/images/resolu.png", '/journal'),
-                _buildFeatureCard("Certificates", "lib/assets/images/certi.png", '/certificates'),
-                _buildFeatureCard("Mood Analysis", "lib/assets/images/prog.png", '/mood-analytics'),
-                _buildFeatureCard("Progress Report", "lib/assets/images/aly.png", '/report'),
+              children: [
+                _buildFeatureCard(
+                  "Journal",
+                  "lib/assets/images/resolu.png",
+                  '/journal',
+                ),
+                _buildFeatureCard(
+                  "Certificates",
+                  "lib/assets/images/certi.png",
+                  '/certificates',
+                ),
+                _buildFeatureCard(
+                  "Mood Analysis",
+                  "lib/assets/images/prog.png",
+                  '/mood-analytics',
+                ),
+                _buildFeatureCard(
+                  "Progress Report",
+                  "lib/assets/images/aly.png",
+                  '/report',
+                ),
               ],
-          ),
+            ),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // 🔹 Wellness Tips Section
-        const Text(
+            // 🔹 Wellness Tips Section
+            const Text(
               'Wellness Tips',
               textAlign: TextAlign.center, // ✅ move here
               style: TextStyle(
@@ -1014,138 +1041,140 @@ class _GrowScreenState extends State<GrowScreen>
               ),
             ),
 
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-          Column(
-            children: [
-              _buildTipCard(
-                title: "Find Your Space",
-                description: "Choose a quiet spot on deck or in your cabin where you won’t disturbed",
-                bgColor: Colors.green.shade50,
-                textColor: Colors.green.shade800,
-              ),
-              _buildTipCard(
-                title: "Steady Yourself",
-                description: "Sit with your back against something stable to maintain balance with ship movement",
-                bgColor: Colors.purple.shade50,
-                textColor: Colors.purple,
-              ),
-              _buildTipCard(
-                title: "Use Natural Sounds",
-                description: "Let the sound of waves and wind become part of your meditation practice",
-                bgColor: Colors.blue.shade50,
-                textColor: Colors.blue,
-              ),
-              _buildTipCard(
-                title: "Regular Practice",
-                description: "Even 5 minutes daily can significantly reduce stress and improve focus.",
-                bgColor: Colors.orange.shade50,
-                textColor: Colors.orange,
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-
-
-/// 🔹 Feature Card
-Widget _buildFeatureCard(String title, String imagePath, String routeName) {
-  return GestureDetector(
-    onTap: () {
-      Navigator.pushNamed(context, routeName);
-    },
-    child: Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        image: DecorationImage(
-          image: AssetImage(imagePath),
-          fit: BoxFit.cover,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color.fromARGB(106, 8, 122, 183),
-                    const Color.fromARGB(0, 1, 1, 29),
-                  ],
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
+            Column(
+              children: [
+                _buildTipCard(
+                  title: "Find Your Space",
+                  description:
+                      "Choose a quiet spot on deck or in your cabin where you won’t disturbed",
+                  bgColor: Colors.green.shade50,
+                  textColor: Colors.green.shade800,
                 ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                _buildTipCard(
+                  title: "Steady Yourself",
+                  description:
+                      "Sit with your back against something stable to maintain balance with ship movement",
+                  bgColor: Colors.purple.shade50,
+                  textColor: Colors.purple,
                 ),
-              ),
+                _buildTipCard(
+                  title: "Use Natural Sounds",
+                  description:
+                      "Let the sound of waves and wind become part of your meditation practice",
+                  bgColor: Colors.blue.shade50,
+                  textColor: Colors.blue,
+                ),
+                _buildTipCard(
+                  title: "Regular Practice",
+                  description:
+                      "Even 5 minutes daily can significantly reduce stress and improve focus.",
+                  bgColor: Colors.orange.shade50,
+                  textColor: Colors.orange,
+                ),
+              ],
             ),
           ],
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-/// 🔹 Wellness Tip Card
-Widget _buildTipCard({
-  required String title,
-  required String description,
-  required Color bgColor,
-  required Color textColor,
-}) {
-  return Container(
-    width: double.infinity,
-    margin: const EdgeInsets.symmetric(vertical: 8),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: bgColor,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.grey.shade300),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: textColor,
+  /// 🔹 Feature Card
+  Widget _buildFeatureCard(String title, String imagePath, String routeName) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, routeName);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          image: DecorationImage(
+            image: AssetImage(imagePath),
+            fit: BoxFit.cover,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color.fromARGB(106, 8, 122, 183),
+                      const Color.fromARGB(0, 1, 1, 29),
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 6),
-        Text(
-          description,
-          style: const TextStyle(fontSize: 14, color: Colors.black87),
-        ),
-      ],
-    ),
-  );
-}
+      ),
+    );
+  }
+
+  /// 🔹 Wellness Tip Card
+  Widget _buildTipCard({
+    required String title,
+    required String description,
+    required Color bgColor,
+    required Color textColor,
+  }) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            description,
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildSoarCardTile() {
     return GestureDetector(
@@ -1330,7 +1359,7 @@ Widget _buildTipCard({
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => GoalPage(userEmail: userEmail),
+              builder: (context) => GoalSet(userEmail: userEmail),
             ),
           ).then((_) {
             // Refresh goals data when returning
@@ -1598,12 +1627,20 @@ Widget _buildTipCard({
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color.fromARGB(255, 109, 159, 223), Color.fromARGB(255, 97, 183, 226)],
+            colors: [
+              Color.fromARGB(255, 109, 159, 223),
+              Color.fromARGB(255, 97, 183, 226),
+            ],
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color.fromARGB(255, 109, 159, 223).withValues(alpha: 0.3),
+              color: const Color.fromARGB(
+                255,
+                109,
+                159,
+                223,
+              ).withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -1826,7 +1863,7 @@ Widget _buildTipCard({
     );
   }
 
-  Widget _buildMeditationTipsCard(){
+  Widget _buildMeditationTipsCard() {
     final tips = [
       {
         'title': 'Find a Quiet Space',
@@ -1986,12 +2023,7 @@ class _ActivityCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.contain,
-              ),
-            ),
+            Expanded(child: Image.asset(imagePath, fit: BoxFit.contain)),
             const SizedBox(height: 8),
             Text(
               title,
@@ -2007,7 +2039,6 @@ class _ActivityCard extends StatelessWidget {
     );
   }
 }
-
 
 // Enhanced Game Card Widget
 class _EnhancedGameCard extends StatelessWidget {
@@ -2043,82 +2074,85 @@ class _EnhancedGameCard extends StatelessWidget {
   }
 
   Widget _buildTapToCalmContent() {
-  return Container(
-    height: 150, // adjust height as needed
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(16),
-      image: const DecorationImage(
-        image: AssetImage('lib/assets/images/game1.png'), // your background PNG
-        fit: BoxFit.cover,
+    return Container(
+      height: 150, // adjust height as needed
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        image: const DecorationImage(
+          image: AssetImage(
+            'lib/assets/images/game1.png',
+          ), // your background PNG
+          fit: BoxFit.cover,
+        ),
       ),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const Spacer(),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Container(
-              width: 60,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(0, 255, 255, 255),
-                borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
-              // child: Image.asset(
-              //   'lib/assets/images/game1.png',
-              //   height: 24,
-              //   width: 24,
-              //   fit: BoxFit.contain,
-              // ),
             ),
-          ),
-        ],
+            const Spacer(),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Container(
+                width: 60,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(0, 255, 255, 255),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                // child: Image.asset(
+                //   'lib/assets/images/game1.png',
+                //   height: 24,
+                //   width: 24,
+                //   fit: BoxFit.contain,
+                // ),
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildMemoryGameContent() {
-  return Container(
-    height: 150, // adjust height as needed
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(16),
-      image: const DecorationImage(
-        image: AssetImage('lib/assets/images/game2.png'), // single PNG background
-        fit: BoxFit.cover,
+    return Container(
+      height: 150, // adjust height as needed
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        image: const DecorationImage(
+          image: AssetImage(
+            'lib/assets/images/game2.png',
+          ), // single PNG background
+          fit: BoxFit.cover,
+        ),
       ),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Text(
-            'MEMORY',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.5,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Text(
+              'MEMORY',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.5,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 }
 
 // Wellness Tip Card Widget
@@ -2168,10 +2202,7 @@ class _WellnessTipCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),

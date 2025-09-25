@@ -3,18 +3,19 @@ import '../services/goal_service.dart';
 import '../services/soar_card_service.dart';
 import '../models/goal_data.dart';
 //import 'dashboard_screen.dart';
+import 'grow_screen.dart';
 import 'daily_checkin_screen.dart';
 
-class GoalPage extends StatefulWidget {
+class GoalSet extends StatefulWidget {
   final String? userEmail;
 
-  const GoalPage({super.key, this.userEmail});
+  const GoalSet({super.key, this.userEmail});
 
   @override
-  State<GoalPage> createState() => _GoalPageState();
+  State<GoalSet> createState() => _GoalPageState();
 }
 
-class _GoalPageState extends State<GoalPage>
+class _GoalPageState extends State<GoalSet>
     with SingleTickerProviderStateMixin {
   String? selectedGoal;
   String? selectedCategory;
@@ -1012,7 +1013,7 @@ class _GoalPageState extends State<GoalPage>
       });
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const DailyCheckinScreen()),
+        MaterialPageRoute(builder: (_) => const GrowScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

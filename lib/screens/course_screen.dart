@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 
 class CourseScreen extends StatefulWidget {
+  const CourseScreen({super.key});
+
   @override
   _CourseScreenState createState() => _CourseScreenState();
 }
 
 class _CourseScreenState extends State<CourseScreen> {
-  Set<int> completedModules = Set<int>();
+  Set<int> completedModules = <int>{};
   final GlobalKey _certificateKey = GlobalKey();
 
   final Map<String, dynamic> courseData = {
@@ -360,7 +357,7 @@ class _CourseScreenState extends State<CourseScreen> {
 
             // Certificate Button
             if (isComplete)
-              Container(
+              SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton.icon(
@@ -419,12 +416,12 @@ class CertificateDialog extends StatelessWidget {
   final VoidCallback onDownload;
 
   const CertificateDialog({
-    Key? key,
+    super.key,
     required this.courseTitle,
     required this.studentName,
     required this.completionDate,
     required this.onDownload,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -507,12 +504,12 @@ class CertificateDialog extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text('Cancel'),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
+                    child: Text('Cancel'),
                   ),
                 ),
                 SizedBox(width: 12),
@@ -541,6 +538,8 @@ class CertificateDialog extends StatelessWidget {
 
 // Usage in your app:
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

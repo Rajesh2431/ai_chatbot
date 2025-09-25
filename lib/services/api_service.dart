@@ -8,22 +8,26 @@ import 'ai_knowledge_service.dart';
 class OpenRouterAPI {
   static const _url = 'https://openrouter.ai/api/v1/chat/completions';
   static const _apiKey =
-      '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';
+      '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';
   //static final _apiKey = dotenv.env['OPENROUTER_API_KEY'] ?? '';
 
   static Future<String> getResponse(String prompt) async {
     // Get enhanced PDF context with conversation flows
-    final pdfContext = await BackendPDFService.getPDFContextForConversation(prompt);
-    
+    final pdfContext = await BackendPDFService.getPDFContextForConversation(
+      prompt,
+    );
+
     // Get conversation state context
-    final conversationContext = ConversationStateService.getConversationContext();
-    
+    final conversationContext =
+        ConversationStateService.getConversationContext();
+
     // Get mood-based context
     final moodContext = await MoodBasedChatService.getMoodBasedContext();
-    
+
     // Get user-uploaded knowledge base content
-    final userKnowledgeContent = await AIKnowledgeService.getAllKnowledgeContent();
-    
+    final userKnowledgeContent =
+        await AIKnowledgeService.getAllKnowledgeContent();
+
     // Check if we should ask a structured question
     String? structuredQuestion;
     if (ConversationStateService.shouldAskStructuredQuestion()) {
@@ -111,7 +115,10 @@ class OpenRouterAPI {
           // {'role': 'user', 'content': '''
           //               You are Saira, a calm and empowering AI designed to help users navigate stress, build leadership skills, and develop unshakable self-confidence. Your role is to provide strength and clarity, guiding users through high-pressure environments, burnout, self-doubt, and emotional regulation.
           //               '''},
-          {'role': 'user', 'content': '''
+          {
+            'role': 'user',
+            'content':
+                '''
 $moodContext
 
 $pdfContext
@@ -132,7 +139,8 @@ CRITICAL INSTRUCTIONS:
 - Ask follow-up questions based on both their mood and the document's patterns
 - Keep responses brief (1-2 sentences) but emotionally appropriate
 - Be more supportive if they're struggling, more encouraging if they're doing well
-'''},
+''',
+          },
         ],
       }),
     );
@@ -147,7 +155,8 @@ CRITICAL INSTRUCTIONS:
     required int score,
     required String originalFeedback,
   }) async {
-    final prompt = '''
+    final prompt =
+        '''
 Please rephrase this SOAR assessment feedback to be more emotional, warm, and supportive for a maritime professional:
 
 Category: $category
@@ -181,12 +190,10 @@ Rephrase the feedback:''';
           'messages': [
             {
               'role': 'system',
-              'content': 'You are a compassionate mental health coach specializing in maritime professionals. Your role is to rephrase assessment feedback in a warm, encouraging, and emotionally supportive way while maintaining the core message. Use empathetic language that acknowledges the challenges of seafaring life.',
+              'content':
+                  'You are a compassionate mental health coach specializing in maritime professionals. Your role is to rephrase assessment feedback in a warm, encouraging, and emotionally supportive way while maintaining the core message. Use empathetic language that acknowledges the challenges of seafaring life.',
             },
-            {
-              'role': 'user',
-              'content': prompt,
-            }
+            {'role': 'user', 'content': prompt},
           ],
         }),
       );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:math' as math;
 
 class InnerCourse extends StatefulWidget {
   final String courseTitle;
@@ -12,14 +13,27 @@ class InnerCourse extends StatefulWidget {
   State<InnerCourse> createState() => _InnerCourseState();
 }
 
-class _InnerCourseState extends State<InnerCourse> {
-  Future<void> _generateCertificate() async {
-    // Debug: Print the data being passed
-    print('DEBUG: Course Title: ${widget.courseTitle}');
-    print('DEBUG: User Email: ${widget.userEmail}');
+class _InnerCourseState extends State<InnerCourse>
+    with TickerProviderStateMixin {
+  late AnimationController _particleAnimationController;
 
+  @override
+  void initState() {
+    super.initState();
+    _particleAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _particleAnimationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _generateCertificate() async {
     if (widget.userEmail == null || widget.userEmail!.isEmpty) {
-      print('DEBUG: User email is null or empty');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('User email not found. Please log in again.'),
@@ -28,7 +42,6 @@ class _InnerCourseState extends State<InnerCourse> {
       );
       return;
     }
-
     try {
       // Show loading dialog
       showDialog(
@@ -47,175 +60,39 @@ class _InnerCourseState extends State<InnerCourse> {
         },
       );
 
-      // Try multiple possible API endpoints for certificate generation
-      final endpoints = [
-        'https://strivehigh.thirdvizion.com/api/certificate/',
-        'https://strivehigh.thirdvizion.com/api/coursecomplete/',
-        'https://strivehigh.thirdvizion.com/api/generatecertificate/',
-        'https://strivehigh.thirdvizion.com/api/submitcourse/',
-        'https://strivehigh.thirdvizion.com/api/coursecompletion/',
-        'https://strivehigh.thirdvizion.com/api/certificates/',
-        'https://strivehigh.thirdvizion.com/api/certificate/generate/',
-        'https://strivehigh.thirdvizion.com/api/course/complete/',
-      ];
-
+      const endpoint =
+          'https://strivehigh.thirdvizion.com/api/generatecertificate/';
       bool success = false;
       dynamic responseData;
 
-      for (final endpoint in endpoints) {
-        try {
-          print('DEBUG: Trying endpoint: $endpoint');
-
-          final requestData = {
-            'course_title': widget.courseTitle,
-            'email': widget.userEmail,
-            'completion_date': DateTime.now().toIso8601String(),
-          };
-
-          print('DEBUG: Request data: $requestData');
-
-          final response = await http.post(
-            Uri.parse(endpoint),
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode(requestData),
-          );
-
-          print('DEBUG: Response status: ${response.statusCode}');
-          print('DEBUG: Response body: ${response.body}');
-
-          if (response.statusCode == 200 || response.statusCode == 201) {
-            try {
-              responseData = json.decode(response.body);
-              success = true;
-              print('DEBUG: Success with endpoint: $endpoint');
-              break;
-            } catch (e) {
-              print('DEBUG: Failed to parse response: $e');
-              continue;
-            }
-          } else {
-            print('DEBUG: Failed with status: ${response.statusCode}');
-            continue;
+      try {
+        final requestData = {
+          'email': widget.userEmail,
+          'category': widget.courseTitle,
+        };
+        final response = await http.post(
+          Uri.parse(endpoint),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(requestData),
+        );
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          try {
+            responseData = json.decode(response.body);
+            success = true;
+          } catch (e) {
+            // Failed to parse response
           }
-        } catch (e) {
-          print('DEBUG: Error with endpoint $endpoint: $e');
-          continue;
         }
+      } catch (e) {
+        // Error with API call
       }
 
       // Close loading dialog
       Navigator.of(context).pop();
 
       if (success) {
-        // Show success dialog with certificate info
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Certificate Generated!'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Course: ${widget.courseTitle}'),
-                  Text('Email: ${widget.userEmail}'),
-                  const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.blue[50]!, Colors.blue[100]!],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue[200]!, width: 2),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.workspace_premium,
-                          size: 48,
-                          color: Colors.blue[600],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Certificate of Completion',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue[800],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'This is to certify that',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          widget.userEmail!.split(
-                            '@',
-                          )[0], // Use email username as name
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue[800],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'has successfully completed',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          widget.courseTitle,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.blue[700],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Completed on ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    responseData != null && responseData['message'] != null
-                        ? responseData['message']
-                        : 'Your certificate has been generated successfully! You can download it from your profile or check your email for the certificate link.',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
+        _showCelebrationDialog();
       } else {
-        // Show error dialog
         showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -247,8 +124,6 @@ class _InnerCourseState extends State<InnerCourse> {
     } catch (e) {
       // Close loading dialog if it's still open
       Navigator.of(context).pop();
-
-      print('DEBUG: Error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error generating certificate: $e'),
@@ -284,7 +159,6 @@ class _InnerCourseState extends State<InnerCourse> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Course Header
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -316,10 +190,7 @@ class _InnerCourseState extends State<InnerCourse> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
-
-              // Course Description
               const Text(
                 "Course Overview",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -333,10 +204,7 @@ class _InnerCourseState extends State<InnerCourse> {
                   color: Colors.black87,
                 ),
               ),
-
               const SizedBox(height: 32),
-
-              // Action Buttons
               Row(
                 children: [
                   Expanded(
@@ -358,10 +226,7 @@ class _InnerCourseState extends State<InnerCourse> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 16),
-
-              // Additional Resources
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -405,4 +270,308 @@ class _InnerCourseState extends State<InnerCourse> {
       ),
     );
   }
+
+  void _showCelebrationDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        final screenSize = MediaQuery.of(context).size;
+        final dialogWidth = screenSize.width * 0.9;
+        final dialogHeight = math.min(screenSize.height * 0.7, 500.0);
+
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: dialogWidth,
+            height: dialogHeight,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF4CAF50),
+                  Color(0xFF81C784),
+                  Color(0xFF66BB6A),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: AnimatedBuilder(
+                    animation: _particleAnimationController,
+                    builder: (context, child) {
+                      return CustomPaint(
+                        painter: ConfettiPainter(
+                          animation: _particleAnimationController,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TweenAnimationBuilder(
+                        tween: Tween<double>(begin: 0, end: 1),
+                        duration: const Duration(milliseconds: 800),
+                        curve: Curves.elasticOut,
+                        builder: (context, double value, child) {
+                          return Transform.scale(
+                            scale: value,
+                            child: Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: const LinearGradient(
+                                  colors: [Colors.amber, Colors.orange],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.amber.withOpacity(0.5),
+                                    blurRadius: 20,
+                                    spreadRadius: 5,
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.workspace_premium,
+                                size: 50,
+                                color: Colors.white,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      TweenAnimationBuilder(
+                        tween: Tween<double>(begin: 0, end: 1),
+                        duration: const Duration(milliseconds: 1000),
+                        curve: Curves.bounceOut,
+                        builder: (context, double value, child) {
+                          return Opacity(
+                            opacity: value,
+                            child: Transform.translate(
+                              offset: Offset(0, 20 * (1 - value)),
+                              child: const Text(
+                                '🎉 CONGRATULATIONS! 🎉',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black26,
+                                      blurRadius: 10,
+                                      offset: Offset(2, 2),
+                                    ),
+                                  ],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 15),
+                      TweenAnimationBuilder(
+                        tween: Tween<double>(begin: 0, end: 1),
+                        duration: const Duration(milliseconds: 1200),
+                        curve: Curves.easeOut,
+                        builder: (context, double value, child) {
+                          return Opacity(
+                            opacity: value,
+                            child: Transform.translate(
+                              offset: Offset(0, 30 * (1 - value)),
+                              child: const Text(
+                                'Certificate Earned!',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black26,
+                                      blurRadius: 8,
+                                      offset: Offset(2, 2),
+                                    ),
+                                  ],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      TweenAnimationBuilder(
+                        tween: Tween<double>(begin: 0, end: 1),
+                        duration: const Duration(milliseconds: 1400),
+                        curve: Curves.easeOut,
+                        builder: (context, double value, child) {
+                          return Opacity(
+                            opacity: value,
+                            child: Transform.translate(
+                              offset: Offset(0, 40 * (1 - value)),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(color: Colors.white30),
+                                ),
+                                child: Text(
+                                  widget.courseTitle,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      Center(
+                        child: TweenAnimationBuilder(
+                          tween: Tween<double>(begin: 0, end: 1),
+                          duration: const Duration(milliseconds: 1600),
+                          curve: Curves.elasticOut,
+                          builder: (context, double value, child) {
+                            return Transform.scale(
+                              scale: value,
+                              child: ElevatedButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: const Color(0xFF4CAF50),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  elevation: 8,
+                                  shadowColor: Colors.white.withOpacity(0.5),
+                                ),
+                                child: const Text(
+                                  'Continue',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class ConfettiPainter extends CustomPainter {
+  final Animation<double> animation;
+  ConfettiPainter({required this.animation}) : super(repaint: animation);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = math.Random(42);
+    final colors = [
+      Colors.red,
+      Colors.blue,
+      Colors.green,
+      Colors.yellow,
+      Colors.purple,
+      Colors.orange,
+      Colors.pink,
+      Colors.cyan,
+    ];
+
+    for (int i = 0; i < 30; i++) {
+      final progress = (animation.value + i * 0.1) % 1.0;
+      final y = (progress * size.height * 1.5 - size.height * 0.2).toDouble();
+      final sinValue = math.sin(
+        (progress.toDouble() * math.pi * 4 + i.toDouble()).toDouble(),
+      );
+      final x =
+          (size.width * 0.1 +
+                  (i.toDouble() * size.width * 0.8 / 30) +
+                  (sinValue * 50).toDouble())
+              .toDouble();
+
+      if (y > -20 && y < size.height + 20) {
+        final color = colors[i % colors.length];
+        final paint = Paint()
+          ..color = color.withOpacity((0.8 - progress * 0.6).toDouble())
+          ..style = PaintingStyle.fill;
+        final shapeType = i % 4;
+        final particleSize = 6.0 + random.nextDouble() * 8;
+
+        if (shapeType == 0) {
+          canvas.drawCircle(Offset(x, y), particleSize / 2, paint);
+        } else if (shapeType == 1) {
+          canvas.drawRect(
+            Rect.fromCenter(
+              center: Offset(x, y),
+              width: particleSize,
+              height: particleSize * 0.6,
+            ),
+            paint,
+          );
+        } else if (shapeType == 2) {
+          final path = Path()
+            ..moveTo(x, y - particleSize / 2)
+            ..lineTo(x - particleSize / 2, y + particleSize / 2)
+            ..lineTo(x + particleSize / 2, y + particleSize / 2)
+            ..close();
+          canvas.drawPath(path, paint);
+        } else {
+          final path = Path()
+            ..moveTo(x, y - particleSize / 2)
+            ..lineTo(x + particleSize / 4, y - particleSize / 4)
+            ..lineTo(x + particleSize / 2, y)
+            ..lineTo(x + particleSize / 4, y + particleSize / 4)
+            ..lineTo(x, y + particleSize / 2)
+            ..lineTo(x - particleSize / 4, y + particleSize / 4)
+            ..lineTo(x - particleSize / 2, y)
+            ..lineTo(x - particleSize / 4, y - particleSize / 4)
+            ..close();
+          canvas.drawPath(path, paint);
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(ConfettiPainter oldDelegate) => true;
 }

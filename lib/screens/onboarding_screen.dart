@@ -1,7 +1,5 @@
-import 'dart:ui';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import '../services/user_profile_service.dart';
 import '../services/auth_service.dart';
@@ -222,7 +220,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         barrierDismissible: false,
         builder: (context) => const Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color.fromARGB(255, 118, 147, 147)),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Color.fromARGB(255, 118, 147, 147),
+            ),
           ),
         ),
       );
@@ -237,7 +237,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         "email": _emailController.text.trim(),
         "age": parseIntOrNull(_ageController.text.trim()),
         "rank": _rankController.text.trim(),
-        "experience_years": parseIntOrNull(_yearsExperienceController.text.trim()),
+        "experience_years": parseIntOrNull(
+          _yearsExperienceController.text.trim(),
+        ),
         "home_location": _homeLocationController.text.trim(),
         "hobbies": _hobbiesController.text.trim(),
         "company_name": _companyController.text.trim(),
@@ -405,227 +407,803 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
-  return Scaffold(
-    resizeToAvoidBottomInset: true,
-    backgroundColor: const Color(0xFFF5F7FA),
-    body: GestureDetector(
-      // Dismiss keyboard when tapping outside input fields
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      backgroundColor: const Color(0xFFF5F7FA),
+      body: GestureDetector(
+        // Dismiss keyboard when tapping outside input fields
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
               image: AssetImage('lib/assets/images/back.png'),
               fit: BoxFit.cover,
             ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Pages with keyboard-aware scrolling
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  onPageChanged: (index) {
-                    setState(() {
-                      _currentPage = index;
-                    });
-                    // Dismiss keyboard when changing pages
-                    FocusScope.of(context).unfocus();
-                  },
-                  children: [
-                    _buildJourneyPage(context, widget.userEmail),
-                    _buildBasicInfoPage(),
-                    _buildContactInfoPage(),
-                    _buildPersonalInfoPage(),
-                  ],
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Pages with keyboard-aware scrolling
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPage = index;
+                      });
+                      // Dismiss keyboard when changing pages
+                      FocusScope.of(context).unfocus();
+                    },
+                    children: [
+                      _buildJourneyPage(context, widget.userEmail),
+                      _buildBasicInfoPage(),
+                      _buildContactInfoPage(),
+                      _buildPersonalInfoPage(),
+                    ],
+                  ),
                 ),
-              ),
 
-              // Keyboard-aware navigation section
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                // Adjust padding when keyboard is visible
-                padding: EdgeInsets.only(
-                  left: 24,
-                  right: 24,
-                  top: 20,
-                  bottom: MediaQuery.of(context).viewInsets.bottom > 0 
-                    ? 10  // Reduced padding when keyboard is visible
-                    : 20, // Normal padding when keyboard is hidden
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Back/Next Navigation for pages 1-3
-                    if (_currentPage > 0)
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        child: Row(
-                          children: [
-                            // Back Button
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF3498DB),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF3498DB).withValues(alpha: 0.3),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(28),
-                                  onTap: () {
-                                    // Dismiss keyboard before navigation
-                                    FocusScope.of(context).unfocus();
-                                    _previousPage();
-                                  },
-                                  child: const Icon(
-                                    Icons.arrow_back,
-                                    color: Colors.white,
-                                    size: 24,
-                                  ),
+                // Keyboard-aware navigation section
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  // Adjust padding when keyboard is visible
+                  padding: EdgeInsets.only(
+                    left: 24,
+                    right: 24,
+                    top: 20,
+                    bottom: MediaQuery.of(context).viewInsets.bottom > 0
+                        ? 10 // Reduced padding when keyboard is visible
+                        : 20, // Normal padding when keyboard is hidden
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Back/Next Navigation for pages 1-3
+                      if (_currentPage > 0)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          child: Row(
+                            children: [
+                              // Back Button
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF3498DB),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF3498DB,
+                                      ).withValues(alpha: 0.3),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ),
-                            const Spacer(),
-                            
-                            // Page Indicator
-                            Row(
-                              children: List.generate(_totalPages - 1, (index) {
-                                final pageIndex = index + 1;
-                                return Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                                  child: Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      color: _currentPage == pageIndex
-                                          ? const Color(0xFF3498DB)
-                                          : const Color(0xFFBDC3C7),
-                                      shape: BoxShape.circle,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(28),
+                                    onTap: () {
+                                      // Dismiss keyboard before navigation
+                                      FocusScope.of(context).unfocus();
+                                      _previousPage();
+                                    },
+                                    child: const Icon(
+                                      Icons.arrow_back,
+                                      color: Colors.white,
+                                      size: 24,
                                     ),
                                   ),
-                                );
-                              }),
-                            ),
-                            const Spacer(),
-                            
-                            // Next/Complete Button
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: _currentPage == _totalPages - 1
-                                    ? const Color(0xFF27AE60)
-                                    : const Color(0xFF3498DB),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: (_currentPage == _totalPages - 1
-                                            ? const Color(0xFF27AE60)
-                                            : const Color(0xFF3498DB))
-                                        .withValues(alpha: 0.3),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(28),
-                                  onTap: () {
-                                    // Dismiss keyboard before navigation
-                                    FocusScope.of(context).unfocus();
-                                    _nextPage();
-                                  },
-                                  child: Icon(
-                                    _currentPage == _totalPages - 1
-                                        ? Icons.check
-                                        : Icons.arrow_forward,
-                                    color: Colors.white,
-                                    size: 24,
-                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
+                              const Spacer(),
 
-                    // Journey Page Navigation (first page)
-                    if (_currentPage == 0)
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            FocusScope.of(context).unfocus();
-                            _nextPage();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3498DB),
-                            foregroundColor: Colors.white,
-                            elevation: 8,
-                            shadowColor: const Color(0xFF3498DB).withValues(alpha: 0.3),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(28),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                "Let's Start your journey",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              // Page Indicator
+                              Row(
+                                children: List.generate(_totalPages - 1, (
+                                  index,
+                                ) {
+                                  final pageIndex = index + 1;
+                                  return Container(
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                    ),
+                                    child: Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: _currentPage == pageIndex
+                                            ? const Color(0xFF3498DB)
+                                            : const Color(0xFFBDC3C7),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  );
+                                }),
                               ),
-                              const SizedBox(width: 12),
+                              const Spacer(),
+
+                              // Next/Complete Button
                               Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: _currentPage == _totalPages - 1
+                                      ? const Color(0xFF27AE60)
+                                      : const Color(0xFF3498DB),
                                   shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          (_currentPage == _totalPages - 1
+                                                  ? const Color(0xFF27AE60)
+                                                  : const Color(0xFF3498DB))
+                                              .withValues(alpha: 0.3),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
-                                child: const Icon(
-                                  Icons.arrow_forward,
-                                  color: Color(0xFF3498DB),
-                                  size: 20,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(28),
+                                    onTap: () {
+                                      // Dismiss keyboard before navigation
+                                      FocusScope.of(context).unfocus();
+                                      _nextPage();
+                                    },
+                                    child: Icon(
+                                      _currentPage == _totalPages - 1
+                                          ? Icons.check
+                                          : Icons.arrow_forward,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                  ],
+
+                      // Journey Page Navigation (first page)
+                      if (_currentPage == 0)
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
+                              _nextPage();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF3498DB),
+                              foregroundColor: Colors.white,
+                              elevation: 8,
+                              shadowColor: const Color(
+                                0xFF3498DB,
+                              ).withValues(alpha: 0.3),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(28),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  "Let's Start your journey",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.arrow_forward,
+                                    color: Color(0xFF3498DB),
+                                    size: 20,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildBasicInfoPage() {
-  return SingleChildScrollView(
-    padding: const EdgeInsets.all(24),
-    child: FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: Form(
-          key: _basicInfoFormKey,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: Form(
+            key: _basicInfoFormKey,
+            child: Column(
+              children: [
+                const SizedBox(height: 5),
+                // Header
+                const Text(
+                  'Sea Smart',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF3498DB),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Basic Information',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2C3E50),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
+
+                // Anchor Icon
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(40),
+                  ),
+                  child: Image.asset(
+                    'lib/assets/images/anc.png',
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                // Description
+                const Text(
+                  'Tell us about yourself to get started\non your journey.',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF7F8C8D),
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
+
+                // Name Field
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Name',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF2C3E50),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF3498DB,
+                            ).withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextFormField(
+                        controller: _nameController,
+                        textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) {
+                          FocusScope.of(context).nextFocus();
+                        },
+                        decoration: const InputDecoration(
+                          hintText: 'Full Name',
+                          hintStyle: TextStyle(
+                            color: Color(0xFFBDC3C7),
+                            fontSize: 16,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.person_outline,
+                            color: Color(0xFF3498DB),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Name is required';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Rank/Position Field
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Rank/Position',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF2C3E50),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF3498DB,
+                            ).withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _rankController.text.isNotEmpty
+                            ? _rankController.text
+                            : null,
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'Captain',
+                            child: Text('Captain'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Chief Officer',
+                            child: Text('Chief Officer'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Second Officer',
+                            child: Text('Second Officer'),
+                          ),
+                          // DropdownMenuItem(value: 'Third Officer', child: Text('Third Officer')),
+                          // DropdownMenuItem(value: 'Chief Engineer', child: Text('Chief Engineer')),
+                          // DropdownMenuItem(value: 'Second Engineer', child: Text('Second Engineer')),
+                          // DropdownMenuItem(value: 'Third Engineer', child: Text('Third Engineer')),
+                          // DropdownMenuItem(value: 'Fourth Engineer', child: Text('Fourth Engineer')),
+                          // DropdownMenuItem(value: 'Chief Mate', child: Text('Chief Mate')),
+                          // DropdownMenuItem(value: 'Second Mate', child: Text('Second Mate')),
+                          // DropdownMenuItem(value: 'Third Mate', child: Text('Third Mate')),
+                          // DropdownMenuItem(value: 'Deck Cadet', child: Text('Deck Cadet')),
+                          // DropdownMenuItem(value: 'Engine Cadet', child: Text('Engine Cadet')),
+                          // DropdownMenuItem(value: 'Able Seaman', child: Text('Able Seaman')),
+                          // DropdownMenuItem(value: 'Ordinary Seaman', child: Text('Ordinary Seaman')),
+                          // DropdownMenuItem(value: 'Bosun', child: Text('Bosun')),
+                          // DropdownMenuItem(value: 'AB', child: Text('AB')),
+                          // DropdownMenuItem(value: 'OS', child: Text('OS')),
+                          // DropdownMenuItem(value: 'Cook', child: Text('Cook')),
+                          // DropdownMenuItem(value: 'Steward', child: Text('Steward')),
+                          // DropdownMenuItem(value: 'Other', child: Text('Other')),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _rankController.text = value ?? '';
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          hintText: 'Select Your Position',
+                          hintStyle: TextStyle(
+                            color: Color(0xFFBDC3C7),
+                            fontSize: 16,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.work_outline,
+                            color: Color(0xFF3498DB),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Rank/Position is required';
+                          }
+                          return null;
+                        },
+                        style: const TextStyle(
+                          color: Color(0xFF2C3E50),
+                          fontSize: 16,
+                        ),
+                        dropdownColor: Colors.white,
+                        icon: const Icon(
+                          Icons.arrow_drop_down,
+                          color: Color(0xFF3498DB),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Years of Experience Field
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Years of Experience',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF2C3E50),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF3498DB,
+                            ).withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextFormField(
+                        controller: _yearsExperienceController,
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) {
+                          FocusScope.of(context).nextFocus();
+                        },
+                        decoration: const InputDecoration(
+                          hintText: 'Years',
+                          hintStyle: TextStyle(
+                            color: Color(0xFFBDC3C7),
+                            fontSize: 16,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.timeline,
+                            color: Color(0xFF3498DB),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Years of Experience is required';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Company Name Field
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Company Name',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF2C3E50),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF3498DB,
+                            ).withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextFormField(
+                        controller: _companyController,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) {
+                          FocusScope.of(context).unfocus();
+                        },
+                        decoration: const InputDecoration(
+                          hintText: 'Company Name',
+                          hintStyle: TextStyle(
+                            color: Color(0xFFBDC3C7),
+                            fontSize: 16,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.business,
+                            color: Color(0xFF3498DB),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Company Name is required';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 100), // Extra space for navigation
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Journey Page - Keyboard Friendly
+  Widget _buildJourneyPage(BuildContext context, String userEmail) {
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("lib/assets/images/wel_background.png"),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 3),
+
+                // Welcome text
+                const Text(
+                  'Welcome to',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black87,
+                  ),
+                ),
+
+                const SizedBox(height: 3),
+
+                // App name
+                const Text(
+                  'Sea Smart',
+                  style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 0, 136, 190),
+                  ),
+                ),
+
+                const SizedBox(height: 1),
+
+                // Powered by text
+                Text(
+                  '',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // Blue container with tagline
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(
+                      255,
+                      0,
+                      136,
+                      190,
+                    ).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color.fromARGB(
+                        255,
+                        0,
+                        136,
+                        190,
+                      ).withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Text(
+                    'Your safe harbor for\nlearning, support, & peace of mind',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Color.fromARGB(255, 0, 136, 190),
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Description text
+                Text(
+                  'Sea Smart is your buddy at sea, helping you stay calm, connected, and continuously growing through every voyage.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey.shade700,
+                    height: 1.5,
+                  ),
+                ),
+
+                const Spacer(),
+
+                // Illustration/Icon placeholder
+                Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100.withAlpha(0),
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(
+                      color: const Color.fromARGB(
+                        255,
+                        0,
+                        136,
+                        190,
+                      ).withOpacity(0),
+                      width: 2,
+                    ),
+                  ),
+                ),
+
+                const Spacer(),
+
+                // Bottom text
+                Text(
+                  'Before we set sail, let\'s ask a few quick questions. This helps us chart the best course for your wellness and support. ⚓',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                    height: 1.4,
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Continue button
+                // Container(
+                //   width: double.infinity,
+                //   height: 54,
+                //   decoration: BoxDecoration(
+                //     gradient: const LinearGradient(
+                //       colors: [
+                //         Color.fromARGB(255, 0, 136, 190),
+                //         Color.fromARGB(255, 0, 120, 170),
+                //       ],
+                //     ),
+                //     borderRadius: BorderRadius.circular(27),
+                //     boxShadow: [
+                //       BoxShadow(
+                //         color: const Color.fromARGB(255, 0, 136, 190).withOpacity(0.3),
+                //         blurRadius: 12,
+                //         offset: const Offset(0, 4),
+                //       ),
+                //     ],
+                //   ),
+                //   child: ElevatedButton(
+                //     onPressed: () {
+                //       Navigator.pushReplacement(
+                //         context,
+                //         MaterialPageRoute(
+                //           builder: (context) =>
+                //               OnboardingScreen(userEmail: userEmail),
+                //         ),
+                //       );
+                //     },
+                //     style: ElevatedButton.styleFrom(
+                //       backgroundColor: Colors.transparent,
+                //       foregroundColor: Colors.white,
+                //       shadowColor: Colors.transparent,
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(27),
+                //       ),
+                //       elevation: 0,
+                //     ),
+                //     child: const Text(
+                //       'Sail with Calm',
+                //       style: TextStyle(
+                //         fontSize: 18,
+                //         fontWeight: FontWeight.w600,
+                //       ),
+                //     ),
+                //   ),
+                // ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContactInfoPage() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
           child: Column(
             children: [
               const SizedBox(height: 5),
@@ -641,7 +1219,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               ),
               const SizedBox(height: 8),
               const Text(
-                'Basic Information',
+                'Contact Information',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
@@ -657,6 +1235,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 height: 80,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(40),
+                  // boxShadow: [
+                  //   BoxShadow(
+                  //     color: const Color(0xFF3498DB).withValues(alpha: 0.2),
+                  //     blurRadius: 15,
+                  //     offset: const Offset(0, 8),
+                  //   ),
+                  // ],
                 ),
                 child: Image.asset(
                   'lib/assets/images/anc.png',
@@ -669,7 +1254,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
               // Description
               const Text(
-                'Tell us about yourself to get started\non your journey.',
+                'Share your details so we can stay connected\non your voyage.',
                 style: TextStyle(
                   fontSize: 16,
                   color: Color(0xFF7F8C8D),
@@ -679,12 +1264,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               ),
               const SizedBox(height: 40),
 
-              // Name Field
+              // Email Field
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Name',
+                    'Email',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -709,13 +1294,310 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       ],
                     ),
                     child: TextFormField(
-                      controller: _nameController,
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       onFieldSubmitted: (_) {
                         FocusScope.of(context).nextFocus();
                       },
                       decoration: const InputDecoration(
-                        hintText: 'Full Name',
+                        hintText: 'Email',
+                        hintStyle: TextStyle(
+                          color: Color(0xFFBDC3C7),
+                          fontSize: 16,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.email_outlined,
+                          color: Color(0xFF3498DB),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Email is required';
+                        }
+                        final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                        if (!emailRegex.hasMatch(value)) {
+                          return 'Enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Phone Field
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Phone (Optional)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        hintText: 'Number',
+                        hintStyle: TextStyle(
+                          color: Color(0xFFBDC3C7),
+                          fontSize: 16,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.phone_outlined,
+                          color: Color(0xFF3498DB),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Home Field
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Home',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextFormField(
+                      controller: _homeLocationController,
+                      decoration: const InputDecoration(
+                        hintText: 'Location',
+                        hintStyle: TextStyle(
+                          color: Color(0xFFBDC3C7),
+                          fontSize: 16,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.home_outlined,
+                          color: Color(0xFF3498DB),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 100), // Extra space for navigation
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPersonalInfoPage() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: Column(
+            children: [
+              const SizedBox(height: 5),
+              // Header
+              const Text(
+                'Sea Smart',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF3498DB),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Personal Information',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2C3E50),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+
+              // Anchor Icon
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(40),
+                  // boxShadow: [
+                  //   BoxShadow(
+                  //     color: const Color(0xFF3498DB).withValues(alpha: 0.2),
+                  //     blurRadius: 15,
+                  //     offset: const Offset(0, 8),
+                  //   ),
+                  // ],
+                ),
+                child: Image.asset(
+                  'lib/assets/images/anc.png',
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              // Description
+              const Text(
+                'Personalize your voyage with a little info\nabout you.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF7F8C8D),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+
+              // Hobbies Field
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Hobbies',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextFormField(
+                      controller: _hobbiesController,
+                      decoration: const InputDecoration(
+                        hintText: 'Interest',
+                        hintStyle: TextStyle(
+                          color: Color(0xFFBDC3C7),
+                          fontSize: 16,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.interests_outlined,
+                          color: Color(0xFF3498DB),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Spouse Field
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Spouse (Optional)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextFormField(
+                      controller: _spouseNameController,
+                      decoration: const InputDecoration(
+                        hintText: 'Spouse Name',
                         hintStyle: TextStyle(
                           color: Color(0xFFBDC3C7),
                           fontSize: 16,
@@ -730,122 +1612,18 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           vertical: 16,
                         ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Name is required';
-                        }
-                        return null;
-                      },
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
 
-
-
-              // Rank/Position Field
+              // Children Field
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Rank/Position',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF2C3E50),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFF3498DB).withValues(alpha: 0.3),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF3498DB).withValues(alpha: 0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _rankController.text.isNotEmpty ? _rankController.text : null,
-                      items: const [
-                        DropdownMenuItem(value: 'Captain', child: Text('Captain')),
-                        DropdownMenuItem(value: 'Chief Officer', child: Text('Chief Officer')),
-                        DropdownMenuItem(value: 'Second Officer', child: Text('Second Officer')),
-                        // DropdownMenuItem(value: 'Third Officer', child: Text('Third Officer')),
-                        // DropdownMenuItem(value: 'Chief Engineer', child: Text('Chief Engineer')),
-                        // DropdownMenuItem(value: 'Second Engineer', child: Text('Second Engineer')),
-                        // DropdownMenuItem(value: 'Third Engineer', child: Text('Third Engineer')),
-                        // DropdownMenuItem(value: 'Fourth Engineer', child: Text('Fourth Engineer')),
-                        // DropdownMenuItem(value: 'Chief Mate', child: Text('Chief Mate')),
-                        // DropdownMenuItem(value: 'Second Mate', child: Text('Second Mate')),
-                        // DropdownMenuItem(value: 'Third Mate', child: Text('Third Mate')),
-                        // DropdownMenuItem(value: 'Deck Cadet', child: Text('Deck Cadet')),
-                        // DropdownMenuItem(value: 'Engine Cadet', child: Text('Engine Cadet')),
-                        // DropdownMenuItem(value: 'Able Seaman', child: Text('Able Seaman')),
-                        // DropdownMenuItem(value: 'Ordinary Seaman', child: Text('Ordinary Seaman')),
-                        // DropdownMenuItem(value: 'Bosun', child: Text('Bosun')),
-                        // DropdownMenuItem(value: 'AB', child: Text('AB')),
-                        // DropdownMenuItem(value: 'OS', child: Text('OS')),
-                        // DropdownMenuItem(value: 'Cook', child: Text('Cook')),
-                        // DropdownMenuItem(value: 'Steward', child: Text('Steward')),
-                        // DropdownMenuItem(value: 'Other', child: Text('Other')),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _rankController.text = value ?? '';
-                        });
-                      },
-                      decoration: const InputDecoration(
-                        hintText: 'Select Your Position',
-                        hintStyle: TextStyle(
-                          color: Color(0xFFBDC3C7),
-                          fontSize: 16,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.work_outline,
-                          color: Color(0xFF3498DB),
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Rank/Position is required';
-                        }
-                        return null;
-                      },
-                      style: const TextStyle(
-                        color: Color(0xFF2C3E50),
-                        fontSize: 16,
-                      ),
-                      dropdownColor: Colors.white,
-                      icon: const Icon(
-                        Icons.arrow_drop_down,
-                        color: Color(0xFF3498DB),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Years of Experience Field
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Years of Experience',
+                    'Children (Optional)',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -870,20 +1648,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       ],
                     ),
                     child: TextFormField(
-                      controller: _yearsExperienceController,
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.next,
-                      onFieldSubmitted: (_) {
-                        FocusScope.of(context).nextFocus();
-                      },
+                      controller: _childrenNamesController,
                       decoration: const InputDecoration(
-                        hintText: 'Years',
+                        hintText: 'Child Name',
                         hintStyle: TextStyle(
                           color: Color(0xFFBDC3C7),
                           fontSize: 16,
                         ),
                         prefixIcon: Icon(
-                          Icons.timeline,
+                          Icons.child_care_outlined,
                           color: Color(0xFF3498DB),
                         ),
                         border: InputBorder.none,
@@ -892,75 +1665,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           vertical: 16,
                         ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Years of Experience is required';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Company Name Field
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Company Name',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF2C3E50),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFF3498DB).withValues(alpha: 0.3),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF3498DB).withValues(alpha: 0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: TextFormField(
-                      controller: _companyController,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      decoration: const InputDecoration(
-                        hintText: 'Company Name',
-                        hintStyle: TextStyle(
-                          color: Color(0xFFBDC3C7),
-                          fontSize: 16,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.business,
-                          color: Color(0xFF3498DB),
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Company Name is required';
-                        }
-                        return null;
-                      },
                     ),
                   ),
                 ],
@@ -970,671 +1674,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           ),
         ),
       ),
-    ),
-  );
-}
-
-// Journey Page - Keyboard Friendly
-Widget _buildJourneyPage(BuildContext context, String userEmail) {
-  return Scaffold(
-    resizeToAvoidBottomInset: false,
-    body: Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage("lib/assets/images/wel.png"),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 3),
-
-              // Welcome text
-              const Text(
-                'Welcome to',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.black87,
-                ),
-              ),
-
-              const SizedBox(height: 3),
-
-              // App name
-              const Text(
-                'Sea Smart',
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 0, 136, 190),
-                ),
-              ),
-
-              const SizedBox(height: 1),
-
-              // Powered by text
-              Text(
-                '',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              // Blue container with tagline
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 0, 136, 190).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color.fromARGB(255, 0, 136, 190).withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-                child: const Text(
-                  'Your safe harbor for\nlearning, support, & peace of mind',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Color.fromARGB(255, 0, 136, 190),
-                    height: 1.4,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Description text
-              Text(
-                'Sea Smart is your buddy at sea, helping you stay calm, connected, and continuously growing through every voyage.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade700,
-                  height: 1.5,
-                ),
-              ),
-
-              const Spacer(),
-
-              // Illustration/Icon placeholder
-              Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100.withAlpha(0),
-                  borderRadius: BorderRadius.circular(100),
-                  border: Border.all(
-                    color: const Color.fromARGB(255, 0, 136, 190).withOpacity(0),
-                    width: 2,
-                  ),
-                ),
-              ),
-
-              const Spacer(),
-
-              // Bottom text
-              Text(
-                'Before we set sail, let\'s ask a few quick questions. This helps us chart the best course for your wellness and support. ⚓',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                  height: 1.4,
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Continue button
-              // Container(
-              //   width: double.infinity,
-              //   height: 54,
-              //   decoration: BoxDecoration(
-              //     gradient: const LinearGradient(
-              //       colors: [
-              //         Color.fromARGB(255, 0, 136, 190),
-              //         Color.fromARGB(255, 0, 120, 170),
-              //       ],
-              //     ),
-              //     borderRadius: BorderRadius.circular(27),
-              //     boxShadow: [
-              //       BoxShadow(
-              //         color: const Color.fromARGB(255, 0, 136, 190).withOpacity(0.3),
-              //         blurRadius: 12,
-              //         offset: const Offset(0, 4),
-              //       ),
-              //     ],
-              //   ),
-              //   child: ElevatedButton(
-              //     onPressed: () {
-              //       Navigator.pushReplacement(
-              //         context,
-              //         MaterialPageRoute(
-              //           builder: (context) =>
-              //               OnboardingScreen(userEmail: userEmail),
-              //         ),
-              //       );
-              //     },
-              //     style: ElevatedButton.styleFrom(
-              //       backgroundColor: Colors.transparent,
-              //       foregroundColor: Colors.white,
-              //       shadowColor: Colors.transparent,
-              //       shape: RoundedRectangleBorder(
-              //         borderRadius: BorderRadius.circular(27),
-              //       ),
-              //       elevation: 0,
-              //     ),
-              //     child: const Text(
-              //       'Sail with Calm',
-              //       style: TextStyle(
-              //         fontSize: 18,
-              //         fontWeight: FontWeight.w600,
-              //       ),
-              //     ),
-              //   ),
-              // ),
-
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-
-  Widget _buildContactInfoPage() {
-  return SingleChildScrollView(
-    padding: const EdgeInsets.all(24),
-    child: FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: Column(
-          children: [
-            const SizedBox(height: 5),
-            // Header
-            const Text(
-              'Sea Smart',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF3498DB),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Contact Information',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2C3E50),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 40),
-
-            // Anchor Icon
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(40),
-                // boxShadow: [
-                //   BoxShadow(
-                //     color: const Color(0xFF3498DB).withValues(alpha: 0.2),
-                //     blurRadius: 15,
-                //     offset: const Offset(0, 8),
-                //   ),
-                // ],
-              ),
-              child: Image.asset(
-                'lib/assets/images/anc.png',
-                width: 80,
-                height: 80,
-                fit: BoxFit.contain,
-              ),
-            ),
-            const SizedBox(height: 30),
-
-            // Description
-            const Text(
-              'Share your details so we can stay connected\non your voyage.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Color(0xFF7F8C8D),
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 40),
-
-            // Email Field
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Email',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFF3498DB).withValues(alpha: 0.3),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF3498DB).withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    onFieldSubmitted: (_) {
-                      FocusScope.of(context).nextFocus();
-                    },
-                    decoration: const InputDecoration(
-                      hintText: 'Email',
-                      hintStyle: TextStyle(
-                        color: Color(0xFFBDC3C7),
-                        fontSize: 16,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.email_outlined,
-                        color: Color(0xFF3498DB),
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Email is required';
-                      }
-                      final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                      if (!emailRegex.hasMatch(value)) {
-                        return 'Enter a valid email';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Phone Field
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Phone (Optional)',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFF3498DB).withValues(alpha: 0.3),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF3498DB).withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      hintText: 'Number',
-                      hintStyle: TextStyle(
-                        color: Color(0xFFBDC3C7),
-                        fontSize: 16,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.phone_outlined,
-                        color: Color(0xFF3498DB),
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Home Field
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Home',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFF3498DB).withValues(alpha: 0.3),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF3498DB).withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    controller: _homeLocationController,
-                    decoration: const InputDecoration(
-                      hintText: 'Location',
-                      hintStyle: TextStyle(
-                        color: Color(0xFFBDC3C7),
-                        fontSize: 16,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.home_outlined,
-                        color: Color(0xFF3498DB),
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 100), // Extra space for navigation
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-  Widget _buildPersonalInfoPage() {
-  return SingleChildScrollView(
-    padding: const EdgeInsets.all(24),
-    child: FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: Column(
-          children: [
-            const SizedBox(height: 5),
-            // Header
-            const Text(
-              'Sea Smart',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF3498DB),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Personal Information',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2C3E50),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 40),
-
-            // Anchor Icon
-           Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(40),
-                // boxShadow: [
-                //   BoxShadow(
-                //     color: const Color(0xFF3498DB).withValues(alpha: 0.2),
-                //     blurRadius: 15,
-                //     offset: const Offset(0, 8),
-                //   ),
-                // ],
-              ),
-              child: Image.asset(
-                'lib/assets/images/anc.png',
-                width: 80,
-                height: 80,
-                fit: BoxFit.contain,
-              ),
-            ),
-            const SizedBox(height: 30),
-
-            // Description
-            const Text(
-              'Personalize your voyage with a little info\nabout you.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Color(0xFF7F8C8D),
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 40),
-
-            // Hobbies Field
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Hobbies',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFF3498DB).withValues(alpha: 0.3),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF3498DB).withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    controller: _hobbiesController,
-                    decoration: const InputDecoration(
-                      hintText: 'Interest',
-                      hintStyle: TextStyle(
-                        color: Color(0xFFBDC3C7),
-                        fontSize: 16,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.interests_outlined,
-                        color: Color(0xFF3498DB),
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Spouse Field
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Spouse (Optional)',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFF3498DB).withValues(alpha: 0.3),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF3498DB).withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    controller: _spouseNameController,
-                    decoration: const InputDecoration(
-                      hintText: 'Spouse Name',
-                      hintStyle: TextStyle(
-                        color: Color(0xFFBDC3C7),
-                        fontSize: 16,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.person_outline,
-                        color: Color(0xFF3498DB),
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Children Field
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Children (Optional)',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFF3498DB).withValues(alpha: 0.3),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF3498DB).withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    controller: _childrenNamesController,
-                    decoration: const InputDecoration(
-                      hintText: 'Child Name',
-                      hintStyle: TextStyle(
-                        color: Color(0xFFBDC3C7),
-                        fontSize: 16,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.child_care_outlined,
-                        color: Color(0xFF3498DB),
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 100), // Extra space for navigation
-          ],
-        ),
-      ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildModernTextField({
     required TextEditingController controller,

@@ -7,7 +7,8 @@ class TutorialOnboardingScreen extends StatefulWidget {
   const TutorialOnboardingScreen({super.key, required this.userEmail});
 
   @override
-  State<TutorialOnboardingScreen> createState() => _TutorialOnboardingScreenState();
+  State<TutorialOnboardingScreen> createState() =>
+      _TutorialOnboardingScreenState();
 }
 
 class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
@@ -27,15 +28,17 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
-    
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     _animationController.forward();
   }
@@ -116,8 +119,8 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
                     height: 8,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: index == _currentPage 
-                          ? const Color(0xFF239CD3) 
+                      color: index == _currentPage
+                          ? const Color(0xFF239CD3)
                           : Colors.grey.shade300,
                     ),
                   );
@@ -145,7 +148,7 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
                     )
                   else
                     const SizedBox(width: 60),
-                  
+
                   Container(
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
@@ -161,7 +164,10 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
                         backgroundColor: Colors.transparent,
                         foregroundColor: Colors.white,
                         shadowColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 12,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(25),
                         ),
@@ -200,7 +206,7 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
                 height: 200,
                 child: Center(
                   child: Image.asset(
-                    'lib/assets/avatar/AI_Avatar.png',
+                    'lib/assets/avatar/Siara_half.png',
                     width: 150,
                     height: 150,
                     fit: BoxFit.contain,
@@ -224,9 +230,9 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
                   ),
                 ),
               ),
-              
+
               //const SizedBox(height: 40),
-              
+
               // Title
               const Text(
                 'KNOW',
@@ -237,18 +243,14 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
                   color: Colors.black87,
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Subtitle
               const Text(
                 'I\'m Saira, your guide to knowledge and learning! Together, we\'ll explore mental health resources, breathing techniques, and educational content to help you navigate life at sea with confidence and wisdom.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                  height: 1.4,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.4),
               ),
             ],
           ),
@@ -273,7 +275,7 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
                 height: 200,
                 child: Center(
                   child: Image.asset(
-                    'lib/assets/avatar/AI_Avatar2.png',
+                    'lib/assets/avatar/kaelcrop.png',
                     width: 150,
                     height: 150,
                     fit: BoxFit.contain,
@@ -297,9 +299,9 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
                   ),
                 ),
               ),
-              
+
               //const SizedBox(height: 40),
-              
+
               // Title
               const Text(
                 'GROW',
@@ -310,18 +312,14 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
                   color: Colors.black87,
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Subtitle
               const Text(
                 'Hey there! I\'m Kael, here to help you grow and develop! We\'ll work on your personal development, track your progress, set goals, and build the skills you need to thrive both at sea and in life.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                  height: 1.4,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.4),
               ),
             ],
           ),
@@ -350,7 +348,7 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
                     children: [
                       // Saira's avatar
                       Image.asset(
-                        'lib/assets/avatar/AI_Avatar.png',
+                        'lib/assets/avatar/Siara_half.png',
                         width: 150,
                         height: 150,
                         fit: BoxFit.contain,
@@ -375,7 +373,7 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
                       const SizedBox(width: 20),
                       // Kael's avatar
                       Image.asset(
-                        'lib/assets/avatar/AI_Avatar2.png',
+                        'lib/assets/avatar/kaelcrop.png',
                         width: 150,
                         height: 150,
                         fit: BoxFit.contain,
@@ -401,7 +399,7 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
                   ),
                 ),
               ),
-              
+
               // Title
               const Text(
                 'SHOW',
@@ -412,18 +410,14 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
                   color: Colors.black87,
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Subtitle
               const Text(
                 'Together, we\'re your team! This is where you showcase your journey! Share your achievements, track your wellness progress, and celebrate your growth. We\'ll help you see how far you\'ve come and inspire others on their journey too.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                  height: 1.4,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.4),
               ),
             ],
           ),
@@ -431,5 +425,4 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
       ),
     );
   }
-
 }

@@ -217,9 +217,9 @@ class _QuizPageState extends State<QuizPage> {
       setState(() {
         _categorySubmitted[category] = true;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Category $category submitted successfully!')),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('Category $category submitted successfully!')),
+      // );
       if (_categorySubmitted.length == _categories.length) {
         // Calculate and send overall average
         List<int> allScores = [];

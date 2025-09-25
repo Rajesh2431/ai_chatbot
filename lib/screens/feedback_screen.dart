@@ -187,7 +187,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: _appEaseAnswer,
+          initialValue: _appEaseAnswer,
           items: const [
             DropdownMenuItem(value: "Very Easy", child: Text("Very Easy")),
             DropdownMenuItem(value: "Easy", child: Text("Easy")),
@@ -236,7 +236,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: _navigationIssueAnswer,
+          initialValue: _navigationIssueAnswer,
           items: const [
             DropdownMenuItem(value: "No", child: Text("No")),
             DropdownMenuItem(value: "Yes", child: Text("Yes")),
@@ -313,7 +313,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<int>(
-          value: _appSatisfactionRating,
+          initialValue: _appSatisfactionRating,
           items: List.generate(5, (index) {
             final rating = index + 1;
             return DropdownMenuItem(
