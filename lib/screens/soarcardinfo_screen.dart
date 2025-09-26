@@ -158,7 +158,7 @@ class _SOARProfileIntroScreenState extends State<SOARProfileIntroScreen> {
       child: Column(
         children: [
           // World map pattern overlay
-          Container(
+          SizedBox(
             height: _getResponsiveValue(
               context: context,
               mobile: 40.0,

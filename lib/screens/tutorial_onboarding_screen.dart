@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'onboarding_screen.dart';
 
 class TutorialOnboardingScreen extends StatefulWidget {
@@ -11,66 +12,109 @@ class TutorialOnboardingScreen extends StatefulWidget {
       _TutorialOnboardingScreenState();
 }
 
-class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
-    with TickerProviderStateMixin {
-  final PageController _pageController = PageController();
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen> {
+  VideoPlayerController? _videoController;
+  VideoPlayerController? _nextVideoController;
+  int _currentVideoIndex = 0;
+  bool _isTransitioning = false;
 
-  int _currentPage = 0;
-  final int _totalPages = 3;
+  // Video file paths
+  final List<String> _videoPaths = [
+    'lib/assets/videos/know.mp4',
+    'lib/assets/videos/grow.mp4',
+    'lib/assets/videos/show.mp4',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _animationController,
-            curve: Curves.easeOutCubic,
-          ),
-        );
-
-    _animationController.forward();
+    _playCurrentVideo();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
-    _pageController.dispose();
+    _videoController?.dispose();
+    _nextVideoController?.dispose();
     super.dispose();
   }
 
-  void _nextPage() {
-    if (_currentPage < _totalPages - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+  Future<void> _playCurrentVideo() async {
+    // Check if we have more videos to play
+    if (_currentVideoIndex >= _videoPaths.length) {
+      // Wait 1.5 seconds then navigate to next screen
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _completeAllVideos();
+      });
+      return;
+    }
+
+    // Dispose previous controller
+    _videoController?.dispose();
+
+    // Use pre-loaded controller if available
+    if (_nextVideoController != null) {
+      _videoController = _nextVideoController;
+      _nextVideoController = null;
     } else {
-      _completeTutorial();
-    }
-  }
-
-  void _previousPage() {
-    if (_currentPage > 0) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+      _videoController = VideoPlayerController.asset(
+        _videoPaths[_currentVideoIndex],
       );
+      await _videoController!.initialize();
+    }
+
+    try {
+      await _videoController!.play();
+
+      // Preload next video
+      _preloadNextVideo();
+
+      // Listen for video completion
+      _videoController!.addListener(_videoListener);
+
+      setState(() {}); // Refresh to show video
+    } catch (e) {
+      print('Error playing video: $e');
+      _playNextVideo(); // Skip to next video on error
     }
   }
 
-  void _completeTutorial() {
+  Future<void> _preloadNextVideo() async {
+    final nextIndex = _currentVideoIndex + 1;
+    if (nextIndex < _videoPaths.length) {
+      try {
+        _nextVideoController = VideoPlayerController.asset(
+          _videoPaths[nextIndex],
+        );
+        await _nextVideoController!.initialize();
+      } catch (e) {
+        print('Error preloading next video: $e');
+      }
+    }
+  }
+
+  void _videoListener() {
+    if (_videoController!.value.position >= _videoController!.value.duration) {
+      // Remove listener to prevent multiple calls
+      _videoController!.removeListener(_videoListener);
+      _playNextVideo();
+    }
+  }
+
+  void _playNextVideo() {
+    if (!_isTransitioning) {
+      _isTransitioning = true;
+      _currentVideoIndex++;
+      _playCurrentVideo().then((_) {
+        _isTransitioning = false;
+      });
+    }
+  }
+
+  void _skipVideo() {
+    _playNextVideo();
+  }
+
+  void _completeAllVideos() {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -82,346 +126,102 @@ class _TutorialOnboardingScreenState extends State<TutorialOnboardingScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Remove progress indicator from top
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Fullscreen video
+          if (_videoController != null && _videoController!.value.isInitialized)
+            SizedBox.expand(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _videoController!.value.size.width,
+                  height: _videoController!.value.size.height,
+                  child: VideoPlayer(_videoController!),
+                ),
+              ),
+            )
+          else
+            const Center(child: CircularProgressIndicator(color: Colors.white)),
 
-            // Page content
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentPage = index;
-                  });
-                  _animationController.reset();
-                  _animationController.forward();
-                },
-                children: [
-                  _buildKnowPage(),
-                  _buildGrowPage(),
-                  _buildShowPage(),
-                ],
+          // Skip button
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            right: 20,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: TextButton(
+                onPressed: _skipVideo,
+                child: const Text(
+                  'Skip',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
             ),
+          ),
 
-            // Navigation dots
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(_totalPages, (index) {
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: index == _currentPage
-                          ? const Color(0xFF239CD3)
-                          : Colors.grey.shade300,
+          // Video progress indicator
+          if (_videoController != null && _videoController!.value.isInitialized)
+            Positioned(
+              bottom: 30,
+              left: 20,
+              right: 20,
+              child: Column(
+                children: [
+                  // Video counter
+                  Text(
+                    '${_currentVideoIndex + 1} / ${_videoPaths.length}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                     ),
-                  );
-                }),
-              ),
-            ),
-
-            // Navigation buttons
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (_currentPage > 0)
-                    TextButton(
-                      onPressed: _previousPage,
-                      child: const Text(
-                        'Back',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    )
-                  else
-                    const SizedBox(width: 60),
-
+                  ),
+                  const SizedBox(height: 8),
+                  // Progress bar
                   Container(
+                    height: 4,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF239CD3), Color(0xFF79FEFC)],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(25),
+                      color: Colors.white.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    child: ElevatedButton(
-                      onPressed: _nextPage,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: Colors.white,
-                        shadowColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
+                    child: StreamBuilder(
+                      stream: Stream.periodic(
+                        const Duration(milliseconds: 100),
                       ),
-                      child: Text(
-                        _currentPage == _totalPages - 1 ? 'LET\'S GO' : 'Next',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      builder: (context, snapshot) {
+                        if (_videoController == null ||
+                            !_videoController!.value.isInitialized) {
+                          return Container();
+                        }
+                        final progress =
+                            _videoController!.value.position.inMilliseconds /
+                            _videoController!.value.duration.inMilliseconds;
+                        return FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: progress.clamp(0.0, 1.0),
+                          child: Container(
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildKnowPage() {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Illustration - Saira's avatar
-              SizedBox(
-                width: 200,
-                height: 200,
-                child: Center(
-                  child: Image.asset(
-                    'lib/assets/avatar/Siara_half.png',
-                    width: 150,
-                    height: 150,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 150,
-                        height: 150,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF239CD3), Color(0xFF79FEFC)],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 60,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-              //const SizedBox(height: 40),
-
-              // Title
-              const Text(
-                'KNOW',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Subtitle
-              const Text(
-                'I\'m Saira, your guide to knowledge and learning! Together, we\'ll explore mental health resources, breathing techniques, and educational content to help you navigate life at sea with confidence and wisdom.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.4),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGrowPage() {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Illustration - Kael's avatar
-              SizedBox(
-                width: 200,
-                height: 200,
-                child: Center(
-                  child: Image.asset(
-                    'lib/assets/avatar/kaelcrop.png',
-                    width: 150,
-                    height: 150,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 150,
-                        height: 150,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF239CD3), Color(0xFF79FEFC)],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 60,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-              //const SizedBox(height: 40),
-
-              // Title
-              const Text(
-                'GROW',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Subtitle
-              const Text(
-                'Hey there! I\'m Kael, here to help you grow and develop! We\'ll work on your personal development, track your progress, set goals, and build the skills you need to thrive both at sea and in life.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.4),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShowPage() {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Illustration - Both Saira and Kael's avatars, same size as KNOW and GROW, centered
-              SizedBox(
-                width: 350,
-                height: 200,
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Saira's avatar
-                      Image.asset(
-                        'lib/assets/avatar/Siara_half.png',
-                        width: 150,
-                        height: 150,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF239CD3), Color(0xFF79FEFC)],
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Icon(
-                              Icons.person,
-                              color: Colors.white,
-                              size: 60,
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 20),
-                      // Kael's avatar
-                      Image.asset(
-                        'lib/assets/avatar/kaelcrop.png',
-                        width: 150,
-                        height: 150,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF239CD3), Color(0xFF79FEFC)],
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Icon(
-                              Icons.person,
-                              color: Colors.white,
-                              size: 60,
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Title
-              const Text(
-                'SHOW',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Subtitle
-              const Text(
-                'Together, we\'re your team! This is where you showcase your journey! Share your achievements, track your wellness progress, and celebrate your growth. We\'ll help you see how far you\'ve come and inspire others on their journey too.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.4),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }

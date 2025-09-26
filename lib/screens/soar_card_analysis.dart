@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'goal_settings.dart';
 import '../services/api_service.dart';
+import 'goalinfo_screen.dart';
 import 'soar_pdf_generator.dart';
 
 class SoarDashboardPage extends StatefulWidget {
@@ -1057,7 +1058,7 @@ class _SoarDashboardPageState extends State<SoarDashboardPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => GoalPage(userEmail: widget.userEmail),
+                  builder: (context) => GoalInfoScreen(userEmail: widget.userEmail),
                 ),
               );
             },

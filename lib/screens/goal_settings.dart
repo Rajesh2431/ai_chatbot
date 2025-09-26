@@ -4,6 +4,7 @@ import '../services/soar_card_service.dart';
 import '../models/goal_data.dart';
 //import 'dashboard_screen.dart';
 import 'daily_checkin_screen.dart';
+import 'goalcomplete_screen.dart';
 
 class GoalPage extends StatefulWidget {
   final String? userEmail;
@@ -1012,7 +1013,9 @@ class _GoalPageState extends State<GoalPage>
       });
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const DailyCheckinScreen()),
+        MaterialPageRoute(
+          builder: (_) => const GoalCompletedScreen(userEmail: ''),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1039,7 +1042,9 @@ class _GoalPageState extends State<GoalPage>
       );
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const DailyCheckinScreen()),
+        MaterialPageRoute(
+          builder: (_) => const GoalCompletedScreen(userEmail: ''),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

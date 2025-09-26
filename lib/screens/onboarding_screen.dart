@@ -1009,7 +1009,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("lib/assets/images/wel_background.png"),
+            image: AssetImage("lib/assets/images/wel_bg.png"),
             fit: BoxFit.cover,
           ),
         ),

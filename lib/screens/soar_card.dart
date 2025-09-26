@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'goal_settings.dart';
+import 'goalinfo_screen.dart';
 import 'soar_card_analysis.dart';
 import '../services/soar_card_service.dart';
 import '../services/user_profile_service.dart';
@@ -338,7 +339,9 @@ class _QuizPageState extends State<QuizPage> {
       }
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => GoalPage(userEmail: userEmail)),
+        MaterialPageRoute(
+          builder: (context) => GoalInfoScreen(userEmail: userEmail),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -616,6 +619,11 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   Widget _buildBottomNav() {
+    // Add safety check at the beginning
+    if (_categories.isEmpty || _currentPage >= _categories.length) {
+      return const SizedBox(); // Return empty widget if no data
+    }
+
     return Container(
       height: 100,
       decoration: BoxDecoration(
@@ -630,49 +638,6 @@ class _QuizPageState extends State<QuizPage> {
       ),
       child: Stack(
         children: [
-          // Progress dots
-          // Positioned(
-          //   top: 20,
-          //   left: 0,
-          //   right: 0,
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.center,
-          //     children: List.generate(_categories.length, (index) {
-          //       final bool active = _currentPage == index;
-          //       final bool completed =
-          //           _categorySubmitted[_categories[index]] ?? false;
-
-          //       return Container(
-          //         margin: const EdgeInsets.symmetric(horizontal: 6),
-          //         child: AnimatedContainer(
-          //           duration: const Duration(milliseconds: 300),
-          //           width: active ? 12 : 8,
-          //           height: active ? 12 : 8,
-          //           decoration: BoxDecoration(
-          //             shape: BoxShape.circle,
-          //             color: completed
-          //                 ? Colors.green.shade500
-          //                 : active
-          //                 ? Colors.blue.shade500
-          //                 : Colors.grey.shade300,
-          //             boxShadow: active
-          //                 ? [
-          //                     BoxShadow(
-          //                       color: Colors.blue.withOpacity(0.3),
-          //                       blurRadius: 8,
-          //                       spreadRadius: 2,
-          //                     ),
-          //                   ]
-          //                 : null,
-          //           ),
-          //           child: completed
-          //               ? Icon(Icons.check, size: 8, color: Colors.white)
-          //               : null,
-          //         ),
-          //       );
-          //     }),
-          //   ),
-          // ),
           // Next/Submit button
           Positioned(
             right: 20,
@@ -764,14 +729,6 @@ class _QuizPageState extends State<QuizPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Text(
-                //   _categories[_currentPage],
-                //   style: TextStyle(
-                //     fontSize: 14,
-                //     fontWeight: FontWeight.w600,
-                //     color: Colors.grey.shade700,
-                //   ),
-                // ),
                 const SizedBox(height: 2),
                 Text(
                   "Step ${_currentPage + 1} of ${_categories.length}",

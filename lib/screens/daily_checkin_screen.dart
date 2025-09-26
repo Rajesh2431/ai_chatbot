@@ -8,7 +8,7 @@ class DailyCheckinScreen extends StatefulWidget {
   final String? avatarName;
   final String? avatarImage;
 
-  const DailyCheckinScreen({super.key, this.avatarName, this.avatarImage});
+  const DailyCheckinScreen({super.key, this.avatarName, this.avatarImage, String? userEmail});
 
   @override
   State<DailyCheckinScreen> createState() => _DailyCheckinScreenState();

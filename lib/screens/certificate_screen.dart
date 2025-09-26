@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:typed_data';
@@ -8,9 +7,6 @@ import 'package:flutter/services.dart' as services;
 import 'package:open_file/open_file.dart';
 import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../services/soar_card_service.dart';
-import '../models/soar_card_answer.dart';
 import '../services/user_profile_service.dart';
 
 class CertificateScreen extends StatefulWidget {
