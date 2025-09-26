@@ -1176,7 +1176,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                                             ),
                                                             Text(
                                                               'Your privacy is our top priority. This policy explains how we handle your mental health information:\n\n'
-                                                              '1. Information We Collect\n'
+                                                              '1. Information We   Collect\n'
                                                               '• Mood entries, journal notes, and wellness tracking data\n'
                                                               '• Usage patterns and app interactions\n'
                                                               '• Device information (anonymized)\n\n'

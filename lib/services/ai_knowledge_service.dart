@@ -87,15 +87,15 @@ class AIKnowledgeService {
       
       // Create a knowledge entry that the AI can reference
       final knowledgeEntry = '''
-PDF Document: $fileName
-File Size: ${_formatFileSize(bytes.length)}
-Upload Date: ${DateTime.now().toIso8601String().split('T')[0]}
+        PDF Document: $fileName
+        File Size: ${_formatFileSize(bytes.length)}
+        Upload Date: ${DateTime.now().toIso8601String().split('T')[0]}
 
-This PDF document has been uploaded to the knowledge base and is available for the AI assistant to reference when providing mental health guidance, techniques, or information. The AI should acknowledge when drawing insights from user-uploaded materials.
+        This PDF document has been uploaded to the knowledge base and is available for the AI assistant to reference when providing mental health guidance, techniques, or information. The AI should acknowledge when drawing insights from user-uploaded materials.
 
-Document Type: PDF
-Status: Successfully uploaded and ready for AI reference
-''';
+        Document Type: PDF
+        Status: Successfully uploaded and ready for AI reference
+        ''';
       
       return knowledgeEntry;
     } catch (e) {

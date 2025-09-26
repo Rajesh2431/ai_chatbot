@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../routes/circular_reveal_route.dart';
 import '../services/avatar_service.dart';
 import '../services/mood_service.dart';
-import 'soar_card.dart';
+import 'soarcardinfo_screen.dart';
 
 class AvatarDetailScreen extends StatelessWidget {
   final String imagePath;
@@ -21,7 +21,12 @@ class AvatarDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255,220, 239, 248), // Light blue background
+      backgroundColor: const Color.fromARGB(
+        255,
+        220,
+        239,
+        248,
+      ), // Light blue background
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40.0),
@@ -126,7 +131,7 @@ class AvatarDetailScreen extends StatelessWidget {
                     // Navigate to SOAR Card
                     Navigator.of(context).pushReplacement(
                       CircularRevealRoute(
-                        page: QuizPage(userEmail: userEmail),
+                        page: SOARProfileIntroScreen(userEmail: userEmail),
                         centerAlignment: center,
                         startRadius: 0,
                         revealColor: const Color(0xFF1976D2),
@@ -134,7 +139,12 @@ class AvatarDetailScreen extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255,26, 148, 197), // Blue button
+                    backgroundColor: const Color.fromARGB(
+                      255,
+                      26,
+                      148,
+                      197,
+                    ), // Blue button
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     shape: RoundedRectangleBorder(
