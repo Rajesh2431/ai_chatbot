@@ -3,7 +3,6 @@ import '../services/goal_service.dart';
 import '../services/soar_card_service.dart';
 import '../models/goal_data.dart';
 //import 'dashboard_screen.dart';
-import 'daily_checkin_screen.dart';
 import 'goalcomplete_screen.dart';
 
 class GoalPage extends StatefulWidget {

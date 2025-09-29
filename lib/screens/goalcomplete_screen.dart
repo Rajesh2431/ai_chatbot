@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'moodinfo_screen.dart';
-import 'soar_card.dart';
 
 class GoalCompletedScreen extends StatefulWidget {
   const GoalCompletedScreen({super.key, required String userEmail});

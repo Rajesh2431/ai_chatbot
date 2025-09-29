@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import 'goal_settings.dart';
 import 'goalinfo_screen.dart';
 import 'soar_card_analysis.dart';
 import '../services/soar_card_service.dart';
