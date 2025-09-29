@@ -1104,7 +1104,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   ),
                 ),
 
-                const Spacer(),
+                const SizedBox(height: 1),
 
                 // Illustration/Icon placeholder
                 Container(
@@ -1125,7 +1125,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   ),
                 ),
 
-                const Spacer(),
+                const SizedBox(),
 
                 // Bottom text
                 Text(
