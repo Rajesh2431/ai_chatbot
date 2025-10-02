@@ -22,6 +22,46 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
     _loadAvatarInfo();
   }
 
+  // Enhanced device type detection
+  DeviceType _getDeviceType(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    if (size.shortestSide < 600) {
+      return DeviceType.mobile;
+    } else if (size.shortestSide < 900) {
+      return DeviceType.tablet;
+    } else {
+      return DeviceType.largeTablet;
+    }
+  }
+
+  // Get responsive font size
+  double _getResponsiveFontSize(BuildContext context, double baseMobile) {
+    final deviceType = _getDeviceType(context);
+    final width = MediaQuery.of(context).size.width;
+
+    switch (deviceType) {
+      case DeviceType.mobile:
+        return baseMobile * (width / 375).clamp(0.85, 1.15);
+      case DeviceType.tablet:
+        return baseMobile * 1.3;
+      case DeviceType.largeTablet:
+        return baseMobile * 1.5;
+    }
+  }
+
+  // Get responsive spacing
+  double _getResponsiveSpacing(BuildContext context, double baseMobile) {
+    final deviceType = _getDeviceType(context);
+    switch (deviceType) {
+      case DeviceType.mobile:
+        return baseMobile;
+      case DeviceType.tablet:
+        return baseMobile * 1.3;
+      case DeviceType.largeTablet:
+        return baseMobile * 1.6;
+    }
+  }
+
   Future<void> _loadMoodHistory() async {
     final history = await MoodService.getMoodHistory();
     setState(() {
@@ -34,15 +74,21 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
     final avatarPath = await UserAvatarService.getHalfAvatarImage();
     final todayScore = await MoodService.getTodaysMoodScore();
     final moodText = _getMoodText(todayScore);
-    
+
     setState(() {
       avatarImagePath = avatarPath;
-      currentMoodReply = UserAvatarService.getMoodResponse(moodText, todayScore.round());
+      currentMoodReply = UserAvatarService.getMoodResponse(
+        moodText,
+        todayScore.round(),
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final deviceType = _getDeviceType(context);
+    final horizontalPadding = deviceType == DeviceType.mobile ? 16.0 : 24.0;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
@@ -52,11 +98,11 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Mood Analytics',
           style: TextStyle(
             color: Colors.black87,
-            fontSize: 22,
+            fontSize: _getResponsiveFontSize(context, 22),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -65,30 +111,29 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(horizontalPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Overview Card
-                  _buildOverviewCard(),
-                  const SizedBox(height: 20),
-
-                  // Weekly Trend
-                  _buildWeeklyTrendCard(),
-                  const SizedBox(height: 20),
-
-                  // Daily History
-                  _buildDailyHistorySection(),
+                  _buildOverviewCard(context),
+                  SizedBox(height: _getResponsiveSpacing(context, 20)),
+                  _buildWeeklyTrendCard(context),
+                  SizedBox(height: _getResponsiveSpacing(context, 20)),
+                  _buildDailyHistorySection(context),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildOverviewCard() {
+  Widget _buildOverviewCard(BuildContext context) {
+    final avatarSize = _getDeviceType(context) == DeviceType.mobile
+        ? 60.0
+        : 80.0;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(_getResponsiveSpacing(context, 20)),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -107,31 +152,33 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.analytics, color: Colors.white, size: 28),
-              SizedBox(width: 12),
+              Icon(
+                Icons.analytics,
+                color: Colors.white,
+                size: _getResponsiveSpacing(context, 28),
+              ),
+              SizedBox(width: _getResponsiveSpacing(context, 12)),
               Text(
                 'Your Mood Journey',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 22,
+                  fontSize: _getResponsiveFontSize(context, 22),
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // Avatar and mood reply section
+          SizedBox(height: _getResponsiveSpacing(context, 16)),
           if (avatarImagePath != null && currentMoodReply != null) ...[
             Row(
               children: [
-                // Avatar image
                 Container(
-                  width: 60,
-                  height: 60,
+                  width: avatarSize,
+                  height: avatarSize,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(avatarSize / 2),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.2),
@@ -141,18 +188,14 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(30),
-                    child: Image.asset(
-                      avatarImagePath!,
-                      fit: BoxFit.cover,
-                    ),
+                    borderRadius: BorderRadius.circular(avatarSize / 2),
+                    child: Image.asset(avatarImagePath!, fit: BoxFit.cover),
                   ),
                 ),
-                const SizedBox(width: 16),
-                // Mood reply
+                SizedBox(width: _getResponsiveSpacing(context, 16)),
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(_getResponsiveSpacing(context, 12)),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
@@ -163,9 +206,9 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                     ),
                     child: Text(
                       currentMoodReply!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
+                        fontSize: _getResponsiveFontSize(context, 14),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -173,7 +216,7 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: _getResponsiveSpacing(context, 16)),
           ],
           FutureBuilder<double>(
             future: MoodService.getTodaysMoodScore(),
@@ -185,16 +228,19 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Today\'s Mood',
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: _getResponsiveFontSize(context, 14),
+                          ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: _getResponsiveSpacing(context, 4)),
                         Text(
                           _getMoodText(todayScore),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
+                            fontSize: _getResponsiveFontSize(context, 18),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -202,9 +248,9 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: _getResponsiveSpacing(context, 16),
+                      vertical: _getResponsiveSpacing(context, 8),
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
@@ -212,9 +258,9 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                     ),
                     child: Text(
                       '${todayScore.toStringAsFixed(1)}/5.0',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: _getResponsiveFontSize(context, 16),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -223,20 +269,23 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
               );
             },
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: _getResponsiveSpacing(context, 12)),
           Text(
             'Total Check-ins: ${moodHistory.length}',
-            style: const TextStyle(color: Colors.white70, fontSize: 14),
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: _getResponsiveFontSize(context, 14),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildWeeklyTrendCard() {
+  Widget _buildWeeklyTrendCard(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(_getResponsiveSpacing(context, 20)),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -251,60 +300,59 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Weekly Trend',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: _getResponsiveFontSize(context, 18),
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: _getResponsiveSpacing(context, 16)),
           FutureBuilder<List<double>>(
             future: MoodService.getWeeklyMoodScores(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
-
               final weeklyScores = snapshot.data!;
-              return SizedBox(
-                height: 120, // Increased height to accommodate labels
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: List.generate(7, (index) {
-                    final score = weeklyScores[index];
-                    final height =
-                        (score / 5.0) * 70; // Reduced bar height to fit labels
-                    final day = DateTime.now().subtract(
-                      Duration(days: 6 - index),
-                    );
+              final graphHeight = _getDeviceType(context) == DeviceType.mobile
+                  ? 180.0
+                  : 220.0;
 
-                    return Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Container(
-                            width: 30,
-                            height: height > 0 ? height : 5,
-                            decoration: BoxDecoration(
-                              color: _getMoodColor(score),
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
+              return SizedBox(
+                height: graphHeight,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: CustomPaint(
+                        painter: LineGraphPainter(
+                          scores: weeklyScores,
+                          getMoodColor: _getMoodColor,
+                        ),
+                        child: Container(),
+                      ),
+                    ),
+                    SizedBox(height: _getResponsiveSpacing(context, 12)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: List.generate(7, (index) {
+                        final day = DateTime.now().subtract(
+                          Duration(days: 6 - index),
+                        );
+                        return Expanded(
+                          child: Text(
                             _getDayName(day.weekday),
-                            style: const TextStyle(
-                              fontSize: 12,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: _getResponsiveFontSize(context, 12),
                               color: Colors.grey,
                             ),
                           ),
-                        ],
-                      ),
-                    );
-                  }),
+                        );
+                      }),
+                    ),
+                  ],
                 ),
               );
             },
@@ -314,11 +362,11 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
     );
   }
 
-  Widget _buildDailyHistorySection() {
+  Widget _buildDailyHistorySection(BuildContext context) {
     if (moodHistory.isEmpty) {
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(40),
+        padding: EdgeInsets.all(_getResponsiveSpacing(context, 40)),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -330,23 +378,30 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
             ),
           ],
         ),
-        child: const Column(
+        child: Column(
           children: [
-            Icon(Icons.mood, size: 60, color: Colors.grey),
-            SizedBox(height: 16),
+            Icon(
+              Icons.mood,
+              size: _getResponsiveSpacing(context, 60),
+              color: Colors.grey,
+            ),
+            SizedBox(height: _getResponsiveSpacing(context, 16)),
             Text(
               'No Check-ins Yet',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: _getResponsiveFontSize(context, 18),
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: _getResponsiveSpacing(context, 8)),
             Text(
               'Complete your first daily check-in to see your mood analytics here!',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(
+                fontSize: _getResponsiveFontSize(context, 14),
+                color: Colors.grey,
+              ),
             ),
           ],
         ),
@@ -354,36 +409,40 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
     }
 
     final sortedDates = moodHistory.keys.toList()
-      ..sort((a, b) => b.compareTo(a)); // Most recent first
+      ..sort((a, b) => b.compareTo(a));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Daily Check-in History',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: _getResponsiveFontSize(context, 18),
             fontWeight: FontWeight.bold,
             color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: _getResponsiveSpacing(context, 12)),
         ...sortedDates.map(
-          (date) => _buildDailyHistoryCard(date, moodHistory[date]),
+          (date) => _buildDailyHistoryCard(context, date, moodHistory[date]),
         ),
       ],
     );
   }
 
-  Widget _buildDailyHistoryCard(String date, Map<String, dynamic> dayData) {
+  Widget _buildDailyHistoryCard(
+    BuildContext context,
+    String date,
+    Map<String, dynamic> dayData,
+  ) {
     final overallScore = (dayData['overall_score'] as num).toDouble();
     final questions = dayData['questions'] as Map<String, dynamic>? ?? {};
     final timestamp = DateTime.parse(dayData['timestamp'] ?? date);
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.only(bottom: _getResponsiveSpacing(context, 12)),
+      padding: EdgeInsets.all(_getResponsiveSpacing(context, 16)),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -406,22 +465,25 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                 children: [
                   Text(
                     _formatDate(timestamp),
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: _getResponsiveFontSize(context, 16),
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
                   ),
                   Text(
                     _formatTime(timestamp),
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: _getResponsiveFontSize(context, 12),
+                      color: Colors.grey,
+                    ),
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+                padding: EdgeInsets.symmetric(
+                  horizontal: _getResponsiveSpacing(context, 12),
+                  vertical: _getResponsiveSpacing(context, 6),
                 ),
                 decoration: BoxDecoration(
                   color: _getMoodColor(overallScore).withValues(alpha: 0.2),
@@ -432,14 +494,14 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                   children: [
                     Icon(
                       _getMoodIcon(overallScore),
-                      size: 16,
+                      size: _getResponsiveSpacing(context, 16),
                       color: _getMoodColor(overallScore),
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: _getResponsiveSpacing(context, 4)),
                     Text(
                       overallScore.toStringAsFixed(1),
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: _getResponsiveFontSize(context, 14),
                         fontWeight: FontWeight.bold,
                         color: _getMoodColor(overallScore),
                       ),
@@ -449,16 +511,22 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: _getResponsiveSpacing(context, 12)),
           Text(
             _getMoodText(overallScore),
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
+            style: TextStyle(
+              fontSize: _getResponsiveFontSize(context, 14),
+              color: Colors.black87,
+            ),
           ),
           if (questions.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: _getResponsiveSpacing(context, 8)),
             Text(
               'Answered ${questions.length} questions',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(
+                fontSize: _getResponsiveFontSize(context, 12),
+                color: Colors.grey,
+              ),
             ),
           ],
         ],
@@ -467,10 +535,10 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
   }
 
   String _getMoodText(double score) {
-    if (score >= 4.0) return 'Excellent! ';
-    if (score >= 3.0) return 'Good 🙂';
-    if (score >= 2.5) return 'Okay 😐';
-    return 'Needs Support 😔';
+    if (score >= 4.0) return 'Excellent!';
+    if (score >= 3.0) return 'Good';
+    if (score >= 2.5) return 'Okay';
+    return 'Needs Support';
   }
 
   Color _getMoodColor(double score) {
@@ -531,5 +599,101 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
     final period = hour >= 12 ? 'PM' : 'AM';
     final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
     return '$displayHour:$minute $period';
+  }
+}
+
+enum DeviceType { mobile, tablet, largeTablet }
+
+class LineGraphPainter extends CustomPainter {
+  final List<double> scores;
+  final Color Function(double) getMoodColor;
+
+  LineGraphPainter({required this.scores, required this.getMoodColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (scores.isEmpty) return;
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    final gradientPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Colors.blue.withOpacity(0.3), Colors.blue.withOpacity(0.05)],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final pointPaint = Paint()..style = PaintingStyle.fill;
+
+    final path = Path();
+    final gradientPath = Path();
+    final points = <Offset>[];
+
+    // Calculate points
+    for (int i = 0; i < scores.length; i++) {
+      final x = (size.width / (scores.length - 1)) * i;
+      final normalizedScore = (scores[i] / 5.0).clamp(0.0, 1.0);
+      final y = size.height - (normalizedScore * size.height);
+      points.add(Offset(x, y));
+    }
+
+    // Draw gradient fill
+    if (points.isNotEmpty) {
+      gradientPath.moveTo(points.first.dx, size.height);
+      gradientPath.lineTo(points.first.dx, points.first.dy);
+
+      for (int i = 1; i < points.length; i++) {
+        gradientPath.lineTo(points[i].dx, points[i].dy);
+      }
+
+      gradientPath.lineTo(points.last.dx, size.height);
+      gradientPath.close();
+      canvas.drawPath(gradientPath, gradientPaint);
+    }
+
+    // Draw line
+    if (points.isNotEmpty) {
+      path.moveTo(points.first.dx, points.first.dy);
+      for (int i = 1; i < points.length; i++) {
+        path.lineTo(points[i].dx, points[i].dy);
+      }
+
+      paint.shader = LinearGradient(
+        colors: [Colors.blue.shade300, Colors.blue.shade600],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+      canvas.drawPath(path, paint);
+    }
+
+    // Draw points
+    for (int i = 0; i < points.length; i++) {
+      final point = points[i];
+      final score = scores[i];
+
+      pointPaint.color = Colors.white;
+      canvas.drawCircle(point, 6, pointPaint);
+
+      pointPaint.color = getMoodColor(score);
+      canvas.drawCircle(point, 4, pointPaint);
+    }
+
+    // Draw grid lines
+    final gridPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.2)
+      ..strokeWidth = 1;
+
+    for (int i = 0; i <= 5; i++) {
+      final y = size.height - (i / 5.0) * size.height;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(LineGraphPainter oldDelegate) {
+    return oldDelegate.scores != scores;
   }
 }

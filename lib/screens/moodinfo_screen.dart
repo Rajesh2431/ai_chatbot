@@ -11,79 +11,136 @@ class MoodMeterInfoScreen extends StatefulWidget {
 }
 
 class _MoodMeterScreenState extends State<MoodMeterInfoScreen> {
-  // Helper method to determine if device is tablet
-  bool _isTablet(BuildContext context) {
-    final shortestSide = MediaQuery.of(context).size.shortestSide;
-    return shortestSide >= 600;
+  // Enhanced device type detection
+  DeviceType _getDeviceType(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    if (size.shortestSide < 600) {
+      return DeviceType.mobile;
+    } else if (size.shortestSide < 900) {
+      return DeviceType.tablet;
+    } else {
+      return DeviceType.largeTablet;
+    }
   }
 
-  // Get responsive values based on device type
-  double _getResponsiveValue({
-    required BuildContext context,
-    required double mobile,
-    required double tablet,
-  }) {
-    return _isTablet(context) ? tablet : mobile;
+  // Get responsive padding
+  EdgeInsets _getResponsivePadding(BuildContext context) {
+    final deviceType = _getDeviceType(context);
+    switch (deviceType) {
+      case DeviceType.mobile:
+        return const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0);
+      case DeviceType.tablet:
+        return const EdgeInsets.symmetric(horizontal: 48.0, vertical: 24.0);
+      case DeviceType.largeTablet:
+        return const EdgeInsets.symmetric(horizontal: 80.0, vertical: 32.0);
+    }
+  }
+
+  // Get responsive font size
+  double _getResponsiveFontSize(BuildContext context, double baseMobile) {
+    final deviceType = _getDeviceType(context);
+    final width = MediaQuery.of(context).size.width;
+
+    switch (deviceType) {
+      case DeviceType.mobile:
+        // Scale based on width for different mobile sizes
+        return baseMobile * (width / 375).clamp(0.85, 1.15);
+      case DeviceType.tablet:
+        return baseMobile * 1.4;
+      case DeviceType.largeTablet:
+        return baseMobile * 1.6;
+    }
+  }
+
+  // Get responsive spacing
+  double _getResponsiveSpacing(BuildContext context, double baseMobile) {
+    final deviceType = _getDeviceType(context);
+    switch (deviceType) {
+      case DeviceType.mobile:
+        return baseMobile;
+      case DeviceType.tablet:
+        return baseMobile * 1.5;
+      case DeviceType.largeTablet:
+        return baseMobile * 2.0;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final deviceType = _getDeviceType(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
-      backgroundColor: Colors.white, // can be removed since image covers it
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Stack(
           children: [
-            // 🔹 Background image
+            // Background image
             Positioned.fill(
               child: Image.asset(
-                "lib/assets/images/moodinfo.png", // replace with your asset
+                "lib/assets/images/moodinfo.png",
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(color: Colors.grey.shade100);
+                },
               ),
             ),
 
-            // 🔹 Main content on top
-            Column(
-              children: [
-                // Header with gradient background
-                _buildHeader(context),
-
-                // Main content
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: _getResponsiveValue(
-                        context: context,
-                        mobile: 24.0,
-                        tablet: 48.0,
-                      ),
-                      vertical: 32.0,
+            // Main content
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
                     ),
-                    child: Column(
-                      children: [
-                        // Center illustration with mood meter
-                        // _buildCenterIllustration(context),
-                        SizedBox(
-                          height: _getResponsiveValue(
-                            context: context,
-                            mobile: 450.0,
-                            tablet: 50.0,
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          // Header with gradient background
+                          _buildHeader(context),
+
+                          // Main content
+                          Expanded(
+                            child: Container(
+                              padding: _getResponsivePadding(context),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Dynamic spacing based on screen height
+                                  SizedBox(
+                                    height: _getResponsiveTopSpacing(
+                                      context,
+                                      screenHeight,
+                                      deviceType,
+                                    ),
+                                  ),
+
+                                  // Description text
+                                  _buildDescriptionText(context),
+
+                                  const Spacer(),
+
+                                  // Get Started button
+                                  _buildGetStartedButton(context),
+
+                                  SizedBox(
+                                    height: _getResponsiveSpacing(
+                                      context,
+                                      24.0,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-
-                        // Description text
-                        _buildDescriptionText(context),
-
-                        const Spacer(),
-
-                        // Get Started button
-                        _buildGetStartedButton(context),
-
-                        const SizedBox(height: 24),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                );
+              },
             ),
           ],
         ),
@@ -91,20 +148,38 @@ class _MoodMeterScreenState extends State<MoodMeterInfoScreen> {
     );
   }
 
+  // Calculate top spacing based on screen height and device type
+  double _getResponsiveTopSpacing(
+    BuildContext context,
+    double screenHeight,
+    DeviceType deviceType,
+  ) {
+    switch (deviceType) {
+      case DeviceType.mobile:
+        // For mobile, use a percentage of remaining height
+        if (screenHeight < 700) {
+          return screenHeight * 0.25; // Smaller phones
+        } else if (screenHeight < 800) {
+          return screenHeight * 0.35; // Medium phones
+        } else {
+          return screenHeight * 0.45; // Larger phones
+        }
+      case DeviceType.tablet:
+        return screenHeight * 0.15;
+      case DeviceType.largeTablet:
+        return screenHeight * 0.12;
+    }
+  }
+
   Widget _buildHeader(BuildContext context) {
+    final deviceType = _getDeviceType(context);
+    final headerPadding = _getResponsivePadding(context);
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(
-        horizontal: _getResponsiveValue(
-          context: context,
-          mobile: 24.0,
-          tablet: 48.0,
-        ),
-        vertical: _getResponsiveValue(
-          context: context,
-          mobile: 40.0,
-          tablet: 50.0,
-        ),
+        horizontal: headerPadding.horizontal / 2,
+        vertical: deviceType == DeviceType.mobile ? 32.0 : 40.0,
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -113,202 +188,79 @@ class _MoodMeterScreenState extends State<MoodMeterInfoScreen> {
           colors: [Color(0xFF4FC3F7), Color(0xFF29B6F6), Color(0xFF03A9F4)],
         ),
       ),
-      child: Text(
-        "MOOD METER",
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: _getResponsiveValue(
-            context: context,
-            mobile: 28.0,
-            tablet: 36.0,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            "MOOD METER",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: _getResponsiveFontSize(context, 28.0),
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 2.0,
+            ),
           ),
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-          letterSpacing: 2.0,
         ),
       ),
     );
   }
 
-  // Widget _buildCenterIllustration(BuildContext context) {
-  //   final illustrationSize = _getResponsiveValue(
-  //     context: context,
-  //     mobile: 300.0,
-  //     tablet: 380.0,
-  //   );
-
-  //   return Container(
-  //     width: illustrationSize,
-  //     height: illustrationSize,
-  //     child: Stack(
-  //       alignment: Alignment.center,
-  //       children: [
-  //         // Main background circle with light blue color
-  //         Container(
-  //           width: illustrationSize,
-  //           height: illustrationSize,
-  //           decoration: BoxDecoration(
-  //             shape: BoxShape.circle,
-  //             color: const Color(0xFFE3F2FD).withOpacity(0.4),
-  //           ),
-  //         ),
-
-  //         // Secondary background circle
-  //         Container(
-  //           width: illustrationSize * 0.85,
-  //           height: illustrationSize * 0.85,
-  //           decoration: BoxDecoration(
-  //             shape: BoxShape.circle,
-  //             color: const Color(0xFFE3F2FD).withOpacity(0.6),
-  //           ),
-  //         ),
-
-  //         // Inner background circle
-  //         Container(
-  //           width: illustrationSize * 0.7,
-  //           height: illustrationSize * 0.7,
-  //           decoration: BoxDecoration(
-  //             shape: BoxShape.circle,
-  //             color: const Color(0xFFE3F2FD).withOpacity(0.8),
-  //           ),
-  //         ),
-
-  //         // Hand illustration (pink/coral colored hand pointing up)
-  //         Positioned(
-  //           bottom: illustrationSize * 0.15,
-  //           child: Container(
-  //             width: illustrationSize * 0.35,
-  //             height: illustrationSize * 0.5,
-  //             child: CustomPaint(
-  //               painter: HandPainter(),
-  //             ),
-  //           ),
-  //         ),
-
-  //         // Mood cards/emotions floating above hand
-  //         Positioned(
-  //           top: illustrationSize * 0.15,
-  //           left: illustrationSize * 0.15,
-  //           child: _buildMoodCard(
-  //             context: context,
-  //             emoji: '😊',
-  //             color: Colors.orange,
-  //             size: _getResponsiveValue(context: context, mobile: 45.0, tablet: 55.0),
-  //           ),
-  //         ),
-
-  //         Positioned(
-  //           top: illustrationSize * 0.2,
-  //           right: illustrationSize * 0.25,
-  //           child: _buildMoodCard(
-  //             context: context,
-  //             emoji: '😐',
-  //             color: Colors.grey.shade300,
-  //             size: _getResponsiveValue(context: context, mobile: 40.0, tablet: 50.0),
-  //           ),
-  //         ),
-
-  //         Positioned(
-  //           top: illustrationSize * 0.12,
-  //           right: illustrationSize * 0.1,
-  //           child: _buildMoodCard(
-  //             context: context,
-  //             emoji: '😄',
-  //             color: Colors.pink.shade100,
-  //             size: _getResponsiveValue(context: context, mobile: 42.0, tablet: 52.0),
-  //           ),
-  //         ),
-
-  //         // Small decorative plus signs
-  //         Positioned(
-  //           top: illustrationSize * 0.4,
-  //           left: illustrationSize * 0.1,
-  //           child: Icon(
-  //             Icons.add,
-  //             color: const Color(0xFF29B6F6).withOpacity(0.6),
-  //             size: _getResponsiveValue(context: context, mobile: 16.0, tablet: 20.0),
-  //           ),
-  //         ),
-
-  //         Positioned(
-  //           bottom: illustrationSize * 0.35,
-  //           right: illustrationSize * 0.08,
-  //           child: Icon(
-  //             Icons.add,
-  //             color: const Color(0xFF29B6F6).withOpacity(0.6),
-  //             size: _getResponsiveValue(context: context, mobile: 16.0, tablet: 20.0),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // Widget _buildMoodCard({
-  //   required BuildContext context,
-  //   required String emoji,
-  //   required Color color,
-  //   required double size,
-  // }) {
-  //   return Container(
-  //     width: size,
-  //     height: size * 0.8,
-  //     decoration: BoxDecoration(
-  //       color: color,
-  //       borderRadius: BorderRadius.circular(8),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: Colors.black.withOpacity(0.1),
-  //           blurRadius: 8,
-  //           offset: const Offset(0, 4),
-  //         ),
-  //       ],
-  //     ),
-  //     child: Center(
-  //       child: Text(
-  //         emoji,
-  //         style: TextStyle(
-  //           fontSize: size * 0.5,
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
   Widget _buildDescriptionText(BuildContext context) {
-    return Text(
-      "Take a moment to reflect — how are you feeling today? This daily mood check helps us understand your emotional state and provide the right support to keep your mind calm and balanced at sea.",
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        fontSize: _getResponsiveValue(
-          context: context,
-          mobile: 20.0,
-          tablet: 20.0,
+    final deviceType = _getDeviceType(context);
+    final maxWidth = deviceType == DeviceType.mobile
+        ? double.infinity
+        : MediaQuery.of(context).size.width * 0.8;
+
+    return Container(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      padding: EdgeInsets.symmetric(
+        horizontal: _getResponsiveSpacing(context, 16.0),
+      ),
+      child: Text(
+        "Take a moment to reflect — how are you feeling today? This daily mood check helps us understand your emotional state and provide the right support to keep your mind calm and balanced at sea.",
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: _getResponsiveFontSize(context, 18.0),
+          color: const Color(0xFF2C3E50),
+          height: 1.6,
+          letterSpacing: 0.3,
         ),
-        color: const Color(0xFF2C3E50),
-        height: 1.5,
-        letterSpacing: 0.3,
       ),
     );
   }
 
   Widget _buildGetStartedButton(BuildContext context) {
-    final buttonWidth = _isTablet(context)
-        ? MediaQuery.of(context).size.width * 0.6
-        : double.infinity;
+    final deviceType = _getDeviceType(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    double buttonWidth;
+    switch (deviceType) {
+      case DeviceType.mobile:
+        buttonWidth = screenWidth * 0.85;
+        break;
+      case DeviceType.tablet:
+        buttonWidth = screenWidth * 0.6;
+        break;
+      case DeviceType.largeTablet:
+        buttonWidth = screenWidth * 0.4;
+        break;
+    }
+
+    final buttonHeight = _getResponsiveSpacing(context, 54.0);
+    final borderRadius = buttonHeight / 2;
 
     return Container(
       width: buttonWidth,
-      height: _getResponsiveValue(context: context, mobile: 55.0, tablet: 65.0),
+      height: buttonHeight,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
           colors: [Color(0xFF29B6F6), Color(0xFF03A9F4)],
         ),
-        borderRadius: BorderRadius.circular(
-          _getResponsiveValue(context: context, mobile: 27.5, tablet: 32.5),
-        ),
+        borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.blue.withOpacity(0.4),
@@ -319,7 +271,6 @@ class _MoodMeterScreenState extends State<MoodMeterInfoScreen> {
       ),
       child: ElevatedButton(
         onPressed: () {
-          // Navigate to mood selection screen
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) =>
@@ -331,19 +282,14 @@ class _MoodMeterScreenState extends State<MoodMeterInfoScreen> {
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              _getResponsiveValue(context: context, mobile: 27.5, tablet: 32.5),
-            ),
+            borderRadius: BorderRadius.circular(borderRadius),
           ),
+          padding: EdgeInsets.zero,
         ),
         child: Text(
-          "Get's Started",
+          "Get Started",
           style: TextStyle(
-            fontSize: _getResponsiveValue(
-              context: context,
-              mobile: 18.0,
-              tablet: 22.0,
-            ),
+            fontSize: _getResponsiveFontSize(context, 18.0),
             fontWeight: FontWeight.w600,
             color: Colors.white,
             letterSpacing: 0.5,
@@ -354,7 +300,9 @@ class _MoodMeterScreenState extends State<MoodMeterInfoScreen> {
   }
 }
 
-// Custom painter for the hand illustration
+enum DeviceType { mobile, tablet, largeTablet }
+
+// Custom painter for the hand illustration (preserved for future use)
 class HandPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -363,9 +311,6 @@ class HandPainter extends CustomPainter {
           const Color(0xFFFFB3BA) // Pink/coral color for hand
       ..style = PaintingStyle.fill;
 
-    final path = Path();
-
-    // Draw a simplified hand shape pointing upward
     final centerX = size.width / 2;
     final centerY = size.height;
 

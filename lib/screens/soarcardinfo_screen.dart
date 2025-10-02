@@ -11,132 +11,153 @@ class SOARProfileIntroScreen extends StatefulWidget {
 class _SOARProfileIntroScreenState extends State<SOARProfileIntroScreen> {
   String? get userEmail => null;
 
-  // Helper method to determine if device is tablet
-  bool _isTablet(BuildContext context) {
-    final shortestSide = MediaQuery.of(context).size.shortestSide;
-    return shortestSide >= 600; // Tablets typically have shortestSide >= 600
+  // Enhanced device type detection
+  DeviceType _getDeviceType(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final diagonal = (size.width * size.width + size.height * size.height);
+
+    if (size.shortestSide < 600) {
+      return DeviceType.mobile;
+    } else if (size.shortestSide < 900) {
+      return DeviceType.tablet;
+    } else {
+      return DeviceType.largeTablet;
+    }
   }
 
-  // Get responsive values based on device type
-  double _getResponsiveValue({
-    required BuildContext context,
-    required double mobile,
-    required double tablet,
-  }) {
-    return _isTablet(context) ? tablet : mobile;
+  // Get responsive padding
+  EdgeInsets _getResponsivePadding(BuildContext context) {
+    final deviceType = _getDeviceType(context);
+    switch (deviceType) {
+      case DeviceType.mobile:
+        return const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0);
+      case DeviceType.tablet:
+        return const EdgeInsets.symmetric(horizontal: 48.0, vertical: 24.0);
+      case DeviceType.largeTablet:
+        return const EdgeInsets.symmetric(horizontal: 80.0, vertical: 32.0);
+    }
+  }
+
+  // Get responsive font size
+  double _getResponsiveFontSize(BuildContext context, double baseMobile) {
+    final deviceType = _getDeviceType(context);
+    final width = MediaQuery.of(context).size.width;
+
+    switch (deviceType) {
+      case DeviceType.mobile:
+        // Scale based on width for different mobile sizes
+        return baseMobile * (width / 375).clamp(0.85, 1.15);
+      case DeviceType.tablet:
+        return baseMobile * 1.4;
+      case DeviceType.largeTablet:
+        return baseMobile * 1.6;
+    }
+  }
+
+  // Get responsive spacing
+  double _getResponsiveSpacing(BuildContext context, double baseMobile) {
+    final deviceType = _getDeviceType(context);
+    switch (deviceType) {
+      case DeviceType.mobile:
+        return baseMobile;
+      case DeviceType.tablet:
+        return baseMobile * 1.5;
+      case DeviceType.largeTablet:
+        return baseMobile * 2.0;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = _isTablet(context);
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header with world map background
-            _buildHeader(context),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      // Header with world map background
+                      _buildHeader(context),
 
-            // Main content
-            Expanded(
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: _getResponsiveValue(
-                    context: context,
-                    mobile: 24.0,
-                    tablet: 48.0,
+                      // Main content
+                      Expanded(
+                        child: Container(
+                          padding: _getResponsivePadding(context),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              SizedBox(
+                                height: _getResponsiveSpacing(context, 16.0),
+                              ),
+
+                              // Subtitle
+                              _buildSubtitle(context),
+
+                              SizedBox(
+                                height: _getResponsiveSpacing(context, 24.0),
+                              ),
+
+                              // Character illustrations
+                              _buildCharacterIllustrations(context),
+
+                              SizedBox(
+                                height: _getResponsiveSpacing(context, 24.0),
+                              ),
+
+                              // Description text
+                              _buildDescriptionText(context),
+
+                              SizedBox(
+                                height: _getResponsiveSpacing(context, 20.0),
+                              ),
+
+                              // Disclaimer text
+                              _buildDisclaimerText(context),
+
+                              SizedBox(
+                                height: _getResponsiveSpacing(context, 24.0),
+                              ),
+
+                              // Ready button
+                              _buildReadyButton(context),
+
+                              SizedBox(
+                                height: _getResponsiveSpacing(context, 16.0),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  vertical: 24.0,
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: _getResponsiveValue(
-                        context: context,
-                        mobile: 16.0,
-                        tablet: 24.0,
-                      ),
-                    ),
-
-                    // Subtitle
-                    _buildSubtitle(context),
-
-                    SizedBox(
-                      height: _getResponsiveValue(
-                        context: context,
-                        mobile: 30.0,
-                        tablet: 40.0,
-                      ),
-                    ),
-
-                    // Character illustrations
-                    _buildCharacterIllustrations(context),
-
-                    SizedBox(
-                      height: _getResponsiveValue(
-                        context: context,
-                        mobile: 30.0,
-                        tablet: 40.0,
-                      ),
-                    ),
-
-                    // Description text
-                    _buildDescriptionText(context),
-
-                    SizedBox(
-                      height: _getResponsiveValue(
-                        context: context,
-                        mobile: 30.0,
-                        tablet: 40.0,
-                      ),
-                    ),
-
-                    // Disclaimer text
-                    _buildDisclaimerText(context),
-
-                    SizedBox(
-                      height: _getResponsiveValue(
-                        context: context,
-                        mobile: 38.0,
-                        tablet: 48.0,
-                      ),
-                    ),
-
-                    // Ready button
-                    _buildReadyButton(context),
-
-                    const SizedBox(height: 24),
-                  ],
                 ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
+    final deviceType = _getDeviceType(context);
+    final headerPadding = _getResponsivePadding(context);
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(
-        horizontal: _getResponsiveValue(
-          context: context,
-          mobile: 24.0,
-          tablet: 48.0,
-        ),
-        vertical: _getResponsiveValue(
-          context: context,
-          mobile: 24.0,
-          tablet: 32.0,
-        ),
+        horizontal: headerPadding.horizontal / 2,
+        vertical: deviceType == DeviceType.mobile ? 24.0 : 32.0,
       ),
       decoration: BoxDecoration(
         image: const DecorationImage(
           image: AssetImage('lib/assets/images/world.png'),
           fit: BoxFit.cover,
+          opacity: 0.3,
         ),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -157,64 +178,74 @@ class _SOARProfileIntroScreenState extends State<SOARProfileIntroScreen> {
       ),
       child: Column(
         children: [
-          // World map pattern overlay
-          SizedBox(
-            height: _getResponsiveValue(
-              context: context,
-              mobile: 40.0,
-              tablet: 60.0,
-            ),
-            width: double.infinity,
-          ),
-
-          SizedBox(
-            height: _getResponsiveValue(
-              context: context,
-              mobile: 16.0,
-              tablet: 24.0,
-            ),
-          ),
+          SizedBox(height: _getResponsiveSpacing(context, 20.0)),
 
           // Main title
-          Text(
-            "LET'S START BUILDING\nYOUR SOAR PROFILE",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: _getResponsiveValue(
-                context: context,
-                mobile: 24.0,
-                tablet: 32.0,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                "LET'S START BUILDING\nYOUR SOAR PROFILE",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: _getResponsiveFontSize(context, 24.0),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 0.5,
+                  height: 1.2,
+                ),
               ),
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              letterSpacing: 0.5,
-              height: 1.2,
             ),
           ),
+
+          SizedBox(height: _getResponsiveSpacing(context, 20.0)),
         ],
       ),
     );
   }
 
   Widget _buildSubtitle(BuildContext context) {
-    return Text(
-      "Strength, Opportunities,\nAspirations & Recommendation",
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        fontSize: _getResponsiveValue(
-          context: context,
-          mobile: 20.0,
-          tablet: 26.0,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          "Strength, Opportunities,\nAspirations & Recommendation",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: _getResponsiveFontSize(context, 18.0),
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF2C3E50),
+            height: 1.3,
+          ),
         ),
-        fontWeight: FontWeight.w600,
-        color: const Color(0xFF2C3E50),
-        height: 1.3,
       ),
     );
   }
 
   Widget _buildCharacterIllustrations(BuildContext context) {
-    final isTablet = _isTablet(context);
+    final deviceType = _getDeviceType(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Calculate character size based on available width
+    double characterWidth;
+    double characterHeight;
+
+    switch (deviceType) {
+      case DeviceType.mobile:
+        characterWidth = (screenWidth * 0.35).clamp(100.0, 140.0);
+        characterHeight = characterWidth * 1.15;
+        break;
+      case DeviceType.tablet:
+        characterWidth = (screenWidth * 0.25).clamp(160.0, 200.0);
+        characterHeight = characterWidth * 1.15;
+        break;
+      case DeviceType.largeTablet:
+        characterWidth = 220.0;
+        characterHeight = 253.0;
+        break;
+    }
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -222,12 +253,14 @@ class _SOARProfileIntroScreenState extends State<SOARProfileIntroScreen> {
         _buildCharacter(
           isLeft: true,
           context: context,
-          scale: isTablet ? 1.3 : 0.8,
+          width: characterWidth,
+          height: characterHeight,
         ),
         _buildCharacter(
           isLeft: false,
           context: context,
-          scale: isTablet ? 1.3 : 0.8,
+          width: characterWidth,
+          height: characterHeight,
         ),
       ],
     );
@@ -236,60 +269,41 @@ class _SOARProfileIntroScreenState extends State<SOARProfileIntroScreen> {
   Widget _buildCharacter({
     required bool isLeft,
     required BuildContext context,
-    double scale = 1.0,
+    required double width,
+    required double height,
   }) {
-    // Choose asset based on side
     String assetPath = isLeft
         ? 'lib/assets/avatar/AI_Avatar2.png'
         : 'lib/assets/avatar/AI_Avatar.png';
 
-    final characterWidth = _getResponsiveValue(
-      context: context,
-      mobile: 140.0,
-      tablet: 200.0,
-    );
-
-    final characterHeight = _getResponsiveValue(
-      context: context,
-      mobile: 160.0,
-      tablet: 230.0,
-    );
-
-    return Transform.scale(
-      scale: scale,
-      child: SizedBox(
-        width: characterWidth,
-        height: characterHeight,
-        child: Image.asset(
-          assetPath,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                Icons.person,
-                size: _getResponsiveValue(
-                  context: context,
-                  mobile: 50.0,
-                  tablet: 70.0,
-                ),
-                color: Colors.grey,
-              ),
-            );
-          },
-        ),
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Image.asset(
+        assetPath,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.person, size: width * 0.4, color: Colors.grey),
+          );
+        },
       ),
     );
   }
 
   Widget _buildDescriptionText(BuildContext context) {
+    final deviceType = _getDeviceType(context);
+    final maxWidth = deviceType == DeviceType.mobile
+        ? double.infinity
+        : MediaQuery.of(context).size.width * 0.8;
+
     return Container(
-      padding: EdgeInsets.all(
-        _getResponsiveValue(context: context, mobile: 20.0, tablet: 28.0),
-      ),
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      padding: EdgeInsets.all(_getResponsiveSpacing(context, 20.0)),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(15),
@@ -299,11 +313,7 @@ class _SOARProfileIntroScreenState extends State<SOARProfileIntroScreen> {
         "SOAR card is like a map. It shows your strengths, your goals, and where you want to head. Once you answer a few questions, I'll use it to personalize your journey, from courses you take to the support I provide whenever you need it. Think of it as your personal compass at sea designed to keep you steady.",
         textAlign: TextAlign.center,
         style: TextStyle(
-          fontSize: _getResponsiveValue(
-            context: context,
-            mobile: 16.0,
-            tablet: 20.0,
-          ),
+          fontSize: _getResponsiveFontSize(context, 15.0),
           color: const Color(0xFF2C3E50),
           height: 1.5,
           letterSpacing: 0.3,
@@ -313,38 +323,50 @@ class _SOARProfileIntroScreenState extends State<SOARProfileIntroScreen> {
   }
 
   Widget _buildDisclaimerText(BuildContext context) {
-    return Text(
-      "*No right or wrong answers; just your story.",
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        fontSize: _getResponsiveValue(
-          context: context,
-          mobile: 14.0,
-          tablet: 16.0,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Text(
+        "*No right or wrong answers; just your story.",
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: _getResponsiveFontSize(context, 13.0),
+          color: Colors.grey,
+          fontStyle: FontStyle.italic,
         ),
-        color: Colors.grey,
-        fontStyle: FontStyle.italic,
       ),
     );
   }
 
   Widget _buildReadyButton(BuildContext context) {
-    final buttonWidth = _isTablet(context)
-        ? MediaQuery.of(context).size.width * 0.6
-        : double.infinity;
+    final deviceType = _getDeviceType(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    double buttonWidth;
+    switch (deviceType) {
+      case DeviceType.mobile:
+        buttonWidth = screenWidth * 0.85;
+        break;
+      case DeviceType.tablet:
+        buttonWidth = screenWidth * 0.6;
+        break;
+      case DeviceType.largeTablet:
+        buttonWidth = screenWidth * 0.4;
+        break;
+    }
+
+    final buttonHeight = _getResponsiveSpacing(context, 54.0);
+    final borderRadius = buttonHeight / 2;
 
     return Container(
       width: buttonWidth,
-      height: _getResponsiveValue(context: context, mobile: 55.0, tablet: 65.0),
+      height: buttonHeight,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
           colors: [Color(0xFF29B6F6), Color(0xFF03A9F4)],
         ),
-        borderRadius: BorderRadius.circular(
-          _getResponsiveValue(context: context, mobile: 27.5, tablet: 32.5),
-        ),
+        borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.blue.withOpacity(0.4),
@@ -365,19 +387,14 @@ class _SOARProfileIntroScreenState extends State<SOARProfileIntroScreen> {
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              _getResponsiveValue(context: context, mobile: 27.5, tablet: 32.5),
-            ),
+            borderRadius: BorderRadius.circular(borderRadius),
           ),
+          padding: EdgeInsets.zero,
         ),
         child: Text(
           "I'm Ready",
           style: TextStyle(
-            fontSize: _getResponsiveValue(
-              context: context,
-              mobile: 18.0,
-              tablet: 22.0,
-            ),
+            fontSize: _getResponsiveFontSize(context, 18.0),
             fontWeight: FontWeight.w600,
             color: Colors.white,
             letterSpacing: 0.5,
@@ -387,3 +404,5 @@ class _SOARProfileIntroScreenState extends State<SOARProfileIntroScreen> {
     );
   }
 }
+
+enum DeviceType { mobile, tablet, largeTablet }
