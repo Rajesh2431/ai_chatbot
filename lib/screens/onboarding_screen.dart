@@ -1003,6 +1003,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   // Journey Page - Keyboard Friendly
+
   Widget _buildJourneyPage(BuildContext context, String userEmail) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -1014,183 +1015,163 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 3),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final deviceType = _getDeviceType(context);
+              final horizontalPadding = _getHorizontalPadding(deviceType);
+              final screenHeight = constraints.maxHeight;
 
-                // Welcome text
-                const Text(
-                  'Welcome to',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black87,
-                  ),
-                ),
+              return Padding(
+                padding: EdgeInsets.all(horizontalPadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Top section
+                    Column(
+                      children: [
+                        SizedBox(height: screenHeight * 0.02),
 
-                const SizedBox(height: 3),
+                        // Welcome text
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Welcome to',
+                            style: TextStyle(
+                              fontSize: _getResponsiveFontSize(context, 32),
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
 
-                // App name
-                const Text(
-                  'Sea Smart',
-                  style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(255, 0, 136, 190),
-                  ),
-                ),
+                        SizedBox(height: screenHeight * 0.005),
 
-                const SizedBox(height: 1),
+                        // App name
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Sea Smart',
+                            style: TextStyle(
+                              fontSize: _getResponsiveFontSize(context, 40),
+                              fontWeight: FontWeight.bold,
+                              color: const Color.fromARGB(255, 0, 136, 190),
+                            ),
+                          ),
+                        ),
 
-                // Powered by text
-                Text(
-                  '',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
+                        SizedBox(height: screenHeight * 0.03),
 
-                const SizedBox(height: 40),
+                        // Blue container with tagline
+                        Container(
+                          width: double.infinity,
+                          constraints: BoxConstraints(
+                            maxWidth: deviceType == DeviceType.mobile
+                                ? double.infinity
+                                : 600,
+                          ),
+                          padding: EdgeInsets.all(
+                            _getResponsiveSpacing(context, 20),
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(
+                              255,
+                              0,
+                              136,
+                              190,
+                            ).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: const Color.fromARGB(
+                                255,
+                                0,
+                                136,
+                                190,
+                              ).withOpacity(0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            'Your safe harbor for\nlearning, support, & peace of mind',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: _getResponsiveFontSize(context, 18),
+                              fontWeight: FontWeight.w600,
+                              color: const Color.fromARGB(255, 0, 136, 190),
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
 
-                // Blue container with tagline
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(
-                      255,
-                      0,
-                      136,
-                      190,
-                    ).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: const Color.fromARGB(
-                        255,
-                        0,
-                        136,
-                        190,
-                      ).withOpacity(0.2),
-                      width: 1,
+                        SizedBox(height: screenHeight * 0.025),
+
+                        // Description text
+                        Container(
+                          constraints: BoxConstraints(
+                            maxWidth: deviceType == DeviceType.mobile
+                                ? double.infinity
+                                : 550,
+                          ),
+                          child: Text(
+                            'Sea Smart is your buddy at sea, helping you stay calm, connected, and continuously growing through every voyage.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: _getResponsiveFontSize(context, 16),
+                              color: Colors.grey.shade700,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  child: const Text(
-                    'Your safe harbor for\nlearning, support, & peace of mind',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color.fromARGB(255, 0, 136, 190),
-                      height: 1.4,
+
+                    // Middle section - Illustration
+                    Container(
+                      width: _getIllustrationSize(context, screenHeight),
+                      height: _getIllustrationSize(context, screenHeight),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100.withOpacity(0),
+                        borderRadius: BorderRadius.circular(
+                          _getIllustrationSize(context, screenHeight) / 2,
+                        ),
+                        border: Border.all(
+                          color: const Color.fromARGB(
+                            255,
+                            0,
+                            136,
+                            190,
+                          ).withOpacity(0),
+                          width: 2,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
 
-                const SizedBox(height: 32),
-
-                // Description text
-                Text(
-                  'Sea Smart is your buddy at sea, helping you stay calm, connected, and continuously growing through every voyage.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade700,
-                    height: 1.5,
-                  ),
-                ),
-
-                const SizedBox(height: 1),
-
-                // Illustration/Icon placeholder
-                Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100.withAlpha(0),
-                    borderRadius: BorderRadius.circular(100),
-                    border: Border.all(
-                      color: const Color.fromARGB(
-                        255,
-                        0,
-                        136,
-                        190,
-                      ).withOpacity(0),
-                      width: 2,
+                    // Bottom section
+                    Column(
+                      children: [
+                        Container(
+                          constraints: BoxConstraints(
+                            maxWidth: deviceType == DeviceType.mobile
+                                ? double.infinity
+                                : 550,
+                          ),
+                          child: Text(
+                            'Before we set sail, let\'s ask a few quick questions. This helps us chart the best course for your wellness and support.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: _getResponsiveFontSize(context, 14),
+                              color: Colors.grey.shade600,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.02),
+                      ],
                     ),
-                  ),
+                  ],
                 ),
-
-                const SizedBox(),
-
-                // Bottom text
-                Text(
-                  'Before we set sail, let\'s ask a few quick questions. This helps us chart the best course for your wellness and support. ⚓',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                    height: 1.4,
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Continue button
-                // Container(
-                //   width: double.infinity,
-                //   height: 54,
-                //   decoration: BoxDecoration(
-                //     gradient: const LinearGradient(
-                //       colors: [
-                //         Color.fromARGB(255, 0, 136, 190),
-                //         Color.fromARGB(255, 0, 120, 170),
-                //       ],
-                //     ),
-                //     borderRadius: BorderRadius.circular(27),
-                //     boxShadow: [
-                //       BoxShadow(
-                //         color: const Color.fromARGB(255, 0, 136, 190).withOpacity(0.3),
-                //         blurRadius: 12,
-                //         offset: const Offset(0, 4),
-                //       ),
-                //     ],
-                //   ),
-                //   child: ElevatedButton(
-                //     onPressed: () {
-                //       Navigator.pushReplacement(
-                //         context,
-                //         MaterialPageRoute(
-                //           builder: (context) =>
-                //               OnboardingScreen(userEmail: userEmail),
-                //         ),
-                //       );
-                //     },
-                //     style: ElevatedButton.styleFrom(
-                //       backgroundColor: Colors.transparent,
-                //       foregroundColor: Colors.white,
-                //       shadowColor: Colors.transparent,
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(27),
-                //       ),
-                //       elevation: 0,
-                //     ),
-                //     child: const Text(
-                //       'Sail with Calm',
-                //       style: TextStyle(
-                //         fontSize: 18,
-                //         fontWeight: FontWeight.w600,
-                //       ),
-                //     ),
-                //   ),
-                // ),
-                const SizedBox(height: 20),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -1725,3 +1706,72 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 }
+
+// Enhanced device type detection
+DeviceType _getDeviceType(BuildContext context) {
+  final size = MediaQuery.of(context).size;
+  if (size.shortestSide < 600) {
+    return DeviceType.mobile;
+  } else if (size.shortestSide < 900) {
+    return DeviceType.tablet;
+  } else {
+    return DeviceType.largeTablet;
+  }
+}
+
+// Get horizontal padding
+double _getHorizontalPadding(DeviceType deviceType) {
+  switch (deviceType) {
+    case DeviceType.mobile:
+      return 24.0;
+    case DeviceType.tablet:
+      return 48.0;
+    case DeviceType.largeTablet:
+      return 80.0;
+  }
+}
+
+// Get responsive font size
+double _getResponsiveFontSize(BuildContext context, double baseMobile) {
+  final deviceType = _getDeviceType(context);
+  final width = MediaQuery.of(context).size.width;
+
+  switch (deviceType) {
+    case DeviceType.mobile:
+      return baseMobile * (width / 375).clamp(0.85, 1.15);
+    case DeviceType.tablet:
+      return baseMobile * 1.3;
+    case DeviceType.largeTablet:
+      return baseMobile * 1.5;
+  }
+}
+
+// Get responsive spacing
+double _getResponsiveSpacing(BuildContext context, double baseMobile) {
+  final deviceType = _getDeviceType(context);
+  switch (deviceType) {
+    case DeviceType.mobile:
+      return baseMobile;
+    case DeviceType.tablet:
+      return baseMobile * 1.3;
+    case DeviceType.largeTablet:
+      return baseMobile * 1.6;
+  }
+}
+
+// Get illustration size based on screen height
+double _getIllustrationSize(BuildContext context, double screenHeight) {
+  final deviceType = _getDeviceType(context);
+
+  switch (deviceType) {
+    case DeviceType.mobile:
+      // Scale based on available height (15-20% of screen)
+      return (screenHeight * 0.20).clamp(120.0, 200.0);
+    case DeviceType.tablet:
+      return (screenHeight * 0.22).clamp(200.0, 280.0);
+    case DeviceType.largeTablet:
+      return (screenHeight * 0.25).clamp(250.0, 350.0);
+  }
+}
+
+enum DeviceType { mobile, tablet, largeTablet }

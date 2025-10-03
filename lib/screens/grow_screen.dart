@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:SeaSmart/screens/goal_set.dart';
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/user_profile_service.dart';
 import '../services/mood_service.dart';
 import '../services/soar_card_service.dart';
@@ -36,7 +38,7 @@ class _MoodIndicator extends StatelessWidget {
       width: 40,
       height: 12,
       decoration: BoxDecoration(
-        color: isActive ? color : color.withValues(alpha: 0.3),
+        color: isActive ? color : color.withOpacity(0.3),
         borderRadius: BorderRadius.circular(6),
       ),
     );
@@ -84,10 +86,10 @@ class _HorizontalCalendarState extends State<HorizontalCalendar> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 76, // Reduced height to prevent overflow
+      height: 76,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: 8, // number of days
+        itemCount: 8,
         itemBuilder: (context, index) {
           final dayNumber = index + 1;
           final isSelected = selectedDay == dayNumber;
@@ -99,24 +101,18 @@ class _HorizontalCalendarState extends State<HorizontalCalendar> {
               });
             },
             child: Container(
-              width: 48, // Optimized width for exact spacing
-              margin: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 3,
-              ), // Precise margins
+              width: 48,
+              margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
               decoration: BoxDecoration(
                 gradient: isSelected
-                    ? LinearGradient(
-                        colors: [
-                          const Color(0xFF3B82F6), // Medium blue
-                          const Color(0xFF06B6D4), // Turquoise blue
-                        ],
+                    ? const LinearGradient(
+                        colors: [Color(0xFF3B82F6), Color(0xFF06B6D4)],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       )
                     : null,
                 color: isSelected ? null : Colors.white,
-                borderRadius: BorderRadius.circular(20), // Perfect pill shape
+                borderRadius: BorderRadius.circular(20),
                 border: isSelected
                     ? null
                     : Border.all(color: Colors.grey.shade300, width: 1),
@@ -131,39 +127,37 @@ class _HorizontalCalendarState extends State<HorizontalCalendar> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Number badge
                   Container(
-                    width: 30, // Perfect size for the badge
+                    width: 30,
                     height: 30,
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Colors.white
-                          : const Color(0xFFE0F2FE), // Light blue
+                          : const Color(0xFFE0F2FE),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
                       child: Text(
                         '$dayNumber',
                         style: TextStyle(
-                          fontSize: 15, // Optimal font size
+                          fontSize: 15,
                           fontWeight: FontWeight.bold,
                           color: isSelected
-                              ? const Color(0xFF3B82F6) // Blue text on white
-                              : const Color(0xFF0EA5E9), // Light blue text
+                              ? const Color(0xFF3B82F6)
+                              : const Color(0xFF0EA5E9),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 5), // Perfect spacing
-                  // Day text
+                  const SizedBox(height: 5),
                   Text(
                     'Day',
                     style: TextStyle(
-                      fontSize: 12, // Optimal font size
+                      fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: isSelected
                           ? Colors.white
-                          : const Color(0xFF0EA5E9), // Light blue
+                          : const Color(0xFF0EA5E9),
                     ),
                   ),
                 ],
@@ -179,29 +173,63 @@ class _HorizontalCalendarState extends State<HorizontalCalendar> {
 class _GrowScreenState extends State<GrowScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int _selectedBottomIndex = 0; // Bottom navigation index
+  int _selectedBottomIndex = 0;
   String _userName = 'Name';
   String? _userAvatarPath;
   final int _dayAtSea = 32;
   final String _destination = 'USA';
-  final int _estimatedArrival = 4;
   double _wellnessScore = 30.0;
   List<SoarCardAnswer> _soarAnswers = [];
   List<dynamic> _userGoals = [];
   bool _loadingSoarData = true;
   bool _loadingGoals = true;
 
+  // Showcase Keys
+  final GlobalKey _profileKey = GlobalKey();
+  final GlobalKey _infoCardKey = GlobalKey();
+  final GlobalKey _calendarKey = GlobalKey();
+  final GlobalKey _knowTabKey = GlobalKey();
+  final GlobalKey _growTabKey = GlobalKey();
+  final GlobalKey _showTabKey = GlobalKey();
+  final GlobalKey _chatButtonKey = GlobalKey();
+  final GlobalKey _activityCard1Key = GlobalKey();
+  final GlobalKey _activityCard2Key = GlobalKey();
+  final GlobalKey _academyCardKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
-      length: 3,
-      vsync: this,
-      initialIndex: 1,
-    ); // Default to Grow tab
+    _tabController = TabController(length: 3, vsync: this, initialIndex: 1);
     _loadUserData();
     _loadSoarData();
     _loadGoalsData();
+
+    // Start the showcase tour after the first frame is rendered.
+    // This is crucial for ShowcaseView to work correctly.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkFirstTimeUser();
+    });
+  }
+
+  void _checkFirstTimeUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isFirstTime = prefs.getBool('isFirstTime') ?? true;
+
+    if (isFirstTime) {
+      ShowCaseWidget.of(context).startShowCase([
+        _profileKey,
+        _infoCardKey,
+        _calendarKey,
+        _knowTabKey,
+        _growTabKey,
+        _showTabKey,
+        _chatButtonKey,
+        _activityCard1Key,
+        _activityCard2Key,
+        _academyCardKey,
+      ]);
+      await prefs.setBool('isFirstTime', false);
+    }
   }
 
   @override
@@ -273,107 +301,15 @@ class _GrowScreenState extends State<GrowScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: _selectedBottomIndex == 0
-          ? _buildGrowScreenContent() // Show grow screen content for home
-          : _getPageForIndex(_selectedBottomIndex), // Show other pages
-      // bottomNavigationBar: CurvedNavigationBar(
-      //   index: _selectedBottomIndex,
-      //   height: 50,
-      //   backgroundColor: const Color(0xFFF8F9FA),
-      //   color: const Color(0xFF5DC1F3),
-      //   buttonBackgroundColor: const Color(0xFF4A90E2),
-      //   animationDuration: const Duration(milliseconds: 300),
-      //   animationCurve: Curves.easeInOut,
-      //   items: [
-      //     // Home (Grow Screen)
-      //     _selectedBottomIndex == 0
-      //         ? const Icon(Icons.home, size: 32, color: Colors.white)
-      //         : const Column(
-      //             mainAxisAlignment: MainAxisAlignment.center,
-      //             mainAxisSize: MainAxisSize.min,
-      //             children: [
-      //               Icon(Icons.home, size: 24, color: Colors.white),
-      //               SizedBox(height: 2),
-      //               Text(
-      //                 'Home',
-      //                 style: TextStyle(
-      //                   color: Colors.white,
-      //                   fontSize: 12,
-      //                   fontWeight: FontWeight.w500,
-      //                 ),
-      //               ),
-      //             ],
-      //           ),
-      //     // Journal
-      //     _selectedBottomIndex == 1
-      //         ? const Icon(Icons.book_rounded, size: 32, color: Colors.white)
-      //         : const Column(
-      //             mainAxisAlignment: MainAxisAlignment.center,
-      //             mainAxisSize: MainAxisSize.min,
-      //             children: [
-      //               Icon(Icons.book_rounded, size: 24, color: Colors.white),
-      //               SizedBox(height: 2),
-      //               Text(
-      //                 'Journal',
-      //                 style: TextStyle(
-      //                   color: Colors.white,
-      //                   fontSize: 12,
-      //                   fontWeight: FontWeight.w500,
-      //                 ),
-      //               ),
-      //             ],
-      //           ),
-      //     // Chat
-      //     _selectedBottomIndex == 2
-      //         ? const Icon(
-      //             Icons.chat_bubble_rounded,
-      //             size: 32,
-      //             color: Colors.white,
-      //           )
-      //         : const Column(
-      //             mainAxisAlignment: MainAxisAlignment.center,
-      //             mainAxisSize: MainAxisSize.min,
-      //             children: [
-      //               Icon(
-      //                 Icons.chat_bubble_rounded,
-      //                 size: 24,
-      //                 color: Colors.white,
-      //               ),
-      //               SizedBox(height: 2),
-      //               Text(
-      //                 'Chat',
-      //                 style: TextStyle(
-      //                   color: Colors.white,
-      //                   fontSize: 12,
-      //                   fontWeight: FontWeight.w500,
-      //                 ),
-      //               ),
-      //             ],
-      //           ),
-      //     // Settings
-      //     _selectedBottomIndex == 3
-      //         ? const Icon(Icons.settings, size: 32, color: Colors.white)
-      //         : const Column(
-      //             mainAxisAlignment: MainAxisAlignment.center,
-      //             mainAxisSize: MainAxisSize.min,
-      //             children: [
-      //               Icon(Icons.settings, size: 24, color: Colors.white),
-      //               SizedBox(height: 2),
-      //               Text(
-      //                 'Settings',
-      //                 style: TextStyle(
-      //                   color: Colors.white,
-      //                   fontSize: 12,
-      //                   fontWeight: FontWeight.w500,
-      //                 ),
-      //               ),
-      //             ],
-      //           ),
-      //   ],
-      //   onTap: _onBottomNavTap,
-      // ),
+    return ShowCaseWidget(
+      builder: (context) {
+        return Scaffold(
+          backgroundColor: const Color(0xFFF8F9FA),
+          body: _selectedBottomIndex == 0
+              ? _buildGrowScreenContent(context)
+              : _getPageForIndex(_selectedBottomIndex),
+        );
+      },
     );
   }
 
@@ -386,11 +322,11 @@ class _GrowScreenState extends State<GrowScreen>
       case 3:
         return const SettingsScreen();
       default:
-        return _buildGrowScreenContent();
+        return _buildGrowScreenContent(context);
     }
   }
 
-  Widget _buildGrowScreenContent() {
+  Widget _buildGrowScreenContent(BuildContext context) {
     return NestedScrollView(
       headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
         return <Widget>[
@@ -400,12 +336,11 @@ class _GrowScreenState extends State<GrowScreen>
             floating: false,
             pinned: false,
             snap: false,
-            expandedHeight: 300.0, // Compact header
+            expandedHeight: 300.0,
             automaticallyImplyLeading: false,
             flexibleSpace: FlexibleSpaceBar(
               background: Column(
                 children: [
-                  // Header - positioned at very top
                   Container(
                     padding: EdgeInsets.fromLTRB(
                       20,
@@ -416,77 +351,81 @@ class _GrowScreenState extends State<GrowScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Profile Avatar
-                        GestureDetector(
-                          onTap: () async {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const UserProfileScreen(),
-                              ),
-                            );
-                            if (result == true) {
-                              _loadUserData();
-                            }
-                          },
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.grey[300],
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
+                        Showcase(
+                          key: _profileKey,
+                          title: 'Your Avatar',
+                          description:
+                              'This is your profile. Tap here to edit your personal information and preferences.',
+                          child: GestureDetector(
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const UserProfileScreen(),
                                 ),
-                              ],
-                            ),
-                            child: ClipOval(
-                              child: _userAvatarPath != null
-                                  ? (_userAvatarPath!.startsWith('lib/assets/'))
-                                        ? Image.asset(
-                                            _userAvatarPath!,
-                                            width: 40,
-                                            height: 40,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
-                                                const Icon(
-                                                  Icons.person,
-                                                  color: Colors.grey,
-                                                  size: 24,
-                                                ),
-                                          )
-                                        : Image.file(
-                                            File(_userAvatarPath!),
-                                            width: 40,
-                                            height: 40,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
-                                                const Icon(
-                                                  Icons.person,
-                                                  color: Colors.grey,
-                                                  size: 24,
-                                                ),
-                                          )
-                                  : const Icon(
-                                      Icons.person,
-                                      color: Colors.grey,
-                                      size: 24,
-                                    ),
+                              );
+                              if (result == true) {
+                                _loadUserData();
+                              }
+                            },
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.grey[300],
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: _userAvatarPath != null
+                                    ? (_userAvatarPath!.startsWith(
+                                            'lib/assets/',
+                                          ))
+                                          ? Image.asset(
+                                              _userAvatarPath!,
+                                              width: 40,
+                                              height: 40,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) =>
+                                                  const Icon(
+                                                    Icons.person,
+                                                    color: Colors.grey,
+                                                    size: 24,
+                                                  ),
+                                            )
+                                          : Image.file(
+                                              File(_userAvatarPath!),
+                                              width: 40,
+                                              height: 40,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) =>
+                                                  const Icon(
+                                                    Icons.person,
+                                                    color: Colors.grey,
+                                                    size: 24,
+                                                  ),
+                                            )
+                                    : const Icon(
+                                        Icons.person,
+                                        color: Colors.grey,
+                                        size: 24,
+                                      ),
+                              ),
                             ),
                           ),
                         ),
-
-                        // Title
                         Image.asset(
-                          "lib/assets/images/strive.png", // your PNG file
-                          height: 40, // adjust as needed
+                          "lib/assets/images/strive.png",
+                          height: 40,
                           fit: BoxFit.contain,
                         ),
-
-                        // Menu Icon
                         Container(
                           width: 40,
                           height: 40,
@@ -503,9 +442,7 @@ class _GrowScreenState extends State<GrowScreen>
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 1),
-
                   const Text(
                     "Sea Smart",
                     style: TextStyle(
@@ -514,78 +451,79 @@ class _GrowScreenState extends State<GrowScreen>
                       color: Color.fromARGB(255, 53, 154, 255),
                     ),
                   ),
-
-                  // User Info Card - more compact
-                  Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 4,
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
+                  Showcase(
+                    key: _infoCardKey,
+                    title: 'Your Journey Stats',
+                    description:
+                        'See how many days you\'ve been on your wellness journey and your destination.',
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 4,
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                        image: const DecorationImage(
+                          image: AssetImage("lib/assets/images/wave_bg.png"),
+                          fit: BoxFit.cover,
                         ),
-                      ],
-                      image: const DecorationImage(
-                        image: AssetImage(
-                          "lib/assets/images/wave_bg.png",
-                        ), // your PNG file
-                        fit: BoxFit.cover, // make it cover full background
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Ready for today's journey, $_userName",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2C3E50),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: _StatCard(
+                                  value: '$_dayAtSea',
+                                  label: 'Day is the Sea',
+                                  color: const Color(0xFF3498DB),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _StatCard(
+                                  value: _destination,
+                                  label: 'Destination',
+                                  color: const Color(0xFF2ECC71),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Ready for today's journey, $_userName",
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2C3E50),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Stats Row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: _StatCard(
-                                value: '$_dayAtSea',
-                                label: 'Day is the Sea',
-                                color: const Color(0xFF3498DB),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _StatCard(
-                                value: _destination,
-                                label: 'Destination',
-                                color: const Color(0xFF2ECC71),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
                   ),
-
                   const SizedBox(height: 1),
-
-                  // Horizontal Calendar
-                  const HorizontalCalendar(),
+                  Showcase(
+                    key: _calendarKey,
+                    title: 'Daily Progress',
+                    description:
+                        'Use the calendar to track your daily progress and check-ins.',
+                    child: const HorizontalCalendar(),
+                  ),
                 ],
               ),
             ),
           ),
-
-          // Sticky Tab Bar
           SliverPersistentHeader(
             delegate: _StickyTabBarDelegate(
               Container(
@@ -596,7 +534,7 @@ class _GrowScreenState extends State<GrowScreen>
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: Colors.black.withOpacity(0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -616,10 +554,28 @@ class _GrowScreenState extends State<GrowScreen>
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
-                  tabs: const [
-                    Tab(text: 'Know'),
-                    Tab(text: 'Grow'),
-                    Tab(text: 'Show'),
+                  tabs: [
+                    Showcase(
+                      key: _knowTabKey,
+                      title: 'The Know Section',
+                      description:
+                          'This is where you gain self-awareness through assessments, journal entries, and personal insights.',
+                      child: const Tab(text: 'Know'),
+                    ),
+                    Showcase(
+                      key: _growTabKey,
+                      title: 'The Grow Section',
+                      description:
+                          'Here you can actively improve your well-being with activities, games, and resources from the Academy.',
+                      child: const Tab(text: 'Grow'),
+                    ),
+                    Showcase(
+                      key: _showTabKey,
+                      title: 'The Show Section',
+                      description:
+                          'This tab showcases your progress with reports, mood analysis, and certificates of completion.',
+                      child: const Tab(text: 'Show'),
+                    ),
                   ],
                 ),
               ),
@@ -632,14 +588,13 @@ class _GrowScreenState extends State<GrowScreen>
         controller: _tabController,
         children: [
           _buildKnowContent(),
-          _buildGrowContent(),
+          _buildGrowContent(context),
           _buildShowContent(),
         ],
       ),
     );
   }
 
-  // Content methods for each tab
   Widget _buildKnowContent() {
     return SingleChildScrollView(
       child: Padding(
@@ -656,15 +611,10 @@ class _GrowScreenState extends State<GrowScreen>
               ),
             ),
             const SizedBox(height: 16),
-
-            // SOAR Card Tile
             _buildSoarCardTile(),
             const SizedBox(height: 16),
-
-            // Goals Tile
             _buildGoalsTile(),
             const SizedBox(height: 16),
-
             const Text(
               'Wellness Tips',
               style: TextStyle(
@@ -681,105 +631,75 @@ class _GrowScreenState extends State<GrowScreen>
     );
   }
 
-  Widget _buildGrowContent() {
+  Widget _buildGrowContent(BuildContext context) {
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Chat with Shipmate Section
-            Container(
-              width: double.infinity,
-              height: 125,
-              alignment: Alignment.bottomRight,
-              decoration: BoxDecoration(
-                image: const DecorationImage(
-                  image: AssetImage('lib/assets/images/chat.png'),
-                  fit: BoxFit.cover,
-                  alignment: Alignment.centerRight,
+            Showcase(
+              key: _chatButtonKey,
+              title: 'Chat with Shipmate',
+              description:
+                  'Your personal AI companion for wellness guidance and support.',
+              child: Container(
+                width: double.infinity,
+                height: 125,
+                alignment: Alignment.bottomRight,
+                decoration: BoxDecoration(
+                  image: const DecorationImage(
+                    image: AssetImage('lib/assets/images/chat.png'),
+                    fit: BoxFit.cover,
+                    alignment: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Stack(
-                children: [
-                  // Wave pattern background
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    left: 20,
-                    top: 20,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Image.asset(
-                        //   "lib/assets/images/cap.png", // ⚓ your image path
-                        //   height: 50,
-                        //   width: 50,
-                        //   fit: BoxFit.contain,
-                        // ),
-                        const SizedBox(height: 8),
-                        // const Text(
-                        //   'Chat with Your',
-                        //   style: TextStyle(
-                        //     color: Colors.white70,
-                        //     fontSize: 14,
-                        //   ),
-                        // ),
-                        // const Text(
-                        //   'SHIPMATE',
-                        //   style: TextStyle(
-                        //     color: Colors.white,
-                        //     fontSize: 18,
-                        //     fontWeight: FontWeight.bold,
-                        //     letterSpacing: 2,
-                        //   ),
-                        // ),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    right: 10,
-                    bottom: 0,
-                    child: GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ChatScreen(),
-                        ),
-                      ),
-                      child: Container(
-                        height: 100,
-                        width: 400,
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(0, 255, 153, 0),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        // child: ClipRRect(
-                        //   borderRadius: BorderRadius.circular(8), // match container radius
-                        //   child: Image.asset(
-                        //     "lib/assets/images/avat.png", // your PNG path
-                        //     fit: BoxFit.cover, // fills container
-                        //   ),
-                        // ),
+                    Positioned(
+                      left: 20,
+                      top: 20,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [SizedBox(height: 8)],
                       ),
                     ),
-                  ),
-                ],
+                    Positioned(
+                      right: 10,
+                      bottom: 0,
+                      child: GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ChatScreen(),
+                          ),
+                        ),
+                        child: Container(
+                          height: 100,
+                          width: 400,
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(0, 255, 153, 0),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Activity Section
             const Text(
               'Activity',
               style: TextStyle(
@@ -789,40 +709,47 @@ class _GrowScreenState extends State<GrowScreen>
               ),
             ),
             const SizedBox(height: 16),
-
             Row(
               children: [
                 Expanded(
-                  child: _ActivityCard(
-                    title: 'Meditation',
-                    imagePath: 'lib/assets/images/med.png',
-                    backgroundColor: Colors.white,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const GridCalmGame()),
+                  child: Showcase(
+                    key: _activityCard1Key,
+                    title: 'Meditation Game',
+                    description: 'A fun way to practice mindfulness and calm.',
+                    child: _ActivityCard(
+                      title: 'Meditation',
+                      imagePath: 'lib/assets/images/med.png',
+                      backgroundColor: Colors.white,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const GridCalmGame()),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _ActivityCard(
-                    title: 'Breathing',
-                    imagePath: 'lib/assets/images/bre.png',
-                    backgroundColor: Colors.white,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const BreathingScreen(),
+                  child: Showcase(
+                    key: _activityCard2Key,
+                    title: 'Breathing Exercises',
+                    description:
+                        'Follow guided breathing exercises to relax and de-stress.',
+                    child: _ActivityCard(
+                      title: 'Breathing',
+                      imagePath: 'lib/assets/images/bre.png',
+                      backgroundColor: Colors.white,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BreathingScreen(),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ],
             ),
-
             const SizedBox(height: 24),
-
-            // Academy Section
             const Text(
               'Academy',
               style: TextStyle(
@@ -832,61 +759,64 @@ class _GrowScreenState extends State<GrowScreen>
               ),
             ),
             const SizedBox(height: 16),
-
-            // Consultation Card
-            Container(
-              width: double.infinity,
-              height: 250,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                image: const DecorationImage(
-                  image: AssetImage('lib/assets/images/consult.png'),
-                  fit: BoxFit.cover,
-                  alignment: Alignment.centerRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+            Showcase(
+              key: _academyCardKey,
+              title: 'Learn & Grow',
+              description:
+                  'Access the Academy to improve your wellness with courses and resources.',
+              child: Container(
+                width: double.infinity,
+                height: 250,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  image: const DecorationImage(
+                    image: AssetImage('lib/assets/images/consult.png'),
+                    fit: BoxFit.cover,
+                    alignment: Alignment.centerRight,
                   ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 16),
-                  GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const Academy()),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
                     ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 20,
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Academy(),
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: const Text(
-                        'CONSULT WITH US!',
-                        style: TextStyle(
-                          color: Color.fromARGB(0, 255, 255, 255),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 50,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 20,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: const Text(
+                          'CONSULT WITH US!',
+                          style: TextStyle(
+                            color: Color.fromARGB(0, 255, 255, 255),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 50,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Games Section
             const Text(
               'Games',
               style: TextStyle(
@@ -896,7 +826,6 @@ class _GrowScreenState extends State<GrowScreen>
               ),
             ),
             const SizedBox(height: 16),
-
             Row(
               children: [
                 Expanded(
@@ -925,10 +854,7 @@ class _GrowScreenState extends State<GrowScreen>
                 ),
               ],
             ),
-
             const SizedBox(height: 24),
-
-            // Wellness Tips Section
             const Text(
               'Wellness Tips',
               style: TextStyle(
@@ -938,7 +864,6 @@ class _GrowScreenState extends State<GrowScreen>
               ),
             ),
             const SizedBox(height: 16),
-
             Column(
               children: [
                 _WellnessTipCard(
@@ -970,7 +895,6 @@ class _GrowScreenState extends State<GrowScreen>
                 ),
               ],
             ),
-
             const SizedBox(height: 32),
           ],
         ),
@@ -985,7 +909,6 @@ class _GrowScreenState extends State<GrowScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔹 Title
             const Text(
               'Your Progress',
               style: TextStyle(
@@ -995,15 +918,12 @@ class _GrowScreenState extends State<GrowScreen>
               ),
             ),
             const SizedBox(height: 16),
-
-            // 🔹 Progress Feature Cards (Grid Style)
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 1,
               childAspectRatio: 2.0,
               mainAxisSpacing: 12,
-
               children: [
                 _buildFeatureCard(
                   "Journal",
@@ -1027,28 +947,23 @@ class _GrowScreenState extends State<GrowScreen>
                 ),
               ],
             ),
-
             const SizedBox(height: 24),
-
-            // 🔹 Wellness Tips Section
             const Text(
               'Wellness Tips',
-              textAlign: TextAlign.center, // ✅ move here
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF2C3E50),
               ),
             ),
-
             const SizedBox(height: 12),
-
             Column(
               children: [
                 _buildTipCard(
                   title: "Find Your Space",
                   description:
-                      "Choose a quiet spot on deck or in your cabin where you won’t disturbed",
+                      "Choose a quiet spot on deck or in your cabin where you won’t be disturbed",
                   bgColor: Colors.green.shade50,
                   textColor: Colors.green.shade800,
                 ),
@@ -1081,7 +996,6 @@ class _GrowScreenState extends State<GrowScreen>
     );
   }
 
-  /// 🔹 Feature Card
   Widget _buildFeatureCard(String title, String imagePath, String routeName) {
     return GestureDetector(
       onTap: () {
@@ -1107,11 +1021,11 @@ class _GrowScreenState extends State<GrowScreen>
           child: Stack(
             children: [
               Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color.fromARGB(106, 8, 122, 183),
-                      const Color.fromARGB(0, 1, 1, 29),
+                      Color.fromARGB(106, 8, 122, 183),
+                      Color.fromARGB(0, 1, 1, 29),
                     ],
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
@@ -1139,7 +1053,6 @@ class _GrowScreenState extends State<GrowScreen>
     );
   }
 
-  /// 🔹 Wellness Tip Card
   Widget _buildTipCard({
     required String title,
     required String description,
@@ -1179,7 +1092,6 @@ class _GrowScreenState extends State<GrowScreen>
   Widget _buildSoarCardTile() {
     return GestureDetector(
       onTap: () async {
-        // Navigate to SOAR card screen
         final userEmail = await UserProfileService.getUserEmail();
         if (userEmail.isNotEmpty && mounted) {
           Navigator.push(
@@ -1188,7 +1100,6 @@ class _GrowScreenState extends State<GrowScreen>
               builder: (context) => SoarDashboardPage(userEmail: userEmail),
             ),
           ).then((_) {
-            // Refresh SOAR data when returning
             _loadSoarData();
           });
         }
@@ -1200,7 +1111,7 @@ class _GrowScreenState extends State<GrowScreen>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -1215,7 +1126,7 @@ class _GrowScreenState extends State<GrowScreen>
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF9B59B6).withValues(alpha: 0.1),
+                    color: const Color(0xFF9B59B6).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -1258,7 +1169,6 @@ class _GrowScreenState extends State<GrowScreen>
                 ),
               ],
             ),
-
             if (!_loadingSoarData && _soarAnswers.isNotEmpty) ...[
               const SizedBox(height: 16),
               const Divider(),
@@ -1327,14 +1237,13 @@ class _GrowScreenState extends State<GrowScreen>
                   ),
                 ),
             ],
-
             if (!_loadingSoarData && _soarAnswers.isEmpty) ...[
               const SizedBox(height: 12),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF9B59B6).withValues(alpha: 0.1),
+                  color: const Color(0xFF9B59B6).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
@@ -1353,7 +1262,6 @@ class _GrowScreenState extends State<GrowScreen>
   Widget _buildGoalsTile() {
     return GestureDetector(
       onTap: () async {
-        // Navigate to goal setting screen
         final userEmail = await UserProfileService.getUserEmail();
         if (userEmail.isNotEmpty && mounted) {
           Navigator.push(
@@ -1362,7 +1270,6 @@ class _GrowScreenState extends State<GrowScreen>
               builder: (context) => GoalSet(userEmail: userEmail),
             ),
           ).then((_) {
-            // Refresh goals data when returning
             _loadGoalsData();
           });
         }
@@ -1374,7 +1281,7 @@ class _GrowScreenState extends State<GrowScreen>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -1389,7 +1296,7 @@ class _GrowScreenState extends State<GrowScreen>
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2ECC71).withValues(alpha: 0.1),
+                    color: const Color(0xFF2ECC71).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -1432,7 +1339,6 @@ class _GrowScreenState extends State<GrowScreen>
                 ),
               ],
             ),
-
             if (!_loadingGoals && _userGoals.isNotEmpty) ...[
               const SizedBox(height: 16),
               const Divider(),
@@ -1505,14 +1411,13 @@ class _GrowScreenState extends State<GrowScreen>
                   ),
                 ),
             ],
-
             if (!_loadingGoals && _userGoals.isEmpty) ...[
               const SizedBox(height: 12),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2ECC71).withValues(alpha: 0.1),
+                  color: const Color(0xFF2ECC71).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
@@ -1548,7 +1453,7 @@ class _GrowScreenState extends State<GrowScreen>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF3498DB).withValues(alpha: 0.3),
+              color: const Color(0xFF3498DB).withOpacity(0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -1560,7 +1465,7 @@ class _GrowScreenState extends State<GrowScreen>
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Icon(
@@ -1587,7 +1492,7 @@ class _GrowScreenState extends State<GrowScreen>
                     'Get personalized wellness guidance and support',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white.withOpacity(0.9),
                     ),
                   ),
                 ],
@@ -1597,7 +1502,7 @@ class _GrowScreenState extends State<GrowScreen>
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -1635,12 +1540,7 @@ class _GrowScreenState extends State<GrowScreen>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color.fromARGB(
-                255,
-                109,
-                159,
-                223,
-              ).withValues(alpha: 0.3),
+              color: const Color.fromARGB(255, 109, 159, 223).withOpacity(0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -1652,7 +1552,7 @@ class _GrowScreenState extends State<GrowScreen>
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Icon(
@@ -1679,7 +1579,7 @@ class _GrowScreenState extends State<GrowScreen>
                     'Track and analyze your mood patterns over time',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white.withOpacity(0.9),
                     ),
                   ),
                 ],
@@ -1689,7 +1589,7 @@ class _GrowScreenState extends State<GrowScreen>
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -1810,7 +1710,7 @@ class _GrowScreenState extends State<GrowScreen>
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -1822,7 +1722,7 @@ class _GrowScreenState extends State<GrowScreen>
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: (tip['color'] as Color).withValues(alpha: 0.1),
+                      color: (tip['color'] as Color).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -1906,7 +1806,7 @@ class _GrowScreenState extends State<GrowScreen>
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -1918,7 +1818,7 @@ class _GrowScreenState extends State<GrowScreen>
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: (tip['color'] as Color).withValues(alpha: 0.1),
+                      color: (tip['color'] as Color).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -1987,7 +1887,6 @@ class _GrowScreenState extends State<GrowScreen>
   }
 }
 
-// Activity Card Widget
 class _ActivityCard extends StatelessWidget {
   final String title;
   final String imagePath;
@@ -2040,7 +1939,6 @@ class _ActivityCard extends StatelessWidget {
   }
 }
 
-// Enhanced Game Card Widget
 class _EnhancedGameCard extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -2075,13 +1973,11 @@ class _EnhancedGameCard extends StatelessWidget {
 
   Widget _buildTapToCalmContent() {
     return Container(
-      height: 150, // adjust height as needed
+      height: 150,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         image: const DecorationImage(
-          image: AssetImage(
-            'lib/assets/images/game1.png',
-          ), // your background PNG
+          image: AssetImage('lib/assets/images/game1.png'),
           fit: BoxFit.cover,
         ),
       ),
@@ -2108,12 +2004,6 @@ class _EnhancedGameCard extends StatelessWidget {
                   color: const Color.fromARGB(0, 255, 255, 255),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                // child: Image.asset(
-                //   'lib/assets/images/game1.png',
-                //   height: 24,
-                //   width: 24,
-                //   fit: BoxFit.contain,
-                // ),
               ),
             ),
           ],
@@ -2124,13 +2014,11 @@ class _EnhancedGameCard extends StatelessWidget {
 
   Widget _buildMemoryGameContent() {
     return Container(
-      height: 150, // adjust height as needed
+      height: 150,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         image: const DecorationImage(
-          image: AssetImage(
-            'lib/assets/images/game2.png',
-          ), // single PNG background
+          image: AssetImage('lib/assets/images/game2.png'),
           fit: BoxFit.cover,
         ),
       ),
@@ -2155,7 +2043,6 @@ class _EnhancedGameCard extends StatelessWidget {
   }
 }
 
-// Wellness Tip Card Widget
 class _WellnessTipCard extends StatelessWidget {
   final String title;
   final String description;
@@ -2213,7 +2100,6 @@ class _WellnessTipCard extends StatelessWidget {
   }
 }
 
-// Sticky Tab Bar Delegate
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
 
@@ -2255,7 +2141,7 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -2304,7 +2190,7 @@ class _GameCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -2317,7 +2203,7 @@ class _GameCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 24),
@@ -2361,7 +2247,7 @@ class _ProgressCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

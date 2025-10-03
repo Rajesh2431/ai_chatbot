@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'soar_card.dart';
 
 class SOARProfileIntroScreen extends StatefulWidget {
@@ -10,11 +11,41 @@ class SOARProfileIntroScreen extends StatefulWidget {
 
 class _SOARProfileIntroScreenState extends State<SOARProfileIntroScreen> {
   String? get userEmail => null;
+  VideoPlayerController? _videoController;
+  bool _isVideoInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeVideo();
+  }
+
+  Future<void> _initializeVideo() async {
+    _videoController = VideoPlayerController.asset(
+      'lib/assets/avatar/soar_saira.mp4', // Replace with your video path
+    );
+
+    try {
+      await _videoController!.initialize();
+      //await _videoController!.setLooping(true);
+      await _videoController!.play();
+      setState(() {
+        _isVideoInitialized = true;
+      });
+    } catch (e) {
+      print('Error initializing video: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
+  }
 
   // Enhanced device type detection
   DeviceType _getDeviceType(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final diagonal = (size.width * size.width + size.height * size.height);
 
     if (size.shortestSide < 600) {
       return DeviceType.mobile;
@@ -101,18 +132,11 @@ class _SOARProfileIntroScreenState extends State<SOARProfileIntroScreen> {
                                 height: _getResponsiveSpacing(context, 24.0),
                               ),
 
-                              // Character illustrations
+                              // Video player
                               _buildCharacterIllustrations(context),
 
                               SizedBox(
                                 height: _getResponsiveSpacing(context, 24.0),
-                              ),
-
-                              // Description text
-                              _buildDescriptionText(context),
-
-                              SizedBox(
-                                height: _getResponsiveSpacing(context, 20.0),
                               ),
 
                               // Disclaimer text
@@ -228,96 +252,41 @@ class _SOARProfileIntroScreenState extends State<SOARProfileIntroScreen> {
     final deviceType = _getDeviceType(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // Calculate character size based on available width
-    double characterWidth;
-    double characterHeight;
+    // Calculate video size based on available width (1:1 aspect ratio)
+    double videoSize;
 
     switch (deviceType) {
       case DeviceType.mobile:
-        characterWidth = (screenWidth * 0.35).clamp(100.0, 140.0);
-        characterHeight = characterWidth * 1.15;
+        videoSize = (screenWidth * 0.85).clamp(250.0, 350.0);
         break;
       case DeviceType.tablet:
-        characterWidth = (screenWidth * 0.25).clamp(160.0, 200.0);
-        characterHeight = characterWidth * 1.15;
+        videoSize = (screenWidth * 0.65).clamp(400.0, 550.0);
         break;
       case DeviceType.largeTablet:
-        characterWidth = 220.0;
-        characterHeight = 253.0;
+        videoSize = 600.0;
         break;
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildCharacter(
-          isLeft: true,
-          context: context,
-          width: characterWidth,
-          height: characterHeight,
-        ),
-        _buildCharacter(
-          isLeft: false,
-          context: context,
-          width: characterWidth,
-          height: characterHeight,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCharacter({
-    required bool isLeft,
-    required BuildContext context,
-    required double width,
-    required double height,
-  }) {
-    String assetPath = isLeft
-        ? 'lib/assets/avatar/AI_Avatar2.png'
-        : 'lib/assets/avatar/AI_Avatar.png';
-
-    return SizedBox(
-      width: width,
-      height: height,
-      child: Image.asset(
-        assetPath,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(Icons.person, size: width * 0.4, color: Colors.grey),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildDescriptionText(BuildContext context) {
-    final deviceType = _getDeviceType(context);
-    final maxWidth = deviceType == DeviceType.mobile
-        ? double.infinity
-        : MediaQuery.of(context).size.width * 0.8;
-
-    return Container(
-      constraints: BoxConstraints(maxWidth: maxWidth),
-      padding: EdgeInsets.all(_getResponsiveSpacing(context, 20.0)),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Text(
-        "SOAR card is like a map. It shows your strengths, your goals, and where you want to head. Once you answer a few questions, I'll use it to personalize your journey, from courses you take to the support I provide whenever you need it. Think of it as your personal compass at sea designed to keep you steady.",
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: _getResponsiveFontSize(context, 15.0),
-          color: const Color(0xFF2C3E50),
-          height: 1.5,
-          letterSpacing: 0.3,
-        ),
+    return Center(
+      child: Container(
+        width: videoSize,
+        height: videoSize,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
+        child: _isVideoInitialized && _videoController != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _videoController!.value.size.width,
+                    height: _videoController!.value.size.height,
+                    child: VideoPlayer(_videoController!),
+                  ),
+                ),
+              )
+            : const Center(
+                child: CircularProgressIndicator(color: Colors.blue),
+              ),
       ),
     );
   }
